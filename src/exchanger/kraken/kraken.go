@@ -1,10 +1,8 @@
 package kraken
 
 import (
-	"encoding/json"
+	"exchanger/util"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 )
 
@@ -24,25 +22,6 @@ type Order struct {
 func FetchOrderBook(pair string) (*OrderBook, error) {
 	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
 
-	// create the request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// execute the request
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	// read the response body
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	var result struct {
 		Error  []string
 		Result map[string]struct {
@@ -51,8 +30,7 @@ func FetchOrderBook(pair string) (*OrderBook, error) {
 		}
 	}
 
-	err = json.Unmarshal(body, &result)
-	if err != nil {
+	if err := util.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
