@@ -2,6 +2,7 @@
 package main
 
 import (
+	"exchanger/bitfinex"
 	"exchanger/hitbtc"
 	"exchanger/kraken"
 	"fmt"
@@ -20,5 +21,12 @@ func main() {
 		fmt.Printf("%s\n", err)
 	} else {
 		fmt.Printf("%s\n", hitbtcBook.Asks[0].Price)
+	}
+
+	bitfinexBook, err := bitfinex.FetchOrderBook("LTCBTC")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+	} else {
+		fmt.Printf("%s\n", bitfinexBook.Asks[0].Price)
 	}
 }
