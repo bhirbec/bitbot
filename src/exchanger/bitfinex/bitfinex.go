@@ -8,7 +8,7 @@ import (
 
 const APIURL = "https://api.bitfinex.com/v1"
 
-func FetchOrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
 
 	var result struct {

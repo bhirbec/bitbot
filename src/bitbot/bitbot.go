@@ -9,21 +9,21 @@ import (
 )
 
 func main() {
-	krakenBook, err := kraken.FetchOrderBook("XXBTXLTC")
+	krakenBook, err := kraken.OrderBook("XXBTXLTC")
 	if err != nil {
 		fmt.Printf("%s\n", err)
 	} else {
 		fmt.Printf("%s\n", krakenBook.Asks[0].Price)
 	}
 
-	hitbtcBook, err := hitbtc.FetchOrderBook("LTCBTC")
+	hitbtcBook, err := hitbtc.OrderBook("LTCBTC")
 	if err != nil {
 		fmt.Printf("%s\n", err)
 	} else {
 		fmt.Printf("%s\n", hitbtcBook.Asks[0].Price)
 	}
 
-	bitfinexBook, err := bitfinex.FetchOrderBook("LTCBTC")
+	bitfinexBook, err := bitfinex.OrderBook("LTCBTC")
 	if err != nil {
 		fmt.Printf("%s\n", err)
 	} else {

@@ -8,7 +8,7 @@ import (
 
 const APIURL = "https://api.hitbtc.com/api/1"
 
-func FetchOrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/public/%s/orderbook", APIURL, pair)
 
 	var result struct {

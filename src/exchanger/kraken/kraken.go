@@ -8,7 +8,7 @@ import (
 
 const APIURL = "https://api.kraken.com/0"
 
-func FetchOrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
 
 	var result struct {
