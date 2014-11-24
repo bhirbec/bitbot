@@ -1,25 +1,14 @@
 package kraken
 
 import (
-	"exchanger/util"
+	"exchanger/orderbook"
 	"fmt"
 	"strconv"
 )
 
 const APIURL = "https://api.kraken.com/0"
 
-type OrderBook struct {
-	Bids []*Order
-	Asks []*Order
-}
-
-type Order struct {
-	Price     float64
-	Volume    float64
-	Timestamp float64
-}
-
-func FetchOrderBook(pair string) (*OrderBook, error) {
+func FetchOrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
 
 	var result struct {
@@ -30,7 +19,7 @@ func FetchOrderBook(pair string) (*OrderBook, error) {
 		}
 	}
 
-	if err := util.FetchOrderBook(url, &result); err != nil {
+	if err := orderbook.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
@@ -48,11 +37,11 @@ func FetchOrderBook(pair string) (*OrderBook, error) {
 		return nil, err
 	}
 
-	return &OrderBook{Bids: bids, Asks: asks}, nil
+	return &orderbook.OrderBook{Bids: bids, Asks: asks}, nil
 }
 
-func parseOrders(rows [][]interface{}) ([]*Order, error) {
-	orders := make([]*Order, len(rows))
+func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {
+	orders := make([]*orderbook.Order, len(rows))
 	for i, row := range rows {
 		price, err := strconv.ParseFloat(row[0].(string), 64)
 		if err != nil {
@@ -64,7 +53,7 @@ func parseOrders(rows [][]interface{}) ([]*Order, error) {
 			return nil, err
 		}
 
-		orders[i] = &Order{
+		orders[i] = &orderbook.Order{
 			Price:     price,
 			Volume:    volume,
 			Timestamp: row[2].(float64),

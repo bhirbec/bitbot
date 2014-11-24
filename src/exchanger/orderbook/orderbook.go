@@ -1,10 +1,21 @@
-package util
+package orderbook
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 )
+
+type OrderBook struct {
+	Bids []*Order
+	Asks []*Order
+}
+
+type Order struct {
+	Price     float64
+	Volume    float64
+	Timestamp float64
+}
 
 func FetchOrderBook(url string, v interface{}) error {
 	// create the request
