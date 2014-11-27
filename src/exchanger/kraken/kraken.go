@@ -6,7 +6,10 @@ import (
 	"strconv"
 )
 
-const APIURL = "https://api.kraken.com/0"
+const (
+	APIURL        = "https://api.kraken.com/0"
+	ExchangerName = "kraken"
+)
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
@@ -37,7 +40,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return &orderbook.OrderBook{Bids: bids, Asks: asks}, nil
+	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
 }
 
 func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {

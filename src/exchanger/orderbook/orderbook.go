@@ -7,8 +7,10 @@ import (
 )
 
 type OrderBook struct {
-	Bids []*Order
-	Asks []*Order
+	// Name of the exchanger
+	Exchanger string
+	Bids      []*Order
+	Asks      []*Order
 }
 
 type Order struct {

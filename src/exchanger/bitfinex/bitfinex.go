@@ -6,7 +6,10 @@ import (
 	"strconv"
 )
 
-const APIURL = "https://api.bitfinex.com/v1"
+const (
+	APIURL        = "https://api.bitfinex.com/v1"
+	ExchangerName = "bitfinex"
+)
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
@@ -31,7 +34,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return &orderbook.OrderBook{bids, asks}, nil
+	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
 }
 
 func parseOrders(rows []map[string]string) ([]*orderbook.Order, error) {

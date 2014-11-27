@@ -6,7 +6,10 @@ import (
 	"strconv"
 )
 
-const APIURL = "https://api.hitbtc.com/api/1"
+const (
+	APIURL        = "https://api.hitbtc.com/api/1"
+	ExchangerName = "hitbtc"
+)
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/public/%s/orderbook", APIURL, pair)
@@ -30,7 +33,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return &orderbook.OrderBook{bids, asks}, nil
+	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
 }
 
 func parseOrders(rows [][]string) ([]*orderbook.Order, error) {
