@@ -11,6 +11,3 @@ RUN go install bitbot
 
 # Run the outyet command by default when the container starts.
 ENTRYPOINT /go/bin/bitbot
-
-# Document that the service listens on port 8080.
-EXPOSE 8080
