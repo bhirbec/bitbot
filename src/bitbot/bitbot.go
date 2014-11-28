@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"exchanger/bitfinex"
+	"exchanger/btce"
 	"exchanger/bter"
 	"exchanger/hitbtc"
 	"exchanger/orderbook"
@@ -43,9 +44,14 @@ func detect() {
 		partials <- &partial{book, err}
 	}()
 
+	go func() {
+		book, err := btce.OrderBook("ltc_btc")
+		partials <- &partial{book, err}
+	}()
+
 	// get orderbooks when they're ready
 	orderbooks := []*orderbook.OrderBook{}
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		p := <-partials
 		if p.err != nil {
 			fmt.Println(p.err)
