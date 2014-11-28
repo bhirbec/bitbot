@@ -12,15 +12,28 @@ import (
 	"exchanger/orderbook"
 )
 
+type market struct {
+	f    func(string) (*orderbook.OrderBook, error)
+	pair string
+}
+
 func main() {
+	markets := []*market{
+		&market{hitbtc.OrderBook, "LTCBTC"},
+		&market{bitfinex.OrderBook, "LTCBTC"},
+		&market{bter.OrderBook, "LTC_BTC"},
+		&market{btce.OrderBook, "ltc_btc"},
+	}
+
 	for i := 0; i < 10; i++ {
 		fmt.Println("*********")
-		detect()
+		detect(markets)
 		time.Sleep(2 * time.Second)
 	}
 }
 
-func detect() {
+func detect(markets []*market) {
+	// fetch orderbooks concurrently
 	type partial struct {
 		orderbook *orderbook.OrderBook
 		err       error
@@ -28,30 +41,16 @@ func detect() {
 
 	partials := make(chan *partial)
 
-	// fetch orderbooks concurrently
-	go func() {
-		book, err := hitbtc.OrderBook("LTCBTC")
-		partials <- &partial{book, err}
-	}()
-
-	go func() {
-		book, err := bitfinex.OrderBook("LTCBTC")
-		partials <- &partial{book, err}
-	}()
-
-	go func() {
-		book, err := bter.OrderBook("LTC_BTC")
-		partials <- &partial{book, err}
-	}()
-
-	go func() {
-		book, err := btce.OrderBook("ltc_btc")
-		partials <- &partial{book, err}
-	}()
+	for _, m := range markets {
+		go func(m *market) {
+			book, err := m.f(m.pair)
+			partials <- &partial{book, err}
+		}(m)
+	}
 
 	// get orderbooks when they're ready
 	orderbooks := []*orderbook.OrderBook{}
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(markets); i++ {
 		p := <-partials
 		if p.err != nil {
 			fmt.Println(p.err)
