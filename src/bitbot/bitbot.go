@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"exchanger/bitfinex"
+	"exchanger/bittrex"
 	"exchanger/btce"
 	"exchanger/bter"
 	"exchanger/hitbtc"
@@ -27,6 +28,7 @@ func main() {
 		&market{bitfinex.OrderBook, "LTCBTC"},
 		&market{bter.OrderBook, "LTC_BTC"},
 		&market{btce.OrderBook, "ltc_btc"},
+		&market{bittrex.OrderBook, "BTC-LTC"},
 	}
 
 	for i := 0; i < 10; i++ {
@@ -84,11 +86,11 @@ func detectArbitrage(orderbooks []*orderbook.OrderBook) {
 func detectOpportunity(ob1, ob2 *orderbook.OrderBook) string {
 	if ask, bid := ob1.Asks[0], ob2.Bids[0]; ask.Price < bid.Price {
 		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
-		profit := 100 * (bid.Price - ask.Price) / ask.Price
+		profit := 100 * (bid.Price/ask.Price - 1)
 		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob1.Exchanger, ask.Price, ask.Volume, ob2.Exchanger, bid.Price, bid.Volume)
 	} else if ask, bid := ob2.Asks[0], ob1.Bids[0]; ask.Price < bid.Price {
 		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
-		profit := 100 * (bid.Price - ask.Price) / ask.Price
+		profit := 100 * (bid.Price/ask.Price - 1)
 		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob2.Exchanger, ask.Price, ask.Volume, ob1.Exchanger, bid.Price, bid.Volume)
 	} else {
 		return ""
