@@ -3,6 +3,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math"
 	"time"
 
 	"exchanger/bitfinex"
@@ -18,6 +20,8 @@ type market struct {
 }
 
 func main() {
+	log.Println("Starting bitbot...")
+
 	markets := []*market{
 		&market{hitbtc.OrderBook, "LTCBTC"},
 		&market{bitfinex.OrderBook, "LTCBTC"},
@@ -26,10 +30,11 @@ func main() {
 	}
 
 	for i := 0; i < 10; i++ {
-		fmt.Println("*********")
 		detect(markets)
 		time.Sleep(2 * time.Second)
 	}
+
+	log.Println("Stopping bitbot...")
 }
 
 func detect(markets []*market) {
@@ -53,7 +58,7 @@ func detect(markets []*market) {
 	for i := 0; i < len(markets); i++ {
 		p := <-partials
 		if p.err != nil {
-			fmt.Println(p.err)
+			log.Println(p.err)
 			continue
 		}
 		orderbooks = append(orderbooks, p.orderbook)
@@ -65,18 +70,23 @@ func detect(markets []*market) {
 		ob1 := orderbooks[i]
 		for j := i + 1; j < l; j++ {
 			ob2 := orderbooks[j]
-			r := detectArbitrage(ob1, ob2)
-			fmt.Println(r)
+			if r := detectArbitrage(ob1, ob2); r != "" {
+				log.Println(r)
+			}
 		}
 	}
 }
 
 func detectArbitrage(ob1, ob2 *orderbook.OrderBook) string {
 	if ask, bid := ob1.Asks[0], ob2.Bids[0]; ask.Price < bid.Price {
-		return fmt.Sprintf("Buy %s %#v/%#v | sell %s %#v/%#v", ob1.Exchanger, ask.Price, ask.Volume, ob2.Exchanger, bid.Price, bid.Volume)
+		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
+		profit := 100 * (bid.Price - ask.Price) / ask.Price
+		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob1.Exchanger, ask.Price, ask.Volume, ob2.Exchanger, bid.Price, bid.Volume)
 	} else if ask, bid := ob2.Asks[0], ob1.Bids[0]; ask.Price < bid.Price {
-		return fmt.Sprintf("Buy %s %#v/%#v | sell %s %#v/%#v", ob2.Exchanger, ask.Price, ask.Volume, ob1.Exchanger, bid.Price, bid.Volume)
+		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
+		profit := 100 * (bid.Price - ask.Price) / ask.Price
+		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob2.Exchanger, ask.Price, ask.Volume, ob1.Exchanger, bid.Price, bid.Volume)
 	} else {
-		return fmt.Sprintf("No arbitrage between %s and %s", ob1.Exchanger, ob2.Exchanger)
+		return ""
 	}
 }
