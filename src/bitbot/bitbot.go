@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"exchanger/bitfinex"
-	"exchanger/bittrex"
+	// "exchanger/bittrex"
 	"exchanger/btce"
 	"exchanger/bter"
 	"exchanger/hitbtc"
@@ -24,11 +24,11 @@ func main() {
 	log.Println("Starting bitbot...")
 
 	markets := []*market{
-		&market{hitbtc.OrderBook, "LTCBTC"},
-		&market{bitfinex.OrderBook, "LTCBTC"},
-		&market{bter.OrderBook, "LTC_BTC"},
-		&market{btce.OrderBook, "ltc_btc"},
-		&market{bittrex.OrderBook, "BTC-LTC"},
+		&market{hitbtc.OrderBook, "BTCUSD"},
+		&market{bitfinex.OrderBook, "BTCUSD"},
+		&market{bter.OrderBook, "BTC_USD"},
+		&market{btce.OrderBook, "btc_usd"},
+		// &market{bittrex.OrderBook, "BTC-LTC"},
 	}
 
 	for i := 0; i < 10; i++ {
