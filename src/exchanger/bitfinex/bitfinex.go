@@ -1,9 +1,11 @@
 package bitfinex
 
 import (
-	"exchanger/orderbook"
+	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"exchanger/orderbook"
 )
 
 const (
@@ -15,51 +17,43 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
 
 	var result struct {
-		Asks []map[string]string
-		Bids []map[string]string
+		Asks orders
+		Bids orders
 	}
 
-	err := orderbook.FetchOrderBook(url, &result)
-	if err != nil {
+	if err := orderbook.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
-	bids, err := parseOrders(result.Bids)
-	if err != nil {
-		return nil, err
-	}
-
-	asks, err := parseOrders(result.Asks)
-	if err != nil {
-		return nil, err
-	}
-
-	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
+	return &orderbook.OrderBook{ExchangerName, result.Bids, result.Asks}, nil
 }
 
-func parseOrders(rows []map[string]string) ([]*orderbook.Order, error) {
-	orders := make([]*orderbook.Order, len(rows))
-	for i, row := range rows {
+type orders []*orderbook.Order
+
+func (ko *orders) UnmarshalJSON(b []byte) error {
+	rows := []map[string]string{}
+
+	if err := json.Unmarshal(b, &rows); err != nil {
+		return err
+	}
+
+	for _, row := range rows {
 		price, err := strconv.ParseFloat(row["price"], 64)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		volume, err := strconv.ParseFloat(row["amount"], 64)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		timestamp, err := strconv.ParseFloat(row["timestamp"], 64)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		orders[i] = &orderbook.Order{
-			Price:     price,
-			Volume:    volume,
-			Timestamp: timestamp,
-		}
+		*ko = append(*ko, &orderbook.Order{price, volume, timestamp})
 	}
-	return orders, nil
+	return nil
 }
