@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"exchanger/bitfinex"
-	// "exchanger/bittrex"
 	"exchanger/btce"
 	"exchanger/bter"
 	"exchanger/hitbtc"
+	"exchanger/kraken"
 	"exchanger/orderbook"
 )
 
@@ -28,7 +28,7 @@ func main() {
 		&market{bitfinex.OrderBook, "BTCUSD"},
 		&market{bter.OrderBook, "BTC_USD"},
 		&market{btce.OrderBook, "btc_usd"},
-		// &market{bittrex.OrderBook, "BTC-LTC"},
+		&market{kraken.OrderBook, "XXBTZUSD"},
 	}
 
 	for i := 0; i < 10; i++ {
