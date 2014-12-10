@@ -25,7 +25,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return &orderbook.OrderBook{ExchangerName, result.Bids, result.Asks}, nil
+	return orderbook.NewOrderbook(ExchangerName, result.Bids, result.Asks)
 }
 
 type orders []*orderbook.Order

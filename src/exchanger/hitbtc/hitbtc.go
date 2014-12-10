@@ -33,7 +33,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
+	return orderbook.NewOrderbook(ExchangerName, bids, asks)
 }
 
 func parseOrders(rows [][]string) ([]*orderbook.Order, error) {

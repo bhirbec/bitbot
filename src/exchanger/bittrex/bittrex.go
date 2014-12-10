@@ -34,12 +34,9 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, fmt.Errorf("Bittrex returned an error. %s", result.Message)
 	}
 
-	ob := &orderbook.OrderBook{
-		Exchanger: ExchangerName,
-		bids:      makeOrders(result.Result.Buy),
-		asks:      makeOrders(result.Result.Sell),
-	}
-	return ob, nil
+	bids := makeOrders(result.Result.Buy)
+	asks := makeOrders(result.Result.Sell)
+	return orderbook.NewOrderbook(ExchangerName, bids, asks)
 }
 
 func makeOrders(rows []*order) []*orderbook.Order {

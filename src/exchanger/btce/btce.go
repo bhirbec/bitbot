@@ -24,7 +24,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 
 	bids := makeOrders(result[pair].Bids)
 	asks := makeOrders(result[pair].Asks)
-	return &orderbook.OrderBook{ExchangerName, bids, asks}, nil
+	return orderbook.NewOrderbook(ExchangerName, bids, asks)
 }
 
 func makeOrders(rows [][]float64) []*orderbook.Order {
