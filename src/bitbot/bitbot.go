@@ -11,7 +11,6 @@ import (
 
 	"exchanger/bitfinex"
 	"exchanger/btce"
-	"exchanger/bter"
 	"exchanger/cex"
 	"exchanger/hitbtc"
 	"exchanger/kraken"
@@ -28,7 +27,6 @@ func main() {
 	funcs := []orderBookFunc{
 		hitbtc.OrderBook,
 		bitfinex.OrderBook,
-		bter.OrderBook,
 		btce.OrderBook,
 		kraken.OrderBook,
 		cex.OrderBook,
@@ -37,7 +35,6 @@ func main() {
 	exchangers := []string{
 		hitbtc.ExchangerName,
 		bitfinex.ExchangerName,
-		bter.ExchangerName,
 		btce.ExchangerName,
 		kraken.ExchangerName,
 		cex.ExchangerName,
