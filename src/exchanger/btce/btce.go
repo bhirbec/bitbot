@@ -7,7 +7,7 @@ import (
 
 const (
 	APIURL        = "https://btc-e.com/api/3"
-	ExchangerName = "btce"
+	ExchangerName = "Btce"
 )
 
 var pairs = map[string]string{

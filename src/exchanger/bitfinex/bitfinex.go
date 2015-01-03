@@ -10,7 +10,7 @@ import (
 
 const (
 	APIURL        = "https://api.bitfinex.com/v1"
-	ExchangerName = "bitfinex"
+	ExchangerName = "Bitfinex"
 )
 
 var pairs = map[string]string{

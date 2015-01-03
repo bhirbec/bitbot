@@ -8,7 +8,7 @@ import (
 
 const (
 	APIURL        = "http://data.bter.com/api/1"
-	ExchangerName = "bter"
+	ExchangerName = "Bter"
 )
 
 var pairs = map[string]string{

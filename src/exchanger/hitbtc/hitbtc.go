@@ -8,7 +8,7 @@ import (
 
 const (
 	APIURL        = "https://api.hitbtc.com/api/1"
-	ExchangerName = "hitbtc"
+	ExchangerName = "Hitbtc"
 )
 
 var pairs = map[string]string{

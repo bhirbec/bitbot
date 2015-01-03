@@ -7,7 +7,7 @@ import (
 
 const (
 	APIURL        = "https://bittrex.com/api/v1.1/public"
-	ExchangerName = "bittrex"
+	ExchangerName = "Bittrex"
 )
 
 type order struct {

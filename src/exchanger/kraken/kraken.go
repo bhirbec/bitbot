@@ -8,7 +8,7 @@ import (
 
 const (
 	APIURL        = "https://api.kraken.com/0"
-	ExchangerName = "kraken"
+	ExchangerName = "Kraken"
 )
 
 var pairs = map[string]string{

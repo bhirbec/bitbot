@@ -32,6 +32,14 @@ func main() {
 		kraken.OrderBook,
 	}
 
+	exchangers := []string{
+		hitbtc.ExchangerName,
+		bitfinex.ExchangerName,
+		bter.ExchangerName,
+		btce.ExchangerName,
+		kraken.ExchangerName,
+	}
+
 	f, err := os.Create(csvpath)
 	if err != nil {
 		log.Fatal(err)
@@ -39,14 +47,7 @@ func main() {
 	defer f.Close()
 	w := csv.NewWriter(f)
 
-	headers := []string{
-		"hitbtc bid", "ask", "spread %",
-		"bitfinex bid", "ask", "spread %",
-		"bter bid", "ask", "spread %",
-		"btce bid", "ask", "spread %",
-		"kraken bid", "ask", "spread %",
-	}
-	w.Write(headers)
+	writeCSVHeader(w, exchangers)
 
 	for i := 0; i < 1; i++ {
 		orderbooks := fetchOrderbooks(funcs, "BTC_USD")
@@ -89,14 +90,29 @@ func fetchOrderbooks(funcs []orderBookFunc, pair string) []*orderbook.OrderBook 
 	return orderbooks
 }
 
+func writeCSVHeader(w *csv.Writer, exchangers []string) {
+	header := []string{}
+	for _, e := range exchangers {
+		header = append(header, fmt.Sprintf("%s bid", e))
+		header = append(header, fmt.Sprintf("%s bid vol", e))
+		header = append(header, fmt.Sprintf("%s ask", e))
+		header = append(header, fmt.Sprintf("%s ask vol", e))
+		header = append(header, fmt.Sprintf("%s spread %%", e))
+	}
+	w.Write(header)
+}
+
 func writeCSVRow(w *csv.Writer, orderbooks []*orderbook.OrderBook) {
-	row := make([]string, 3*len(orderbooks))
+	n := 5 //
+	row := make([]string, n*len(orderbooks))
 	for i, ob := range orderbooks {
 		if ob != nil {
 			bid, ask := ob.Bids[0], ob.Asks[0]
-			row[i*3] = fmt.Sprintf("%.2f", bid.Price)
-			row[i*3+1] = fmt.Sprintf("%.2f", ask.Price)
-			row[i*3+2] = fmt.Sprintf("%.2f", (ask.Price/bid.Price-1.0)*100.0)
+			row[i*n] = fmt.Sprintf("%.6f", bid.Price)
+			row[i*n+1] = fmt.Sprintf("%.6f", bid.Volume)
+			row[i*n+2] = fmt.Sprintf("%.6f", ask.Price)
+			row[i*n+3] = fmt.Sprintf("%.6f", ask.Volume)
+			row[i*n+4] = fmt.Sprintf("%.6f", (ask.Price/bid.Price-1.0)*100.0)
 		}
 	}
 	w.Write(row)
