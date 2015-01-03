@@ -12,6 +12,7 @@ import (
 	"exchanger/bitfinex"
 	"exchanger/btce"
 	"exchanger/bter"
+	"exchanger/cex"
 	"exchanger/hitbtc"
 	"exchanger/kraken"
 	"exchanger/orderbook"
@@ -30,6 +31,7 @@ func main() {
 		bter.OrderBook,
 		btce.OrderBook,
 		kraken.OrderBook,
+		cex.OrderBook,
 	}
 
 	exchangers := []string{
@@ -38,6 +40,7 @@ func main() {
 		bter.ExchangerName,
 		btce.ExchangerName,
 		kraken.ExchangerName,
+		cex.ExchangerName,
 	}
 
 	f, err := os.Create(csvpath)
