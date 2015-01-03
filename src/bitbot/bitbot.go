@@ -126,25 +126,18 @@ func detectArbitrage(orderbooks []*orderbook.OrderBook) {
 		if ob1 := orderbooks[i]; ob1 != nil {
 			for j := i + 1; j < l; j++ {
 				if ob2 := orderbooks[j]; ob2 != nil {
-					if r := detectOpportunity(ob1, ob2); r != "" {
-						log.Println(r)
-					}
+					printOpportunity(ob1, ob2)
+					printOpportunity(ob2, ob1)
 				}
 			}
 		}
 	}
 }
 
-func detectOpportunity(ob1, ob2 *orderbook.OrderBook) string {
+func printOpportunity(ob1, ob2 *orderbook.OrderBook) {
 	if ask, bid := ob1.Asks[0], ob2.Bids[0]; ask.Price < bid.Price {
 		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
 		profit := 100 * (bid.Price/ask.Price - 1)
-		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob1.Exchanger, ask.Price, ask.Volume, ob2.Exchanger, bid.Price, bid.Volume)
-	} else if ask, bid := ob2.Asks[0], ob1.Bids[0]; ask.Price < bid.Price {
-		diff := math.Min(ask.Volume, bid.Volume) * (bid.Price - ask.Price)
-		profit := 100 * (bid.Price/ask.Price - 1)
-		return fmt.Sprintf("%.2f%% %#v | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob2.Exchanger, ask.Price, ask.Volume, ob1.Exchanger, bid.Price, bid.Volume)
-	} else {
-		return ""
+		log.Printf("%.2f%% %.2f | buy %s %#v/%#v | sell %s %#v/%#v", profit, diff, ob1.Exchanger, ask.Price, ask.Volume, ob2.Exchanger, bid.Price, bid.Volume)
 	}
 }
