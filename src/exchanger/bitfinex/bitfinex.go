@@ -13,7 +13,12 @@ const (
 	ExchangerName = "bitfinex"
 )
 
+var pairs = map[string]string{
+	"BTC_USD": "BTCUSD",
+}
+
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
+	pair = pairs[pair]
 	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
 
 	var result struct {

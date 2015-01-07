@@ -11,7 +11,12 @@ const (
 	ExchangerName = "hitbtc"
 )
 
+var pairs = map[string]string{
+	"BTC_USD": "BTCUSD",
+}
+
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
+	pair = pairs[pair]
 	url := fmt.Sprintf("%s/public/%s/orderbook", APIURL, pair)
 
 	var result struct {

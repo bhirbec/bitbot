@@ -10,7 +10,12 @@ const (
 	ExchangerName = "btce"
 )
 
+var pairs = map[string]string{
+	"BTC_USD": "btc_usd",
+}
+
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
+	pair = pairs[pair]
 	url := fmt.Sprintf("%s/depth/%s", APIURL, pair)
 
 	var result map[string]struct {

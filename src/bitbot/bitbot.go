@@ -19,20 +19,17 @@ import (
 
 const csvpath = "data/orderbook.csv"
 
-type market struct {
-	f    func(string) (*orderbook.OrderBook, error)
-	pair string
-}
+type orderBookFunc func(string) (*orderbook.OrderBook, error)
 
 func main() {
 	log.Println("Starting bitbot...")
 
-	markets := []*market{
-		&market{hitbtc.OrderBook, "BTCUSD"},
-		&market{bitfinex.OrderBook, "BTCUSD"},
-		&market{bter.OrderBook, "BTC_USD"},
-		&market{btce.OrderBook, "btc_usd"},
-		&market{kraken.OrderBook, "XXBTZUSD"},
+	funcs := []orderBookFunc{
+		hitbtc.OrderBook,
+		bitfinex.OrderBook,
+		bter.OrderBook,
+		btce.OrderBook,
+		kraken.OrderBook,
 	}
 
 	f, err := os.Create(csvpath)
@@ -51,8 +48,8 @@ func main() {
 	}
 	w.Write(headers)
 
-	for i := 0; i < 3600; i++ {
-		orderbooks := fetchOrderbooks(markets)
+	for i := 0; i < 1; i++ {
+		orderbooks := fetchOrderbooks(funcs, "BTC_USD")
 		detectArbitrage(orderbooks)
 		writeCSVRow(w, orderbooks)
 		time.Sleep(2 * time.Second)
@@ -61,7 +58,7 @@ func main() {
 	log.Println("Stopping bitbot...")
 }
 
-func fetchOrderbooks(markets []*market) []*orderbook.OrderBook {
+func fetchOrderbooks(funcs []orderBookFunc, pair string) []*orderbook.OrderBook {
 	type partial struct {
 		orderbook *orderbook.OrderBook
 		err       error
@@ -71,16 +68,16 @@ func fetchOrderbooks(markets []*market) []*orderbook.OrderBook {
 	// fetch orderbooks concurrently
 	partials := make(chan *partial)
 
-	for i, m := range markets {
-		go func(i int, m *market) {
-			book, err := m.f(m.pair)
+	for i, f := range funcs {
+		go func(i int, f orderBookFunc) {
+			book, err := f(pair)
 			partials <- &partial{book, err, i}
-		}(i, m)
+		}(i, f)
 	}
 
 	// get orderbooks when they're ready
-	orderbooks := make([]*orderbook.OrderBook, len(markets))
-	for i := 0; i < len(markets); i++ {
+	orderbooks := make([]*orderbook.OrderBook, len(funcs))
+	for i := 0; i < len(funcs); i++ {
 		p := <-partials
 		if p.err != nil {
 			log.Println(p.err)

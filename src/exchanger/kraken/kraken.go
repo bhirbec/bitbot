@@ -11,7 +11,12 @@ const (
 	ExchangerName = "kraken"
 )
 
+var pairs = map[string]string{
+	"BTC_USD": "XXBTZUSD",
+}
+
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
+	pair = pairs[pair]
 	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
 
 	var result struct {
