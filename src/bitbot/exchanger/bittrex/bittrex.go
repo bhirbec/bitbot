@@ -1,8 +1,9 @@
 package bittrex
 
 import (
-	"exchanger/orderbook"
 	"fmt"
+
+	"bitbot/exchanger/orderbook"
 )
 
 const (

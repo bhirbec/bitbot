@@ -1,9 +1,10 @@
 package hitbtc
 
 import (
-	"exchanger/orderbook"
 	"fmt"
 	"strconv"
+
+	"bitbot/exchanger/orderbook"
 )
 
 const (

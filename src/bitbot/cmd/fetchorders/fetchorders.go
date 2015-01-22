@@ -9,12 +9,12 @@ import (
 	"log"
 	"time"
 
-	"exchanger/bitfinex"
-	"exchanger/btce"
-	"exchanger/cex"
-	"exchanger/hitbtc"
-	"exchanger/kraken"
-	"exchanger/orderbook"
+	"bitbot/exchanger/bitfinex"
+	"bitbot/exchanger/btce"
+	"bitbot/exchanger/cex"
+	"bitbot/exchanger/hitbtc"
+	"bitbot/exchanger/kraken"
+	"bitbot/exchanger/orderbook"
 )
 
 type exchanger struct {
