@@ -1,0 +1,17 @@
+
+- hosts: all
+
+  tasks:
+    - name: Copy Go code # TODO: this is slow
+      copy: src=../src dest=/home/bhirbec force=true
+
+    - name: go install bitbot/...
+      shell: GOPATH=$HOME go install bitbot/...
+
+    - name: Copy upstart.conf
+      copy: src=upstart/bitbot-fetch.conf dest=/etc/init/bitbot-fetch.conf
+      sudo: yes
+
+    - name: Restart bitbot-fetch
+      command: service bitbot-fetch restart
+      sudo: yes
