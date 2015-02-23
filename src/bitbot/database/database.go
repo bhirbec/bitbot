@@ -58,6 +58,59 @@ func SaveRecord(db *DB, pair string, r *Record) {
 	panicOnError(err)
 }
 
+func SelectRecords(db *DB, pair string) chan *Record {
+	c := make(chan *Record)
+
+	const stmt = `
+        select
+            StartTime,
+            EndTime,
+            Exchanger,
+            Bids,
+            Asks
+        from
+            %s
+        order
+            by EndTime
+    `
+
+	go func() {
+		defer close(c)
+
+		rows, err := db.Query(fmt.Sprintf(stmt, pair))
+		panicOnError(err)
+		defer rows.Close()
+
+		for rows.Next() {
+			var startTime, endTime int64
+			var exchanger, bidData, askData string
+
+			err = rows.Scan(&startTime, &endTime, &exchanger, &bidData, &askData)
+			panicOnError(err)
+
+			var bids []*orderbook.Order
+			err = json.Unmarshal([]byte(bidData), &bids)
+			panicOnError(err)
+
+			var asks []*orderbook.Order
+			err = json.Unmarshal([]byte(askData), &asks)
+			panicOnError(err)
+
+			c <- &Record{
+				Exchanger: exchanger,
+				StartTime: startTime,
+				StartDate: time.Unix(0, startTime),
+				EndTime:   endTime,
+				EndDate:   time.Unix(0, endTime),
+				Bids:      bids,
+				Asks:      asks,
+			}
+		}
+	}()
+
+	return c
+}
+
 func panicOnError(err error) {
 	if err != nil {
 		panic(err)
