@@ -14,6 +14,8 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
+// TODO: this code is not panic safe
+
 type exchanger struct {
 	name string
 	f    func(string) (*orderbook.OrderBook, error)

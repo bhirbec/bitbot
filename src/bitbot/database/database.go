@@ -5,13 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"time"
 
 	"bitbot/exchanger/orderbook"
 )
-
-// TODO: should panic instead of log.Fatal
 
 type DB struct {
 	*sql.DB
@@ -31,9 +28,7 @@ type Record struct {
 
 func Open(dbPath string) *DB {
 	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	panicOnError(err)
 	return &DB{db}
 }
 
@@ -48,25 +43,23 @@ func CreateTable(db *DB, pair string) {
 		)
 	`
 	_, err := db.Exec(fmt.Sprintf(stmt, pair))
-	if err != nil {
-		log.Fatal(err)
-	}
+	panicOnError(err)
 }
 
 func SaveRecord(db *DB, pair string, r *Record) {
 	bids, err := json.Marshal(r.Bids[:10])
-	if err != nil {
-		log.Fatal(err)
-	}
+	panicOnError(err)
 
 	asks, err := json.Marshal(r.Asks[:10])
-	if err != nil {
-		log.Fatal(err)
-	}
+	panicOnError(err)
 
 	const stmt = "insert into %s (StartTime, EndTime, Exchanger, Bids, Asks) values (?, ?, ?, ?, ?);"
 	_, err = db.Exec(fmt.Sprintf(stmt, pair), r.StartTime, r.EndTime, r.Exchanger, bids, asks)
+	panicOnError(err)
+}
+
+func panicOnError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
