@@ -10,9 +10,15 @@
       apt: name={{item}} update_cache=true
       with_items:
         - gcc
+        - git
 
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
 
     - name: Create symlinks to Go binaries
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
+
+    - name: Clone repository
+      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest=/home/bhirbec/bitbot
+      sudo: no
+

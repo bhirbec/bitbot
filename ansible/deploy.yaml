@@ -1,15 +1,21 @@
 
 - hosts: all
 
+  vars:
+    project_dir: /home/bhirbec/bitbot
+
   tasks:
-    - name: Copy Go code # TODO: this is slow
-      copy: src=../src dest=/home/bhirbec force=true
+    - name: Fetch repository
+      shell: git fetch origin chdir={{project_dir}}
+
+    - name: Checkout Master branch
+      shell: git reset --hard origin/master chdir={{project_dir}}
 
     - name: go install bitbot/...
-      shell: GOPATH=$HOME go install bitbot/...
+      shell: GOPATH={{project_dir}} go install bitbot/...
 
     - name: Copy upstart.conf
-      copy: src=upstart/bitbot-fetch.conf dest=/etc/init/bitbot-fetch.conf
+      template: src=upstart/bitbot-fetch.conf dest=/etc/init/bitbot-fetch.conf
       sudo: yes
 
     - name: Restart bitbot-fetch
