@@ -1,10 +1,9 @@
 package orderbook
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"bitbot/httpreq"
 )
 
 type OrderBook struct {
@@ -51,25 +50,7 @@ func NewOrderbook(Exchanger string, bids, asks []*Order) (*OrderBook, error) {
 	return &OrderBook{Exchanger, bids, asks}, nil
 }
 
+// TODO: inline those function calls
 func FetchOrderBook(url string, v interface{}) error {
-	// create the request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil
-	}
-
-	// execute the request
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil
-	}
-
-	// read the response body
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil
-	}
-
-	return json.Unmarshal(body, v)
+	return httpreq.Get(url, nil, v)
 }
