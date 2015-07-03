@@ -18,6 +18,7 @@ type DB struct {
 // TODO: should only expose StartDate and EndDate (not StartTime and EndTime)
 type Record struct {
 	Exchanger string
+	Pair      string
 	StartTime int64
 	StartDate time.Time
 	EndTime   int64
