@@ -1,0 +1,5 @@
+record:
+    build: ./src
+    command: /go/bin/record /var/data/db-docker.sql
+    volumes:
+        - ./data:/var/data
