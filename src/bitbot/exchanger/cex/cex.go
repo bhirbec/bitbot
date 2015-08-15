@@ -2,7 +2,6 @@ package cex
 
 import (
 	"fmt"
-	"strconv"
 
 	"bitbot/exchanger/orderbook"
 )
@@ -22,7 +21,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	url := fmt.Sprintf("%sorder_book/%s", APIURL, pair)
 
 	var result struct {
-		Timestamp string
+		Timestamp int64
 		Asks      [][]interface{}
 		Bids      [][]interface{}
 	}
@@ -47,14 +46,9 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {
 	orders := make([]*orderbook.Order, len(rows))
 	for i, row := range rows {
-		volume, err := strconv.ParseFloat(row[1].(string), 64)
-		if err != nil {
-			return nil, err
-		}
-
 		orders[i] = &orderbook.Order{
 			Price:  row[0].(float64),
-			Volume: volume,
+			Volume: row[1].(float64),
 		}
 	}
 
