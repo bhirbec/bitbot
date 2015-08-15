@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"time"
 
@@ -47,7 +46,6 @@ func main() {
 			// TODO: timeout after 2 sec
 			go func(e *exchanger) {
 				if r := fetchRecord(e, pair); r != nil {
-					fmt.Println(r)
 					database.SaveRecord(db, pair, r)
 				}
 			}(e)
