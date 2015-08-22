@@ -4,7 +4,7 @@ FROM golang:1.3.3
 MAINTAINER Benoit Hirbec <benoit.hirbec@gmail.com>
 
 # Copy the local package files to the container's workspace.
-ADD . /go/src
+COPY . /go/src
 
 # Build the bitbot command inside the container.
 RUN go install bitbot/cmd/...
