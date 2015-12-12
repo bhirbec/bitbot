@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"runtime"
 	"time"
 
 	"bitbot/database"
@@ -14,7 +15,6 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
-// TODO: this code is not panic safe
 var (
 	dbPath      = flag.String("d", "./data/book.sql", "SQLite database path.")
 	periodicity = flag.Int64("t", 5, "Periodicity expressed in seconds.")
@@ -53,7 +53,9 @@ func main() {
 }
 
 func work(db *database.DB, e *exchanger, pair string) {
-	log.Printf("Fetching %s...", e.name)
+	defer logPanic()
+
+	log.Printf("Fetching %s for pair %s...", e.name, pair)
 	start := time.Now().UnixNano()
 	// TODO: how the timeout is handled
 	book, err := e.f(pair)
@@ -73,4 +75,15 @@ func work(db *database.DB, e *exchanger, pair string) {
 	}
 
 	database.SaveRecord(db, pair, r)
+}
+
+// logPanic logs a formatted stack trace of the panicing goroutine. The stack trace is truncated
+// at 4096 bytes (https://groups.google.com/d/topic/golang-nuts/JGraQ_Cp2Es/discussion)
+func logPanic() {
+	if err := recover(); err != nil {
+		const size = 4096
+		buf := make([]byte, size)
+		stack := buf[:runtime.Stack(buf, false)]
+		log.Printf("Error: %v\n%s", err, stack)
+	}
 }
