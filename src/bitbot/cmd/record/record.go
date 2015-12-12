@@ -74,6 +74,8 @@ func work(db *database.DB, e *exchanger, pair string) {
 		Asks:      book.Asks,
 	}
 
+	// created_at := start.Format("2006-1-2 15:04:05")
+	// duration := int64(time.Since(start) / time.Microsecond)
 	database.SaveRecord(db, pair, r)
 }
 
