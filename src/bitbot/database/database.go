@@ -34,14 +34,14 @@ func Open(dbPath string) *DB {
 
 func CreateTable(db *DB, pair string) {
 	const stmt = `
-		create table if not exists %s (
-			StartTime int,
-			EndTime int,
-			Exchanger text,
-			Bids text,
-			Asks text
-		)
-	`
+        create table if not exists %s (
+            StartTime int,
+            EndTime int,
+            Exchanger text,
+            Bids text,
+            Asks text
+        )
+    `
 	_, err := db.Exec(fmt.Sprintf(stmt, pair))
 	panicOnError(err)
 }
@@ -58,8 +58,8 @@ func SaveRecord(db *DB, pair string, r *Record) {
 	panicOnError(err)
 }
 
-func SelectRecords(db *DB, pair string) chan *Record {
-	c := make(chan *Record)
+func SelectRecords(db *DB, pair string) []*Record {
+	records := []*Record{}
 
 	const stmt = `
         select
@@ -72,43 +72,40 @@ func SelectRecords(db *DB, pair string) chan *Record {
             %s
         order
             by EndTime
+        limit
+            600
     `
 
-	go func() {
-		defer close(c)
+	rows, err := db.Query(fmt.Sprintf(stmt, pair))
+	panicOnError(err)
+	defer rows.Close()
 
-		rows, err := db.Query(fmt.Sprintf(stmt, pair))
+	for rows.Next() {
+		var startTime, endTime int64
+		var exchanger, bidData, askData string
+
+		err = rows.Scan(&startTime, &endTime, &exchanger, &bidData, &askData)
 		panicOnError(err)
-		defer rows.Close()
 
-		for rows.Next() {
-			var startTime, endTime int64
-			var exchanger, bidData, askData string
+		var bids []*orderbook.Order
+		err = json.Unmarshal([]byte(bidData), &bids)
+		panicOnError(err)
 
-			err = rows.Scan(&startTime, &endTime, &exchanger, &bidData, &askData)
-			panicOnError(err)
+		var asks []*orderbook.Order
+		err = json.Unmarshal([]byte(askData), &asks)
+		panicOnError(err)
 
-			var bids []*orderbook.Order
-			err = json.Unmarshal([]byte(bidData), &bids)
-			panicOnError(err)
-
-			var asks []*orderbook.Order
-			err = json.Unmarshal([]byte(askData), &asks)
-			panicOnError(err)
-
-			c <- &Record{
-				Exchanger: exchanger,
-				StartTime: startTime,
-				StartDate: time.Unix(0, startTime),
-				EndTime:   endTime,
-				EndDate:   time.Unix(0, endTime),
-				Bids:      bids,
-				Asks:      asks,
-			}
-		}
-	}()
-
-	return c
+		records = append(records, &Record{
+			Exchanger: exchanger,
+			StartTime: startTime,
+			StartDate: time.Unix(0, startTime),
+			EndTime:   endTime,
+			EndDate:   time.Unix(0, endTime),
+			Bids:      bids,
+			Asks:      asks,
+		})
+	}
+	return records
 }
 
 func panicOnError(err error) {
