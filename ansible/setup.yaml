@@ -19,6 +19,6 @@
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
 
     - name: Clone repository
-      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest=/home/bhirbec/bitbot
+      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest=/home/bhirbec/bitbot accept_hostkey=yes
       sudo: no
 
