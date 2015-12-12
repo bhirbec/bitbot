@@ -18,6 +18,7 @@ import (
 var (
 	dbPath      = flag.String("d", "./data/book.sql", "SQLite database path.")
 	periodicity = flag.Int64("t", 5, "Periodicity expressed in seconds.")
+	pair        = flag.String("p", "BTC_USD", "Exchanger pair.")
 )
 
 type exchanger struct {
@@ -27,9 +28,7 @@ type exchanger struct {
 
 func main() {
 	log.Println("Start recording...")
-
 	flag.Parse()
-	pair := "BTC_USD"
 
 	db := database.Open(*dbPath)
 	defer db.Close()
@@ -42,14 +41,14 @@ func main() {
 		&exchanger{"cex", cex.OrderBook},
 	}
 
-	database.CreateTable(db, pair)
+	database.CreateTable(db, *pair)
 
 	for {
 		for _, e := range exchangers {
 			// TODO: timeout after 2 sec
 			go func(e *exchanger) {
-				if r := fetchRecord(e, pair); r != nil {
-					database.SaveRecord(db, pair, r)
+				if r := fetchRecord(e, *pair); r != nil {
+					database.SaveRecord(db, *pair, r)
 				}
 			}(e)
 		}
