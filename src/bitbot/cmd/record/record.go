@@ -15,6 +15,9 @@ import (
 )
 
 // TODO: this code is not panic safe
+var (
+	dbPath = flag.String("d", "./data/book.sql", "SQLite database path.")
+)
 
 type exchanger struct {
 	name string
@@ -25,10 +28,9 @@ func main() {
 	log.Println("Start recording...")
 
 	flag.Parse()
-	dbPath := flag.Arg(0)
 	pair := "BTC_USD"
 
-	db := database.Open(dbPath)
+	db := database.Open(*dbPath)
 	defer db.Close()
 
 	exchangers := []*exchanger{
