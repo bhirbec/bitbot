@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	dbPath      = flag.String("d", "./data/book.sql", "SQLite database path.")
+	dbPath      = flag.String("d", "./data/dev.sql", "SQLite database path.")
 	periodicity = flag.Int64("t", 5, "Periodicity expressed in seconds.")
 	pair        = flag.String("p", "BTC_USD", "Exchanger pair.")
 )
