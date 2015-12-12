@@ -15,9 +15,9 @@
       shell: GOPATH={{project_dir}} go install bitbot/...
 
     - name: Copy upstart.conf
-      template: src=upstart/bitbot-fetch.conf dest=/etc/init/bitbot-fetch.conf
+      template: src=upstart/record.conf dest=/etc/init/record.conf
       sudo: yes
 
-    - name: Restart bitbot-fetch
-      command: service bitbot-fetch restart
+    - name: Restart record
+      command: service record restart
       sudo: yes
