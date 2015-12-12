@@ -16,7 +16,8 @@ import (
 
 // TODO: this code is not panic safe
 var (
-	dbPath = flag.String("d", "./data/book.sql", "SQLite database path.")
+	dbPath      = flag.String("d", "./data/book.sql", "SQLite database path.")
+	periodicity = flag.Int64("t", 5, "Periodicity expressed in seconds.")
 )
 
 type exchanger struct {
@@ -53,7 +54,7 @@ func main() {
 			}(e)
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(*periodicity) * time.Second)
 	}
 }
 
