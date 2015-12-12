@@ -22,7 +22,7 @@ type exchanger struct {
 }
 
 func main() {
-	log.Println("Fetching orderbooks...")
+	log.Println("Start recording...")
 
 	flag.Parse()
 	dbPath := flag.Arg(0)
@@ -56,6 +56,7 @@ func main() {
 }
 
 func fetchRecord(e *exchanger, pair string) *database.Record {
+	log.Printf("Fetching %s...", e.name)
 	start := time.Now().UnixNano()
 	book, err := e.f(pair)
 	end := time.Now().UnixNano()
