@@ -45,34 +45,32 @@ func main() {
 
 	for {
 		for _, e := range exchangers {
-			// TODO: timeout after 2 sec
-			go func(e *exchanger) {
-				if r := fetchRecord(e, *pair); r != nil {
-					database.SaveRecord(db, *pair, r)
-				}
-			}(e)
+			go work(db, e, *pair)
 		}
 
 		time.Sleep(time.Duration(*periodicity) * time.Second)
 	}
 }
 
-func fetchRecord(e *exchanger, pair string) *database.Record {
+func work(db *database.DB, e *exchanger, pair string) {
 	log.Printf("Fetching %s...", e.name)
 	start := time.Now().UnixNano()
+	// TODO: how the timeout is handled
 	book, err := e.f(pair)
 	end := time.Now().UnixNano()
 
 	if err != nil {
 		log.Println(err)
-		return nil
+		return
 	}
 
-	return &database.Record{
+	r := &database.Record{
 		Exchanger: e.name,
 		StartTime: start,
 		EndTime:   end,
 		Bids:      book.Bids,
 		Asks:      book.Asks,
 	}
+
+	database.SaveRecord(db, pair, r)
 }
