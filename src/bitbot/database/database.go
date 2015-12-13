@@ -10,6 +10,7 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
+// TODO: remove this and use *sql.DB directly
 type DB struct {
 	*sql.DB
 }

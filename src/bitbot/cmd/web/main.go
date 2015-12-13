@@ -21,6 +21,11 @@ func main() {
 
 	http.HandleFunc("/bid_ask", BidAskHandler)
 
+	// TODO: cache static files
+	// TODO: make the static dir indepedent of the working directory
+	// TODO: make static dir a flag or init parameter
+	http.Handle("/", http.FileServer(http.Dir("client")))
+
 	log.Println("Starting webserver")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
 	if err != nil {
