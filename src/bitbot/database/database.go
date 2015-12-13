@@ -10,7 +10,6 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
-// TODO: remove this and use *sql.DB directly
 type DB struct {
 	*sql.DB
 }
@@ -35,14 +34,14 @@ func Open(dbPath string) *DB {
 
 func CreateTable(db *DB, pair string) {
 	const stmt = `
-        create table if not exists %s (
-            StartTime int,
-            EndTime int,
-            Exchanger text,
-            Bids text,
-            Asks text
-        )
-    `
+		create table if not exists %s (
+			StartTime int,
+			EndTime int,
+			Exchanger text,
+			Bids text,
+			Asks text
+		)
+	`
 	_, err := db.Exec(fmt.Sprintf(stmt, pair))
 	panicOnError(err)
 }
@@ -61,6 +60,14 @@ func SaveRecord(db *DB, pair string, r *Record) {
 
 func SelectRecords(db *DB, pair string) []*Record {
 	records := []*Record{}
+	for r := range StreamRecords(db, pair) {
+		records = append(records, r)
+	}
+	return records
+}
+
+func StreamRecords(db *DB, pair string) chan *Record {
+	c := make(chan *Record)
 
 	const stmt = `
         select
@@ -72,41 +79,46 @@ func SelectRecords(db *DB, pair string) []*Record {
         from
             %s
         order
-            by EndTime
+            by StartTime
         limit
             600
     `
 
-	rows, err := db.Query(fmt.Sprintf(stmt, pair))
-	panicOnError(err)
-	defer rows.Close()
+	go func() {
+		defer close(c)
 
-	for rows.Next() {
-		var startTime, endTime int64
-		var exchanger, bidData, askData string
-
-		err = rows.Scan(&startTime, &endTime, &exchanger, &bidData, &askData)
+		rows, err := db.Query(fmt.Sprintf(stmt, pair))
 		panicOnError(err)
+		defer rows.Close()
 
-		var bids []*orderbook.Order
-		err = json.Unmarshal([]byte(bidData), &bids)
-		panicOnError(err)
+		for rows.Next() {
+			var startTime, endTime int64
+			var exchanger, bidData, askData string
 
-		var asks []*orderbook.Order
-		err = json.Unmarshal([]byte(askData), &asks)
-		panicOnError(err)
+			err = rows.Scan(&startTime, &endTime, &exchanger, &bidData, &askData)
+			panicOnError(err)
 
-		records = append(records, &Record{
-			Exchanger: exchanger,
-			StartTime: startTime,
-			StartDate: time.Unix(0, startTime),
-			EndTime:   endTime,
-			EndDate:   time.Unix(0, endTime),
-			Bids:      bids,
-			Asks:      asks,
-		})
-	}
-	return records
+			var bids []*orderbook.Order
+			err = json.Unmarshal([]byte(bidData), &bids)
+			panicOnError(err)
+
+			var asks []*orderbook.Order
+			err = json.Unmarshal([]byte(askData), &asks)
+			panicOnError(err)
+
+			c <- &Record{
+				Exchanger: exchanger,
+				StartTime: startTime,
+				StartDate: time.Unix(0, startTime),
+				EndTime:   endTime,
+				EndDate:   time.Unix(0, endTime),
+				Bids:      bids,
+				Asks:      asks,
+			}
+		}
+	}()
+
+	return c
 }
 
 func panicOnError(err error) {

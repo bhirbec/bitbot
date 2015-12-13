@@ -7,7 +7,12 @@ var Router = function (path) {
         $.get('/bid_ask', function (data) {
             ReactDOM.render(<BidAskTable data={data} />, content);
         });
-    } else {
+    } else if (path == '/opportunity') {
+        $.get('/opportunity', function (data) {
+            ReactDOM.render(<OppTable data={data} />, content);
+        });
+    }
+    else {
         content.innerHTML = 'Page not found.'
     }
 };
@@ -25,6 +30,7 @@ var Tabs = React.createClass({
     render: function () {
         return <ul>
             <li><a href="#/bid_ask">Bid/Ask</a></li>
+            <li><a href="#/opportunity">Opportunities</a></li>
         </ul>
     }
 });
@@ -47,6 +53,37 @@ var BidAskTable = React.createClass({
                     <th>Exchanger</th>
                     <th>Bid</th>
                     <th>Ask</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows}
+            </tbody>
+        </table>
+    }
+});
+
+var OppTable = React.createClass({
+    render: function () {
+        if (this.props.data.length == 0) {
+            return <p>No results.</p>
+        }
+
+        var rows = this.props.data.map(function (r) {
+            return <tr>
+                <td>{r.Date}</td>
+                <td>{r.Spread}%</td>
+                <td>buy {r.BuyExchanger}, {r.Ask.Price} {r.Ask.Volume}</td>
+                <td>Sell {r.SellExchanger}, {r.Bid.Price}, {r.Bid.Volume}</td>
+            </tr>
+        });
+
+        return <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Spread</th>
+                    <th>Buy</th>
+                    <th>Sell</th>
                 </tr>
             </thead>
             <tbody>
