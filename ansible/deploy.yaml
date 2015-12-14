@@ -14,10 +14,18 @@
     - name: go install bitbot/...
       shell: GOPATH={{project_dir}} go install bitbot/...
 
-    - name: Copy upstart.conf
+    - name: Copy record.conf
       template: src=upstart/record.conf dest=/etc/init/record.conf
       sudo: yes
 
     - name: Restart record
       command: service record restart
+      sudo: yes
+
+    - name: Copy web.conf
+      template: src=upstart/web.conf dest=/etc/init/web.conf
+      sudo: yes
+
+    - name: Restart web service
+      command: service web restart
       sudo: yes

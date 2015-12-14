@@ -7,7 +7,8 @@ gcloud compute instances create recorder \
     --maintenance-policy "MIGRATE" \
     --image "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1404-trusty-v20150805" \
     --boot-disk-size "10" \
-    --boot-disk-type "pd-standard";
+    --boot-disk-type "pd-standard" \
+    --tags "http-server" "https-server";
 
 # make sure we can ssh the instance
 while [ "$(gcloud compute ssh recorder --command="echo ok")" != "ok" ]; do

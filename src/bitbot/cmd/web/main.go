@@ -14,7 +14,8 @@ import (
 var db *database.DB
 
 var (
-	dbPath = flag.String("d", "./data/dev.sql", "SQLite database path.")
+	dbPath  = flag.String("d", "./data/dev.sql", "SQLite database path.")
+	address = flag.String("h", "localhost:8080", "host:port TCP informations")
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("client")))
 
 	log.Println("Starting webserver")
-	err := http.ListenAndServe("0.0.0.0:8080", nil)
+	err := http.ListenAndServe(*address, nil)
 	if err != nil {
 		panic(err)
 	}
