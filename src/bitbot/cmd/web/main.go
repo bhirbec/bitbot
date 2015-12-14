@@ -19,6 +19,8 @@ var (
 )
 
 func main() {
+	flag.Parse()
+
 	db = database.Open(*dbPath)
 	defer db.Close()
 
@@ -30,7 +32,7 @@ func main() {
 	// TODO: make static dir a flag or init parameter
 	http.Handle("/", http.FileServer(http.Dir("client")))
 
-	log.Println("Starting webserver")
+	log.Printf("Starting webserver on %s\n", *address)
 	err := http.ListenAndServe(*address, nil)
 	if err != nil {
 		panic(err)
