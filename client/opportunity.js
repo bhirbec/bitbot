@@ -1,5 +1,33 @@
 module.exports = React.createClass({
     render: function () {
+        return <div>
+            <h1>Search for opportunities</h1>
+            <SearchForm />
+            <Table data={this.props.data} />
+        </div>
+    }
+});
+
+// TODO: use the hash to populate the form (or not :)
+var SearchForm = React.createClass({
+    render: function () {
+        return <form onSubmit={this.submit}>
+            <label>Min profit</label>
+            <input id="min_profit" name="min_profit" type="text" size="10" />
+        </form>
+    },
+
+    submit: function (e) {
+        e.preventDefault()
+        // TODO: find a way to remove $('min_profit')
+        var minProfit = $('#min_profit').val()
+        // TODO: use pushState instead?
+        window.location.hash = '/opportunity?min_profit=' + minProfit
+    }
+})
+
+var Table = React.createClass({
+    render: function () {
         if (this.props.data.length == 0) {
             return <p>No results.</p>
         }

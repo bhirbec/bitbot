@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"bitbot/database"
@@ -45,6 +46,16 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
+	minProfitStr := r.FormValue("min_profit")
+	if minProfitStr == "" {
+		minProfitStr = "0"
+	}
+
+	minProfit, err := strconv.ParseFloat(minProfitStr, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	records := map[string]*database.Record{}
 	opps := []map[string]interface{}{}
 
@@ -76,12 +87,13 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 			vol := math.Min(ask.Volume, bid.Volume)
 			spread := bid.Price/ask.Price - 1
 
-			// if spread < 0.02 || vol < 0.1 {
-			// 	continue
-			// }
+			if spread < minProfit {
+				continue
+			}
 
 			const timeFormat = "2006-01-02 15:04:05.000"
 			date := r1.StartDate.Format(timeFormat)
+			// TODO: remove this
 			profit := vol * (bid.Price - ask.Price)
 
 			opp := map[string]interface{}{
