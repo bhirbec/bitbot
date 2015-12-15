@@ -1,5 +1,8 @@
 (function() {
 
+var BidAskTable = require('./bidask.js'),
+    OppTable = require('./opportunity.js');
+
 var Router = function (path) {
     var content = document.getElementById('content');
 
@@ -32,68 +35,6 @@ var Tabs = React.createClass({
             <li><a href="#/bid_ask">Bid/Ask</a></li>
             <li><a href="#/opportunity">Opportunities</a></li>
         </ul>
-    }
-});
-
-var BidAskTable = React.createClass({
-    render: function () {
-        var rows = this.props.data.map(function (r) {
-            return <tr>
-                <td>{r.StartDate}</td>
-                <td>{r.Exchanger}</td>
-                <td>{r.Bids[0].Price}</td>
-                <td>{r.Asks[0].Price}</td>
-            </tr>
-        });
-
-        return <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Exchanger</th>
-                    <th>Bid</th>
-                    <th>Ask</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
-    }
-});
-
-var OppTable = React.createClass({
-    render: function () {
-        if (this.props.data.length == 0) {
-            return <p>No results.</p>
-        }
-
-        var rows = this.props.data.map(function (r) {
-            return <tr>
-                <td>{r.Date}</td>
-                <td>{r.Spread}%</td>
-                <td>{r.BuyExchanger}</td>
-                <td>{r.Ask.Price}</td>
-                <td>{r.Ask.Volume}</td>
-                <td>{r.SellExchanger}</td>
-                <td>{r.Bid.Price}</td>
-                <td>{r.Bid.Volume}</td>
-            </tr>
-        });
-
-        return <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Spread</th>
-                    <th colSpan="3">Buy</th>
-                    <th colSpan="3">Sell</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
     }
 });
 
