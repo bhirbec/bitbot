@@ -72,8 +72,12 @@ var OppTable = React.createClass({
             return <tr>
                 <td>{r.Date}</td>
                 <td>{r.Spread}%</td>
-                <td>buy {r.BuyExchanger}, {r.Ask.Price} {r.Ask.Volume}</td>
-                <td>Sell {r.SellExchanger}, {r.Bid.Price}, {r.Bid.Volume}</td>
+                <td>{r.BuyExchanger}</td>
+                <td>{r.Ask.Price}</td>
+                <td>{r.Ask.Volume}</td>
+                <td>{r.SellExchanger}</td>
+                <td>{r.Bid.Price}</td>
+                <td>{r.Bid.Volume}</td>
             </tr>
         });
 
@@ -82,8 +86,8 @@ var OppTable = React.createClass({
                 <tr>
                     <th>Date</th>
                     <th>Spread</th>
-                    <th>Buy</th>
-                    <th>Sell</th>
+                    <th colSpan="3">Buy</th>
+                    <th colSpan="3">Sell</th>
                 </tr>
             </thead>
             <tbody>
