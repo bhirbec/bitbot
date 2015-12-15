@@ -1,3 +1,4 @@
+# TODO: update to node 4.2
 
 - hosts: all
   sudo: yes
@@ -11,12 +12,24 @@
       with_items:
         - gcc
         - git
+        - build-essential
 
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
 
     - name: Create symlinks to Go binaries
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
+
+    - name: Add Node.js repository key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+
+    - name: Add Node.js repository
+      apt_repository:
+        repo: 'deb https://deb.nodesource.com/node {{ansible_distribution_release}} main'
+
+    - name: Install Node.js
+      apt: pkg=nodejs
 
     - name: Clone repository
       git: repo=git@bitbucket.org:bhirbec/bitbot.git dest=/home/bhirbec/bitbot accept_hostkey=yes

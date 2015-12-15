@@ -30,7 +30,7 @@ func main() {
 	// TODO: cache static files
 	// TODO: make the static dir indepedent of the working directory
 	// TODO: make static dir a flag or init parameter
-	http.Handle("/", http.FileServer(http.Dir("client")))
+	http.Handle("/", http.FileServer(http.Dir("public")))
 
 	log.Printf("Starting webserver on %s\n", *address)
 	err := http.ListenAndServe(*address, nil)

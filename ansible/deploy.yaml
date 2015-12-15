@@ -1,3 +1,4 @@
+# TODO: move go install to makefile
 
 - hosts: all
 
@@ -13,6 +14,9 @@
 
     - name: go install bitbot/...
       shell: GOPATH={{project_dir}} go install bitbot/...
+
+    - name: Bundle javascript
+      shell: make js chdir={{project_dir}}
 
     - name: Copy record.conf
       template: src=upstart/record.conf dest=/etc/init/record.conf
