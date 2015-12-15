@@ -34,14 +34,14 @@ func Open(dbPath string) *DB {
 
 func CreateTable(db *DB, pair string) {
 	const stmt = `
-		create table if not exists %s (
-			StartTime int,
-			EndTime int,
-			Exchanger text,
-			Bids text,
-			Asks text
-		)
-	`
+        create table if not exists %s (
+            StartTime int,
+            EndTime int,
+            Exchanger text,
+            Bids text,
+            Asks text
+        )
+    `
 	_, err := db.Exec(fmt.Sprintf(stmt, pair))
 	panicOnError(err)
 }
@@ -78,8 +78,8 @@ func StreamRecords(db *DB, pair string) chan *Record {
             Asks
         from
             %s
-        order
-            by StartTime
+        order by
+            StartTime desc
         limit
             600
     `
