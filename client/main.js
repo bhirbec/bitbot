@@ -6,7 +6,7 @@ var BidAskTab = require('./bidask.js'),
 var Router = function (path) {
     var content = document.getElementById('content');
 
-    if (path == stringStartsWith(path, '/bid_ask')) {
+    if (stringStartsWith(path, '/bid_ask' )) {
         $.get(path, function (data) {
             ReactDOM.render(<BidAskTab data={data} />, content);
         });
@@ -16,7 +16,7 @@ var Router = function (path) {
         });
     }
     else {
-        content.innerHTML = 'Page not found.'
+        content.innerHTML = 'Page not found...'
     }
 };
 

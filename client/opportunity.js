@@ -11,18 +11,24 @@ module.exports = React.createClass({
 // TODO: use the hash to populate the form (or not :)
 var SearchForm = React.createClass({
     render: function () {
-        return <form onSubmit={this.submit}>
+        return <form onSubmit={this.handleSubmit}>
             <label>Min profit</label>
-            <input id="min_profit" name="min_profit" type="text" size="10" />
+            <input name="min_profit" type="text" size="10" />
+            <label>Limit</label>
+            <input name="limit" type='text' size="10" />
+            {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
+            I don't understand why... */}
+            <input type="submit" value="send" />
         </form>
     },
 
-    submit: function (e) {
+    handleSubmit: function (e) {
         e.preventDefault()
-        // TODO: find a way to remove $('min_profit')
-        var minProfit = $('#min_profit').val()
+        var form = e.target;
+        var minProfit = form.min_profit.value;
+        var limit = form.limit.value;
         // TODO: use pushState instead?
-        window.location.hash = '/opportunity?min_profit=' + minProfit
+        window.location.hash = '/opportunity?min_profit=' + minProfit + '&limit=' + limit;
     }
 })
 
