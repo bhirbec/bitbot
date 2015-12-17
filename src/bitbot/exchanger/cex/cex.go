@@ -11,13 +11,14 @@ const (
 	ExchangerName = "Cex"
 )
 
-var pairs = map[string]string{
+var Pairs = map[string]string{
+	"BTC_EUR": "BTC/EUR",
 	"BTC_USD": "BTC/USD",
 	"LTC_BTC": "LTC/BTC",
 }
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
-	pair = pairs[pair]
+	pair = Pairs[pair]
 	url := fmt.Sprintf("%sorder_book/%s", APIURL, pair)
 
 	var result struct {

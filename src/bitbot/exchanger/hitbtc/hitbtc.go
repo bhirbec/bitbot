@@ -31,14 +31,15 @@ var (
 	apiSecret = config.String("hitbtc", "api_secret")
 )
 
-var pairs = map[string]string{
+var Pairs = map[string]string{
+	"BTC_EUR": "BTCEUR",
 	"BTC_USD": "BTCUSD",
 	"LTC_BTC": "LTCBTC",
 	"LTC_USD": "LTCUSD",
 }
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
-	pair = pairs[pair]
+	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, pair)
 
 	var result struct {

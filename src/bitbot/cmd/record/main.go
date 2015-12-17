@@ -18,12 +18,26 @@ import (
 var (
 	dbPath      = flag.String("d", "./data/dev.sql", "SQLite database path.")
 	periodicity = flag.Int64("t", 5, "Periodicity expressed in seconds.")
-	pair        = flag.String("p", "BTC_USD", "Exchanger pair.")
 )
 
 type exchanger struct {
-	name string
-	f    func(string) (*orderbook.OrderBook, error)
+	name  string
+	pairs map[string]string
+	f     func(string) (*orderbook.OrderBook, error)
+}
+
+var exchangers = []*exchanger{
+	&exchanger{"hitbtc", hitbtc.Pairs, hitbtc.OrderBook},
+	&exchanger{"bitfinex", bitfinex.Pairs, bitfinex.OrderBook},
+	&exchanger{"btce", btce.Pairs, btce.OrderBook},
+	&exchanger{"kraken", kraken.Pairs, kraken.OrderBook},
+	&exchanger{"cex", cex.Pairs, cex.OrderBook},
+}
+
+var pairs = []string{
+	"BTC_USD",
+	"BTC_EUR",
+	"LTC_BTC",
 }
 
 func main() {
@@ -33,19 +47,17 @@ func main() {
 	db := database.Open(*dbPath)
 	defer db.Close()
 
-	exchangers := []*exchanger{
-		&exchanger{"hitbtc", hitbtc.OrderBook},
-		&exchanger{"bitfinex", bitfinex.OrderBook},
-		&exchanger{"btce", btce.OrderBook},
-		&exchanger{"kraken", kraken.OrderBook},
-		&exchanger{"cex", cex.OrderBook},
+	for _, pair := range pairs {
+		database.CreateTable(db, pair)
 	}
-
-	database.CreateTable(db, *pair)
 
 	for {
 		for _, e := range exchangers {
-			go work(db, e, *pair)
+			for _, pair := range pairs {
+				if _, ok := e.pairs[pair]; ok {
+					go work(db, e, pair)
+				}
+			}
 		}
 
 		time.Sleep(time.Duration(*periodicity) * time.Second)
