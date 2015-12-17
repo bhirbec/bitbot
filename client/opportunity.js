@@ -2,20 +2,19 @@ module.exports = React.createClass({
     render: function () {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm />
+            <SearchForm params={this.props.params} />
             <Table data={this.props.data} />
         </div>
     }
 });
 
-// TODO: use the hash to populate the form (or not :)
 var SearchForm = React.createClass({
     render: function () {
         return <form onSubmit={this.handleSubmit}>
             <label>Min profit</label>
-            <input name="min_profit" type="text" size="10" />
+            <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
             <label>Limit</label>
-            <input name="limit" type='text' size="10" />
+            <input name="limit" type='text' size="10" defaultValue={this.props.params.limit} />
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
             I don't understand why... */}
             <input type="submit" value="send" />

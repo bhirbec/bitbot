@@ -1,18 +1,21 @@
 (function() {
 
+var urllib = require('url');
+
 var BidAskTab = require('./bidask.js'),
     OpportunityTab = require('./opportunity.js');
 
-var Router = function (path) {
+var Router = function (url) {
     var content = document.getElementById('content');
+    var route = urllib.parse(url, true);
 
-    if (stringStartsWith(path, '/bid_ask' )) {
-        $.get(path, function (data) {
+    if (route.pathname == '/bid_ask') {
+        $.get(url, function (data) {
             ReactDOM.render(<BidAskTab data={data} />, content);
         });
-    } else if (stringStartsWith(path, '/opportunity')) {
-        $.get(path, function (data) {
-            ReactDOM.render(<OpportunityTab data={data} />, content);
+    } else if (route.pathname == '/opportunity') {
+        $.get(url, function (data) {
+            ReactDOM.render(<OpportunityTab data={data} params={route.query} />, content);
         });
     }
     else {
@@ -37,10 +40,6 @@ var Tabs = React.createClass({
         </ul>
     }
 });
-
-function stringStartsWith(string, prefix) {
-    return string.slice(0, prefix.length) == prefix;
-}
 
 var getLocationHash = function () {
     var hash = window.location.hash;
