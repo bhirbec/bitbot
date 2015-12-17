@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"bitbot/database"
@@ -28,14 +29,23 @@ var (
 	address = flag.String("h", "localhost:8080", "host:port TCP informations")
 )
 
+var pairs = map[string]bool{
+	"BTC_USD": true,
+	"BTC_EUR": true,
+	"LTC_BTC": true,
+}
+
 func main() {
 	flag.Parse()
 
 	db = database.Open(*dbPath)
 	defer db.Close()
 
-	http.HandleFunc("/bid_ask", BidAskHandler)
-	http.HandleFunc("/opportunity", OpportunityHandler)
+	for pair, _ := range pairs {
+		http.HandleFunc("/bid_ask/"+pair, BidAskHandler)
+		http.HandleFunc("/opportunity/"+pair, OpportunityHandler)
+	}
+
 	http.Handle("/", http.FileServer(http.Dir(staticDir)))
 
 	log.Printf("Starting webserver on %s\n", *address)
@@ -46,12 +56,24 @@ func main() {
 }
 
 func BidAskHandler(w http.ResponseWriter, r *http.Request) {
-	records := database.SelectRecords(db, "BTC_USD", 100)
+	pair := parsePairFromURI(r.URL.Path)
+	if _, ok := pairs[pair]; !ok {
+		http.Error(w, "Page Not Found", http.StatusNotFound)
+		return
+	}
+
+	records := database.SelectRecords(db, pair, 100)
 	JSONResponse(w, records)
 }
 
 // TODO: default value for minProfitStr and limit are not correct
 func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
+	pair := parsePairFromURI(r.URL.Path)
+	if _, ok := pairs[pair]; !ok {
+		http.Error(w, "Page Not Found", http.StatusNotFound)
+		return
+	}
+
 	minProfitStr := r.FormValue("min_profit")
 	if minProfitStr == "" {
 		minProfitStr = "0"
@@ -64,11 +86,14 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 
 	limitParam := r.FormValue("limit")
 	limit, _ := strconv.ParseInt(limitParam, 10, 64)
+	if limit == 0 {
+		limit = 1000
+	}
 
 	records := map[string]*database.Record{}
 	opps := []map[string]interface{}{}
 
-	for r1 := range database.StreamRecords(db, "BTC_USD", limit) {
+	for r1 := range database.StreamRecords(db, pair, limit) {
 		records[r1.Exchanger] = r1
 
 		for ex, r2 := range records {
@@ -115,6 +140,10 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	JSONResponse(w, opps)
+}
+
+func parsePairFromURI(path string) string {
+	return strings.Split(path, "/")[2]
 }
 
 func JSONResponse(w http.ResponseWriter, input interface{}) {

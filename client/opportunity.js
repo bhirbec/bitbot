@@ -2,7 +2,7 @@ module.exports = React.createClass({
     render: function () {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm params={this.props.params} />
+            <SearchForm uri={this.props.uri} params={this.props.params} />
             <Table data={this.props.data} />
         </div>
     }
@@ -27,7 +27,7 @@ var SearchForm = React.createClass({
         var minProfit = form.min_profit.value;
         var limit = form.limit.value;
         // TODO: use pushState instead?
-        window.location.hash = '/opportunity?min_profit=' + minProfit + '&limit=' + limit;
+        window.location.hash = this.props.uri + '?min_profit=' + minProfit + '&limit=' + limit;
     }
 })
 

@@ -9,13 +9,14 @@ var Router = function (url) {
     var content = document.getElementById('content');
     var route = urllib.parse(url, true);
 
-    if (route.pathname == '/bid_ask') {
+    // TODO: don't pass route.pathname. Component should able to modify the has without it.
+    if (stringStartsWith(route.pathname , '/bid_ask')) {
         $.get(url, function (data) {
-            ReactDOM.render(<BidAskTab data={data} />, content);
+            ReactDOM.render(<BidAskTab uri={route.pathname} data={data} />, content);
         });
-    } else if (route.pathname == '/opportunity') {
+    } else if (stringStartsWith(route.pathname, '/opportunity')) {
         $.get(url, function (data) {
-            ReactDOM.render(<OpportunityTab data={data} params={route.query} />, content);
+            ReactDOM.render(<OpportunityTab uri={route.pathname} data={data} params={route.query} />, content);
         });
     }
     else {
@@ -32,14 +33,23 @@ var App = React.createClass({
     }
 });
 
+// TODO: define list of pairs
 var Tabs = React.createClass({
     render: function () {
         return <ul>
-            <li><a href="#/bid_ask">Bid/Ask</a></li>
-            <li><a href="#/opportunity">Opportunities</a></li>
+            <li><a href="#/bid_ask/BTC_USD">Bid/Ask BTC_USD</a></li>
+            <li><a href="#/bid_ask/BTC_EUR">Bid/Ask BTC_EUR</a></li>
+            <li><a href="#/bid_ask/LTC_BTC">Bid/Ask LTC_BTC</a></li>
+            <li><a href="#/opportunity/BTC_USD">Opportunities BTC_USD</a></li>
+            <li><a href="#/opportunity/BTC_EUR">Opportunities BTC_EUR</a></li>
+            <li><a href="#/opportunity/LTC_BTC">Opportunities LTC_BTC</a></li>
         </ul>
     }
 });
+
+function stringStartsWith(string, prefix) {
+    return string.slice(0, prefix.length) == prefix;
+}
 
 var getLocationHash = function () {
     var hash = window.location.hash;
@@ -55,7 +65,7 @@ var init = function () {
 
     var hash = getLocationHash();
     if (hash == "") {
-        window.location.hash = '/bid_ask';
+        window.location.hash = '/bid_ask/BTC_USD';
     } else {
         Router(hash);
     }
