@@ -12,11 +12,8 @@
     - name: Checkout Master branch
       shell: git reset --hard origin/master chdir={{project_dir}}
 
-    - name: go install bitbot/...
-      shell: GOPATH={{project_dir}} go install bitbot/...
-
-    - name: Bundle javascript
-      shell: make js chdir={{project_dir}}
+    - name: Run make
+      shell: make chdir={{project_dir}}
 
     - name: Copy record.conf
       template: src=upstart/record.conf dest=/etc/init/record.conf

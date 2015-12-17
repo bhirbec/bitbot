@@ -1,8 +1,13 @@
 SHELL=/bin/bash
 
-.PHONY: all js
+export GOPATH := $(CURDIR)
 
-all: js
+.PHONY: all js go
+
+all: js go
+
+go:
+	go install -v bitbot/cmd/...
 
 js: public/build/main.js
 
