@@ -98,23 +98,18 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			date := r1.StartDate.Format(timeFormat)
-			// TODO: remove this
-			profit := vol * (bid.Price - ask.Price)
-
 			opp := map[string]interface{}{
-				"Date":          date,
+				"Date":          r1.StartDate.Format(timeFormat),
 				"Ask":           ask,
 				"BuyExchanger":  buy.Exchanger,
 				"Bid":           bid,
 				"SellExchanger": sell.Exchanger,
-				"Profit":        profit,
+				"Profit":        vol * (bid.Price - ask.Price),
 				"Spread":        100 * spread,
 			}
 
 			opps = append(opps, opp)
 		}
-		// fmt.Printf("%s | %6.2f%% %6.2f$ | buy %-10s %6.2f %6.2f | sell %-10s %6.2f %6.2f\n", date, 100*spread, pAndl, buy.Exchanger, ask.Price, ask.Volume, sell.Exchanger, bid.Price, bid.Volume)
 	}
 
 	JSONResponse(w, opps)
