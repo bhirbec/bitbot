@@ -12,7 +12,10 @@ import (
 	"bitbot/database"
 )
 
-const staticDir = "public"
+const (
+	staticDir  = "public"
+	timeFormat = "2006-01-02 15:04:05"
+)
 
 var db *database.DB
 
@@ -95,7 +98,6 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			const timeFormat = "2006-01-02 15:04:05.000"
 			date := r1.StartDate.Format(timeFormat)
 			// TODO: remove this
 			profit := vol * (bid.Price - ask.Price)
