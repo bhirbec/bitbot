@@ -12,6 +12,10 @@ import (
 	"bitbot/database"
 )
 
+// TODO: HTTP handler are not panic safe
+// TODO: cache static files
+// TODO: make the static dir indepedent of the working directory
+
 const (
 	staticDir  = "public"
 	timeFormat = "2006-01-02 15:04:05"
@@ -32,9 +36,6 @@ func main() {
 
 	http.HandleFunc("/bid_ask", BidAskHandler)
 	http.HandleFunc("/opportunity", OpportunityHandler)
-
-	// TODO: cache static files
-	// TODO: make the static dir indepedent of the working directory
 	http.Handle("/", http.FileServer(http.Dir(staticDir)))
 
 	log.Printf("Starting webserver on %s\n", *address)
