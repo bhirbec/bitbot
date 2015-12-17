@@ -50,6 +50,7 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(w, records)
 }
 
+// TODO: default value for minProfitStr and limit are not correct
 func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	minProfitStr := r.FormValue("min_profit")
 	if minProfitStr == "" {
