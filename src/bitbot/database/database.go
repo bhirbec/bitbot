@@ -58,15 +58,15 @@ func SaveRecord(db *DB, pair string, r *Record) {
 	panicOnError(err)
 }
 
-func SelectRecords(db *DB, pair string) []*Record {
+func SelectRecords(db *DB, pair string, limit int64) []*Record {
 	records := []*Record{}
-	for r := range StreamRecords(db, pair) {
+	for r := range StreamRecords(db, pair, limit) {
 		records = append(records, r)
 	}
 	return records
 }
 
-func StreamRecords(db *DB, pair string) chan *Record {
+func StreamRecords(db *DB, pair string, limit int64) chan *Record {
 	c := make(chan *Record)
 
 	const stmt = `
@@ -81,13 +81,14 @@ func StreamRecords(db *DB, pair string) chan *Record {
         order by
             StartTime desc
         limit
-            600
+            ?
     `
 
 	go func() {
 		defer close(c)
 
-		rows, err := db.Query(fmt.Sprintf(stmt, pair))
+		params := []interface{}{limit}
+		rows, err := db.Query(fmt.Sprintf(stmt, pair), params...)
 		panicOnError(err)
 		defer rows.Close()
 

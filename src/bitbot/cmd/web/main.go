@@ -41,7 +41,7 @@ func main() {
 }
 
 func BidAskHandler(w http.ResponseWriter, r *http.Request) {
-	records := database.SelectRecords(db, "BTC_USD")
+	records := database.SelectRecords(db, "BTC_USD", 100)
 	JSONResponse(w, records)
 }
 
@@ -56,10 +56,13 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	limitParam := r.FormValue("limit")
+	limit, _ := strconv.ParseInt(limitParam, 10, 64)
+
 	records := map[string]*database.Record{}
 	opps := []map[string]interface{}{}
 
-	for r1 := range database.StreamRecords(db, "BTC_USD") {
+	for r1 := range database.StreamRecords(db, "BTC_USD", limit) {
 		records[r1.Exchanger] = r1
 
 		for ex, r2 := range records {
