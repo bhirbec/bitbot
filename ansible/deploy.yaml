@@ -1,5 +1,3 @@
-# TODO: move go install to makefile
-
 - hosts: all
 
   vars:
