@@ -1,1 +1,1 @@
-recorder.us-central1-b.the-bitbot-project ansible_ssh_user=bhirbec
+bitbot-1.us-central1-b.the-bitbot-project ansible_ssh_user=bhirbec

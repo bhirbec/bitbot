@@ -1,7 +1,12 @@
+GCE
+===
 
+Create a VM instance and disk
+-----------------------------
+$ ./ansible/setup.sh
 
 Deployment
-==========
+----------
 
 - Install Ansible
 $ git clone git://github.com/ansible/ansible.git --recursive

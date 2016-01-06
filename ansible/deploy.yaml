@@ -2,6 +2,7 @@
 
   vars:
     project_dir: /home/bhirbec/bitbot
+    disk_dir: /media/bitbot-data
 
   tasks:
     - name: Fetch repository

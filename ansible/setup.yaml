@@ -16,9 +16,11 @@
 
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
+      # [WARNING]: Consider using get_url module rather than running curl
 
     - name: Create symlinks to Go binaries
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
+      # [WARNING]: Consider using file module with state=link rather than running ln
 
     - name: Add Node.js repository key
       apt_key:
