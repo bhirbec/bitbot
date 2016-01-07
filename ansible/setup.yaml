@@ -5,6 +5,8 @@
 
   vars:
     go_version: 1.4.1
+    mysql_root_pwd: password
+    mysql_bitbot_pwd: password
 
   tasks:
     - name: Download APT packages
@@ -13,6 +15,7 @@
         - gcc
         - git
         - build-essential
+        - curl
 
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
@@ -22,6 +25,7 @@
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
       # [WARNING]: Consider using file module with state=link rather than running ln
 
+    # Node.js install
     - name: Add Node.js repository key
       apt_key:
         url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
@@ -33,7 +37,24 @@
     - name: Install Node.js
       apt: pkg=nodejs
 
-    - name: Clone repository
-      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest=/home/bhirbec/bitbot accept_hostkey=yes
-      sudo: no
+    # MySQL 5.7 install (http://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-installing)
+    - name: Add APT key for mysql 5.7
+      apt_key:
+        data: "{{ lookup('file', 'mysql/apt.key') }}"
 
+    - name: Copy mysql.list
+      copy: src=mysql/mysql.list dest=/etc/apt/sources.list.d/mysql.list
+
+    - name: Setup MySQL password
+      shell: |
+        debconf-set-selections <<< 'mysql-server mysql-server/root_password password {{ mysql_root_pwd }}'
+        debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {{ mysql_root_pwd }}'
+      args:
+        executable: /bin/bash
+
+    - name: Install MySQL packages
+      apt: name=mysql-server update_cache=true
+
+    # NOTE: "if not exists" doesn't seem to work
+    - name: Create MySQL user
+      shell: mysql -u root -e "create user if not exists 'bitbot' identified by '{{ mysql_bitbot_pwd }}'"

@@ -1,4 +1,5 @@
 *.sublime-workspace
+.vagrant
 /data
 /pkg
 /bin
