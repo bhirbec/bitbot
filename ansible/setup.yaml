@@ -9,6 +9,9 @@
     mysql_root_pwd: password
     mysql_user: bitbot
     mysql_user_pwd: password
+    disk_mount: /media/bitbot-data
+    mysql_data_dir: "{{ disk_mount }}/mysql"
+    mysql_log_dir: "{{ disk_mount }}/mysql/log"
 
   tasks:
     - name: Download APT packages
@@ -56,6 +59,27 @@
 
     - name: Install MySQL packages
       apt: name=mysql-server update_cache=true
+
+    - name: Stop MySQL
+      shell: service mysql stop
+
+    - name: Make MySQL directories
+      file: path={{ item }} state=directory owner=mysql
+      with_items:
+        - "{{ mysql_data_dir }}"
+        - "{{ mysql_log_dir }}"
+
+    - name: Copy Mysql data
+      shell: rsync -apv /var/lib/mysql/ {{ mysql_data_dir }}
+
+    - name: Copy MySQL config
+      template: src=mysql/my.cnf dest=/etc/mysql/conf.d/my.cnf
+
+    - name: Copy AppArmor config
+      template: src=mysql/usr.sbin.mysqld dest=/etc/apparmor.d/usr.sbin.mysqld
+
+    - name: Start MySQL
+      shell: service mysql start
 
     - name: Setup database
       shell: |
