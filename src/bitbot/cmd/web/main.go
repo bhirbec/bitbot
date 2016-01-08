@@ -25,8 +25,13 @@ const (
 var db *database.DB
 
 var (
-	dbPath  = flag.String("d", "./data/dev.sql", "SQLite database path.")
-	address = flag.String("h", "localhost:8080", "host:port TCP informations")
+	// TODO: factorize db related flags
+	dbName  = flag.String("d", "bitbot", "MySQL database.")
+	dbHost  = flag.String("h", "localhost", "MySQL host.")
+	dbPort  = flag.String("p", "3306", "MySQL port.")
+	dbUser  = flag.String("u", "bitbot", "MySQL user.")
+	dbPwd   = flag.String("w", "password", "MySQL user's password.")
+	address = flag.String("b", "localhost:8080", "host:port TCP informations")
 )
 
 var pairs = map[string]bool{
@@ -38,7 +43,7 @@ var pairs = map[string]bool{
 func main() {
 	flag.Parse()
 
-	db = database.Open(*dbPath)
+	db = database.Open(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
 	defer db.Close()
 
 	for pair, _ := range pairs {
@@ -93,7 +98,7 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	records := map[string]*database.Record{}
 	opps := []map[string]interface{}{}
 
-	for r1 := range database.StreamRecords(db, pair, limit) {
+	for _, r1 := range database.SelectRecords(db, pair, limit) {
 		records[r1.Exchanger] = r1
 
 		for ex, r2 := range records {
@@ -110,8 +115,6 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 
 			if r1.Asks[0].Price < r2.Bids[0].Price {
 				buy, sell = r1, r2
-			} else if r2.Asks[0].Price < r1.Bids[0].Price {
-				buy, sell = r2, r1
 			} else {
 				continue
 			}
