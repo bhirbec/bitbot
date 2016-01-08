@@ -37,12 +37,12 @@ var App = React.createClass({
 var Tabs = React.createClass({
     render: function () {
         return <ul>
-            <li><a href="#/bid_ask/BTC_USD">Bid/Ask BTC_USD</a></li>
-            <li><a href="#/bid_ask/BTC_EUR">Bid/Ask BTC_EUR</a></li>
-            <li><a href="#/bid_ask/LTC_BTC">Bid/Ask LTC_BTC</a></li>
-            <li><a href="#/opportunity/BTC_USD">Opportunities BTC_USD</a></li>
-            <li><a href="#/opportunity/BTC_EUR">Opportunities BTC_EUR</a></li>
-            <li><a href="#/opportunity/LTC_BTC">Opportunities LTC_BTC</a></li>
+            <li><a href="#/bid_ask/btc_usd">Bid/Ask BTC_USD</a></li>
+            <li><a href="#/bid_ask/btc_eur">Bid/Ask BTC_EUR</a></li>
+            <li><a href="#/bid_ask/ltc_btc">Bid/Ask LTC_BTC</a></li>
+            <li><a href="#/opportunity/btc_usd">Opportunities BTC_USD</a></li>
+            <li><a href="#/opportunity/btc_eur">Opportunities BTC_EUR</a></li>
+            <li><a href="#/opportunity/ltc_btc">Opportunities LTC_BTC</a></li>
         </ul>
     }
 });
@@ -65,7 +65,7 @@ var init = function () {
 
     var hash = getLocationHash();
     if (hash == "") {
-        window.location.hash = '/bid_ask/BTC_USD';
+        window.location.hash = '/bid_ask/btc_usd';
     } else {
         Router(hash);
     }

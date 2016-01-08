@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -44,7 +43,6 @@ func SaveRecord(db *DB, pair string, start time.Time, obs map[string]*orderbook.
 
 	const stmt = "insert into %s (ts, orderbooks) values (?, ?)"
 	ts := start.Format(timeFormat)
-	pair = strings.ToLower(pair)
 	_, err = db.Exec(fmt.Sprintf(stmt, pair), ts, obsJSON)
 	panicOnError(err)
 }
@@ -64,8 +62,6 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
     `
 
 	records := []*Record{}
-	// TODO: think about the lowercase for pair
-	pair = strings.ToLower(pair)
 	rows, err := db.Query(fmt.Sprintf(stmt, pair, limit))
 	panicOnError(err)
 

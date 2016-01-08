@@ -40,9 +40,9 @@ var exchangers = []*exchanger{
 }
 
 var pairs = []string{
-	"BTC_USD",
-	"BTC_EUR",
-	"LTC_BTC",
+	"btc_usd",
+	"btc_eur",
+	"ltc_btc",
 }
 
 func main() {

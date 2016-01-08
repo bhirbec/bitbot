@@ -35,9 +35,9 @@ var (
 )
 
 var pairs = map[string]bool{
-	"BTC_USD": true,
-	"BTC_EUR": true,
-	"LTC_BTC": true,
+	"btc_usd": true,
+	"btc_eur": true,
+	"ltc_btc": true,
 }
 
 func main() {

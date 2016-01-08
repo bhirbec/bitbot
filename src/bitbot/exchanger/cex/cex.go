@@ -12,9 +12,9 @@ const (
 )
 
 var Pairs = map[string]string{
-	"BTC_EUR": "BTC/EUR",
-	"BTC_USD": "BTC/USD",
-	"LTC_BTC": "LTC/BTC",
+	"btc_eur": "BTC/EUR",
+	"btc_usd": "BTC/USD",
+	"ltc_btc": "LTC/BTC",
 }
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
