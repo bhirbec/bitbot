@@ -57,12 +57,10 @@
     - name: Install MySQL packages
       apt: name=mysql-server update_cache=true
 
-    - name: Create database
-      shell: mysql -u root -e "create database if not exists {{ mysql_db }}"
-
-    # NOTE: "if not exists" doesn't seem to work
-    - name: Create MySQL user
-      shell: mysql -u root -e "create user if not exists '{{ mysql_user }}' identified by '{{ mysql_user_pwd }}'"
-
-    - name: Create MySQL user
-      shell: mysql -u root -e "grant all privileges on {{ mysql_db }} . * to {{ mysql_user }}"
+    - name: Setup database
+      shell: |
+        mysql -u root -e "
+          create database if not exists {{ mysql_db }};
+          create user if not exists '{{ mysql_user }}' identified by '{{ mysql_user_pwd }}';
+          grant all privileges on {{ mysql_db }} . * to {{ mysql_user }};
+        "
