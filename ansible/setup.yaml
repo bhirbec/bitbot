@@ -63,6 +63,7 @@
     - name: Stop MySQL
       shell: service mysql stop
 
+    # TODO: this broke the first time I ran it :/
     - name: Make MySQL directories
       file: path={{ item }} state=directory owner=mysql
       with_items:
