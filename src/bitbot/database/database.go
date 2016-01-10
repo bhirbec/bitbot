@@ -18,16 +18,9 @@ type DB struct {
 	*sql.DB
 }
 
-// TODO: factorize this type with Orderbook type?
-// TODO: should only expose StartDate and EndDate (not StartTime and EndTime)
 type Record struct {
-	Exchanger string
-	StartTime int64
-	StartDate time.Time
-	EndTime   int64
-	EndDate   time.Time
-	Bids      []*orderbook.Order
-	Asks      []*orderbook.Order
+	StartDate  time.Time
+	Orderbooks map[string]*orderbook.OrderBook
 }
 
 func Open(name, host, port, user, pwd string) *DB {
@@ -79,14 +72,10 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
 		err = json.Unmarshal(jsonData, &obs)
 		panicOnError(err)
 
-		for ex, ob := range obs {
-			records = append(records, &Record{
-				Exchanger: ex,
-				StartDate: startDate,
-				Bids:      ob.Bids,
-				Asks:      ob.Asks,
-			})
-		}
+		records = append(records, &Record{
+			StartDate:  startDate,
+			Orderbooks: obs,
+		})
 	}
 
 	return records

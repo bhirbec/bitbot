@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"bitbot/database"
 )
@@ -67,8 +66,20 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	records := database.SelectRecords(db, pair, 100)
-	JSONResponse(w, records)
+	rows := []interface{}{}
+
+	for _, rec := range database.SelectRecords(db, pair, 100) {
+		for ex, ob := range rec.Orderbooks {
+			rows = append(rows, map[string]interface{}{
+				"Exchanger": ex,
+				"StartDate": rec.StartDate,
+				"Bids":      ob.Bids,
+				"Asks":      ob.Asks,
+			})
+		}
+	}
+
+	JSONResponse(w, rows)
 }
 
 // TODO: default value for minProfitStr and limit are not correct
@@ -95,50 +106,40 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
-	records := map[string]*database.Record{}
 	opps := []map[string]interface{}{}
 
-	for _, r1 := range database.SelectRecords(db, pair, limit) {
-		records[r1.Exchanger] = r1
+	for _, rec := range database.SelectRecords(db, pair, limit) {
+		for ex1, buy := range rec.Orderbooks {
+			for ex2, sell := range rec.Orderbooks {
+				if ex1 == ex2 {
+					continue
+				}
 
-		for ex, r2 := range records {
-			if ex == r1.Exchanger {
-				continue
+				if buy.Asks[0].Price >= sell.Bids[0].Price {
+					continue
+				}
+
+				ask := buy.Asks[0]
+				bid := sell.Bids[0]
+				vol := math.Min(ask.Volume, bid.Volume)
+				spread := bid.Price/ask.Price - 1
+
+				if spread < minProfit {
+					continue
+				}
+
+				opp := map[string]interface{}{
+					"Date":          rec.StartDate.Format(timeFormat),
+					"Ask":           ask,
+					"BuyExchanger":  buy.Exchanger,
+					"Bid":           bid,
+					"SellExchanger": sell.Exchanger,
+					"Profit":        vol * (bid.Price - ask.Price),
+					"Spread":        100 * spread,
+				}
+
+				opps = append(opps, opp)
 			}
-
-			// skip record that are not on the same time range
-			if r1.StartDate.Sub(r2.StartDate) > time.Duration(1*time.Second) {
-				continue
-			}
-
-			var buy, sell *database.Record
-
-			if r1.Asks[0].Price < r2.Bids[0].Price {
-				buy, sell = r1, r2
-			} else {
-				continue
-			}
-
-			ask := buy.Asks[0]
-			bid := sell.Bids[0]
-			vol := math.Min(ask.Volume, bid.Volume)
-			spread := bid.Price/ask.Price - 1
-
-			if spread < minProfit {
-				continue
-			}
-
-			opp := map[string]interface{}{
-				"Date":          r1.StartDate.Format(timeFormat),
-				"Ask":           ask,
-				"BuyExchanger":  buy.Exchanger,
-				"Bid":           bid,
-				"SellExchanger": sell.Exchanger,
-				"Profit":        vol * (bid.Price - ask.Price),
-				"Spread":        100 * spread,
-			}
-
-			opps = append(opps, opp)
 		}
 	}
 
