@@ -15,6 +15,7 @@ const (
 
 var Pairs = map[string]string{
 	"btc_usd": "BTCUSD",
+	"ltc_usd": "LTCUSD",
 	"ltc_btc": "LTCBTC",
 }
 
