@@ -16,6 +16,11 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
+// NOTE: use Ticker endpoint to retrieve bid/ask info for several pairs at the same time?
+// - https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD,XXBTZEUR,XXBTXLTC
+// - https://cex.io/api/tickers/BTC/BTC/USD/EUR
+// - https://api.hitbtc.com/api/1/public/ticker
+
 var (
 	dbName      = flag.String("d", "bitbot", "MySQL database.")
 	dbHost      = flag.String("h", "localhost", "MySQL host.")
