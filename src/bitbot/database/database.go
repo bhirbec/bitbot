@@ -60,7 +60,6 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
 
 	var ts string
 	var jsonData []byte
-	var obs map[string]*orderbook.OrderBook
 
 	for rows.Next() {
 		err = rows.Scan(&ts, &jsonData)
@@ -69,6 +68,7 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
 		startDate, err := time.Parse(timeFormat, ts)
 		panicOnError(err)
 
+		var obs map[string]*orderbook.OrderBook
 		err = json.Unmarshal(jsonData, &obs)
 		panicOnError(err)
 
