@@ -41,11 +41,16 @@ func SaveRecord(db *DB, pair string, start time.Time, obs map[string]*orderbook.
 }
 
 func SelectRecords(db *DB, pair string, limit int64) []*Record {
-	// TODO: exchanger must be a parameter
-	const stmt = `
+	stmt := `
         select
             ts,
-            orderbooks
+            json_object(
+                "Exchangers", orderbooks->"$.*.Exchanger",
+                "BidPrices",  orderbooks->"$.*.Bids[0].Price",
+                "BidVolumes", orderbooks->"$.*.Bids[0].Volume",
+                "AskPrices",  orderbooks->"$.*.Asks[0].Price",
+                "AskVolumes", orderbooks->"$.*.Asks[0].Volume"
+            )
         from
             %s
         order by
@@ -53,7 +58,7 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
         limit
             %d
     `
-
+	fmt.Println(stmt)
 	records := []*Record{}
 	rows, err := db.Query(fmt.Sprintf(stmt, pair, limit))
 	panicOnError(err)
@@ -68,9 +73,30 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
 		startDate, err := time.Parse(timeFormat, ts)
 		panicOnError(err)
 
-		var obs map[string]*orderbook.OrderBook
-		err = json.Unmarshal(jsonData, &obs)
+		var dest struct {
+			Exchangers []string
+			BidPrices  []float64
+			BidVolumes []float64
+			AskPrices  []float64
+			AskVolumes []float64
+		}
+		err = json.Unmarshal(jsonData, &dest)
 		panicOnError(err)
+
+		obs := map[string]*orderbook.OrderBook{}
+
+		// TODO: try to simplify/remove this
+		for i, ex := range dest.Exchangers {
+			obs[ex] = &orderbook.OrderBook{
+				Exchanger: ex,
+				Bids: []*orderbook.Order{
+					&orderbook.Order{dest.BidPrices[i], dest.BidVolumes[i], 0},
+				},
+				Asks: []*orderbook.Order{
+					&orderbook.Order{dest.AskPrices[i], dest.AskVolumes[i], 0},
+				},
+			}
+		}
 
 		records = append(records, &Record{
 			StartDate:  startDate,
