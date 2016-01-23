@@ -13,7 +13,7 @@ gcloud compute instances create bitbot-1 \
     --image "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1404-trusty-v20150805" \
     --boot-disk-size "10" \
     --boot-disk-type "pd-standard" \
-    --disk name=bitbot-data \
+    --disk name="bitbot-data",device-name="bitbot-data" \
     --tags "http-server,https-server";
 
 # make sure we can ssh the instance
