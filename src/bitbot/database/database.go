@@ -45,11 +45,9 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
         select
             ts,
             json_object(
-                "Exchangers", orderbooks->"$.*.Exchanger",
-                "BidPrices",  orderbooks->"$.*.Bids[0].Price",
-                "BidVolumes", orderbooks->"$.*.Bids[0].Volume",
-                "AskPrices",  orderbooks->"$.*.Asks[0].Price",
-                "AskVolumes", orderbooks->"$.*.Asks[0].Volume"
+                "Exchangers", orderbooks->'$.*.Exchanger',
+                "Bids", orderbooks->'$.*.Bids[0]',
+                "Asks", orderbooks->'$.*.Asks[0]'
             )
         from
             %s
@@ -58,7 +56,6 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
         limit
             %d
     `
-	fmt.Println(stmt)
 	records := []*Record{}
 	rows, err := db.Query(fmt.Sprintf(stmt, pair, limit))
 	panicOnError(err)
@@ -75,26 +72,19 @@ func SelectRecords(db *DB, pair string, limit int64) []*Record {
 
 		var dest struct {
 			Exchangers []string
-			BidPrices  []float64
-			BidVolumes []float64
-			AskPrices  []float64
-			AskVolumes []float64
+			Bids       []*orderbook.Order
+			Asks       []*orderbook.Order
 		}
 		err = json.Unmarshal(jsonData, &dest)
 		panicOnError(err)
 
 		obs := map[string]*orderbook.OrderBook{}
 
-		// TODO: try to simplify/remove this
 		for i, ex := range dest.Exchangers {
 			obs[ex] = &orderbook.OrderBook{
 				Exchanger: ex,
-				Bids: []*orderbook.Order{
-					&orderbook.Order{dest.BidPrices[i], dest.BidVolumes[i], 0},
-				},
-				Asks: []*orderbook.Order{
-					&orderbook.Order{dest.AskPrices[i], dest.AskVolumes[i], 0},
-				},
+				Bids:      []*orderbook.Order{dest.Bids[i]},
+				Asks:      []*orderbook.Order{dest.Asks[i]},
 			}
 		}
 
