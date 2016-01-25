@@ -1,6 +1,8 @@
 (function() {
 
-var urllib = require('url');
+var urllib = require('url'),
+    React = require('react'),
+    ReactDOM = require('react-dom');
 
 var BidAskTab = require('./bidask.js'),
     OpportunityTab = require('./opportunity.js');
