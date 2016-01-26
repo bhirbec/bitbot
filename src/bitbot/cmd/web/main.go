@@ -51,7 +51,7 @@ func main() {
 		http.HandleFunc("/opportunity/"+pair, OpportunityHandler)
 	}
 
-	http.Handle("/build/", http.FileServer(http.Dir(staticDir)))
+	http.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
 	http.HandleFunc("/", HomeHandler)
 
 	log.Printf("Starting webserver on %s\n", *address)
