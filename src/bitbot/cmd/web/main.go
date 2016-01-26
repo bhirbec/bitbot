@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"html/template"
 	"log"
 	"math"
 	"net/http"
@@ -50,13 +51,22 @@ func main() {
 		http.HandleFunc("/opportunity/"+pair, OpportunityHandler)
 	}
 
-	http.Handle("/", http.FileServer(http.Dir(staticDir)))
+	http.Handle("/build/", http.FileServer(http.Dir(staticDir)))
+	http.HandleFunc("/", HomeHandler)
 
 	log.Printf("Starting webserver on %s\n", *address)
 	err := http.ListenAndServe(*address, nil)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("public/index.html")
+	if err != nil {
+		panic(err)
+	}
+	t.Execute(w, nil)
 }
 
 func BidAskHandler(w http.ResponseWriter, r *http.Request) {
