@@ -2,7 +2,7 @@
   sudo: yes
 
   vars:
-    go_version: 1.4.1
+    go_version: 1.5.3
     mysql_db: bitbot
     mysql_root_pwd: password
     mysql_user: bitbot
@@ -26,7 +26,7 @@
 
     - name: Create symlinks to Go binaries
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
-      [WARNING]: Consider using file module with state=link rather than running ln
+      # [WARNING]: Consider using file module with state=link rather than running ln
 
     # Node.js install
     - name: Setup APT for Nodejs
