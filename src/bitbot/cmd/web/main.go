@@ -62,7 +62,7 @@ func main() {
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("public/index.html")
+	t, err := template.ParseFiles("client/index.html")
 	if err != nil {
 		panic(err)
 	}
