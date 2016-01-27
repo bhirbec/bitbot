@@ -2,7 +2,10 @@
 
 var urllib = require('url'),
     React = require('react'),
-    ReactDOM = require('react-dom');
+    ReactDOM = require('react-dom')
+    Tabs = require('material-ui/lib/tabs/tabs'),
+    Tab = require('material-ui/lib/tabs/tab'),
+    injectTapEventPlugin = require('react-tap-event-plugin');
 
 var BidAskTab = require('./bidask.js'),
     OpportunityTab = require('./opportunity.js');
@@ -26,26 +29,29 @@ var Router = function (url) {
     }
 };
 
+// TODO: define list of pairs
 var App = React.createClass({
     render: function () {
         return <div>
-            <Tabs />
+            <Tabs value={this.state.value}>
+                <Tab label="Bid/Ask BTC_USD" value="/bid_ask/btc_usd" onActive={this.handleActive}></Tab>
+                <Tab label="Bid/Ask BTC_EUR" value="/bid_ask/btc_eur" onActive={this.handleActive}></Tab>
+                <Tab label="Bid/Ask LTC_BTC" value="/bid_ask/ltc_btc" onActive={this.handleActive}></Tab>
+                <Tab label="Opportunities BTC_USD" value="/opportunity/btc_usd" onActive={this.handleActive}></Tab>
+                <Tab label="Opportunities BTC_EUR" value="/opportunity/btc_eur" onActive={this.handleActive}></Tab>
+                <Tab label="Opportunities LTC_BTC" value="/opportunity/ltc_btc" onActive={this.handleActive}></Tab>
+            </Tabs>
             <div id="content"></div>
         </div>
-    }
-});
+    },
 
-// TODO: define list of pairs
-var Tabs = React.createClass({
-    render: function () {
-        return <ul>
-            <li><a href="#/bid_ask/btc_usd">Bid/Ask BTC_USD</a></li>
-            <li><a href="#/bid_ask/btc_eur">Bid/Ask BTC_EUR</a></li>
-            <li><a href="#/bid_ask/ltc_btc">Bid/Ask LTC_BTC</a></li>
-            <li><a href="#/opportunity/btc_usd">Opportunities BTC_USD</a></li>
-            <li><a href="#/opportunity/btc_eur">Opportunities BTC_EUR</a></li>
-            <li><a href="#/opportunity/ltc_btc">Opportunities LTC_BTC</a></li>
-        </ul>
+    getInitialState: function () {
+        return {value: '/bid_ask/btc_usd'};
+    },
+
+    handleActive: function (tab) {
+        this.setState({value: tab.props.value});
+        location.hash = tab.props.value;
     }
 });
 
@@ -59,6 +65,7 @@ var getLocationHash = function () {
 }
 
 var init = function () {
+    injectTapEventPlugin();
     ReactDOM.render(<App />, document.getElementById('app'));
 
     $(window).bind('hashchange', function(e) {
