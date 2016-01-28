@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"bitbot/database"
 )
@@ -46,18 +47,30 @@ func main() {
 	db = database.Open(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
 	defer db.Close()
 
+	m := http.NewServeMux()
+
 	for pair, _ := range pairs {
-		http.HandleFunc("/bid_ask/"+pair, BidAskHandler)
-		http.HandleFunc("/opportunity/"+pair, OpportunityHandler)
+		m.HandleFunc("/bid_ask/"+pair, BidAskHandler)
+		m.HandleFunc("/opportunity/"+pair, OpportunityHandler)
 	}
 
-	http.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
-	http.HandleFunc("/", HomeHandler)
+	m.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
+	m.HandleFunc("/", HomeHandler)
 
 	log.Printf("Starting webserver on %s\n", *address)
+	http.HandleFunc("/", timeItWrapper(m))
 	err := http.ListenAndServe(*address, nil)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		h.ServeHTTP(w, r)
+		duration := time.Since(start) / time.Millisecond
+		log.Printf("%s took %dms", r.URL.RequestURI(), duration)
 	}
 }
 
