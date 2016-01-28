@@ -20,6 +20,9 @@
         - build-essential
         - curl
 
+    - name: Clean previous Go install
+      shell: rm -rf /usr/local/go/
+
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
       # [WARNING]: Consider using get_url module rather than running curl
