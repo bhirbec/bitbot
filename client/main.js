@@ -1,5 +1,3 @@
-(function() {
-
 var React = require('react'),
     ReactDOM = require('react-dom'),
     Router = require('react-router').Router,
@@ -58,5 +56,3 @@ ReactDOM.render((
         </Route>
     </Router>
 ), document.getElementById('app'));
-
-})();
