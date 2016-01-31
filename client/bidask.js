@@ -1,8 +1,27 @@
 var React = require('react');
 
 module.exports =  React.createClass({
+    getInitialState: function () {
+        return {data: []};
+    },
+
+    componentDidMount: function () {
+        this._updateState(this.props.location);
+    },
+
+    componentWillReceiveProps: function (nextProps) {
+        this._updateState(nextProps.location)
+    },
+
+    _updateState: function (location) {
+        var that = this;
+        $.get(location.pathname, location.query, function (data) {
+            that.setState({data: data});
+        });
+    },
+
     render: function () {
-        var rows = this.props.data.map(function (r) {
+        var rows = this.state.data.map(function (r) {
             return <tr>
                 <td>{r.StartDate}</td>
                 <td>{r.Exchanger}</td>

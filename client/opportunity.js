@@ -1,18 +1,46 @@
-var React = require('react');
+var React = require('react'),
+    hashHistory = require('react-router').hashHistory;
 
 module.exports = React.createClass({
+    getInitialState: function () {
+        return {data: []};
+    },
+
+    componentDidMount: function () {
+        this._updateState(this.props.location);
+    },
+
+    componentWillReceiveProps: function (nextProps) {
+        this._updateState(nextProps.location)
+    },
+
+    _updateState: function (location) {
+        var that = this;
+        $.get(location.pathname, location.query, function (data) {
+            that.setState({data: data});
+        });
+    },
+
+    handleSubmit: function (e) {
+        e.preventDefault();
+        var form = e.target;
+        var minProfit = form.min_profit.value;
+        var limit = form.limit.value;
+        hashHistory.push(this.props.location.pathname + '?min_profit=' + minProfit + '&limit=' + limit);
+    },
+
     render: function () {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm uri={this.props.uri} params={this.props.params} />
-            <Table data={this.props.data} />
+            <SearchForm params={this.props.location.query} handleSubmit={this.handleSubmit} />
+            <Table data={this.state.data} />
         </div>
     }
 });
 
 var SearchForm = React.createClass({
     render: function () {
-        return <form onSubmit={this.handleSubmit}>
+        return <form onSubmit={this.props.handleSubmit}>
             <label>Min profit</label>
             <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
             <label>Limit</label>
@@ -21,15 +49,6 @@ var SearchForm = React.createClass({
             I don't understand why... */}
             <input type="submit" value="send" />
         </form>
-    },
-
-    handleSubmit: function (e) {
-        e.preventDefault()
-        var form = e.target;
-        var minProfit = form.min_profit.value;
-        var limit = form.limit.value;
-        // TODO: use pushState instead?
-        window.location.hash = this.props.uri + '?min_profit=' + minProfit + '&limit=' + limit;
     }
 })
 
