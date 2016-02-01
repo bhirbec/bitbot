@@ -66,6 +66,7 @@
         - "{{ mysql_data_dir }}"
         - "{{ mysql_log_dir }}"
 
+    # TODO: this may delete existing data.
     - name: Copy Mysql data
       shell: rsync -apv /var/lib/mysql/ {{ mysql_data_dir }}
 
@@ -78,6 +79,7 @@
     - name: Start MySQL
       shell: service mysql start
 
+    # TODO: we need db/init.sql but haven't cloned the repo yet
     - name: Setup database
       shell: |
         mysql -u root -e "
