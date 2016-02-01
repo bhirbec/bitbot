@@ -11,12 +11,6 @@ var Tabs = require('material-ui/lib/tabs/tabs'),
 var BidAskTab = require('./bidask.js'),
     OpportunityTab = require('./opportunity.js');
 
-var pairs = [
-    {symbol: 'btc_usd', label: 'BTC_USD'},
-    {symbol: 'btc_eur', label: 'BTC_EUR'},
-    {symbol: 'ltc_btc', label: 'LTC_BTC'}
-];
-
 injectTapEventPlugin();
 
 var App = React.createClass({
@@ -34,12 +28,8 @@ var App = React.createClass({
 
         return <div>
             <Tabs value={this.state.value}>
-                {pairs.map(function (p) {
-                    return <Tab label={"Bid/Ask " + p.label} value={"/bid_ask/" + p.symbol} onActive={that.handleActive}></Tab>
-                })}
-                {pairs.map(function (p) {
-                    return <Tab label={"Opportunities " + p.label} value={"/opportunity/" + p.symbol} onActive={that.handleActive}></Tab>
-                })}
+                <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={that.handleActive}></Tab>
+                <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={that.handleActive}></Tab>
             </Tabs>
             <div id="content">
                 {this.props.children}

@@ -1,5 +1,11 @@
 var React = require('react'),
+    ReactDOM = require('react-dom'),
     hashHistory = require('react-router').hashHistory;
+
+var SelectField = require('material-ui/lib/select-field'),
+    MenuItem = require('material-ui/lib/menus/menu-item');
+
+var pairs = require('./pairs');
 
 module.exports = React.createClass({
     getInitialState: function () {
@@ -21,36 +27,50 @@ module.exports = React.createClass({
         });
     },
 
-    handleSubmit: function (e) {
-        e.preventDefault();
-        var form = e.target;
-        var minProfit = form.min_profit.value;
-        var limit = form.limit.value;
-        hashHistory.push(this.props.location.pathname + '?min_profit=' + minProfit + '&limit=' + limit);
-    },
-
     render: function () {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm params={this.props.location.query} handleSubmit={this.handleSubmit} />
+            <SearchForm location={this.props.location} pair={this.props.params.pair} />
             <Table data={this.state.data} />
         </div>
     }
 });
 
 var SearchForm = React.createClass({
+    handleChange: function (e, i, pair) {
+        this._submit(pair);
+        e.preventDefault();
+    },
+
+    handleSubmit: function (e) {
+        this._submit(this.props.pair);
+        e.preventDefault();
+    },
+
+    _submit: function (pair) {
+        var form = ReactDOM.findDOMNode(this);
+        var minProfit = form.min_profit.value;
+        var limit = form.limit.value;
+        hashHistory.push('/opportunity/' + pair + '?min_profit=' + minProfit + '&limit=' + limit);
+    },
+
     render: function () {
-        return <form onSubmit={this.props.handleSubmit}>
+        return <form onSubmit={this.handleSubmit}>
+            <SelectField value={this.props.pair} onChange={this.handleChange}>
+                {pairs.map(function (p) {
+                    return <MenuItem value={p.symbol} primaryText={p.label} />
+                })}
+            </SelectField>
             <label>Min profit</label>
-            <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
+            <input name="min_profit" type="text" size="10" defaultValue={this.props.location.query.min_profit} />
             <label>Limit</label>
-            <input name="limit" type='text' size="10" defaultValue={this.props.params.limit} />
+            <input name="limit" type='text' size="10" defaultValue={this.props.location.query.limit} />
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
             I don't understand why... */}
             <input type="submit" value="send" />
         </form>
     }
-})
+});
 
 var Table = React.createClass({
     render: function () {
