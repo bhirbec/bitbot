@@ -33,11 +33,7 @@ module.exports = React.createClass({
         return <div>
             <h1>Bid/Ask</h1>
             <SearchForm location={this.props.location} pair={this.props.params.pair} />
-            <LineChart data={this.state.data} exchanger={'Cex'} />
-            <LineChart data={this.state.data} exchanger={'Kraken'} />
-            <LineChart data={this.state.data} exchanger={'Btce'} />
-            <LineChart data={this.state.data} exchanger={'Hitbtc'} />
-            <LineChart data={this.state.data} exchanger={'Bitfinex'} />
+            <LineChart data={this.state.data} />
             { /* <Table data={this.state.data} /> */}
         </div>
     }
