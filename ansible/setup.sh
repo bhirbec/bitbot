@@ -1,11 +1,6 @@
 # TODO: check --maintenance-policy
 # TODO: check --scopes
 
-gcloud compute disks create "bitbot-data" \
-	--size "100" \
-	--zone "us-central1-b" \
-	--type "pd-standard";
-
 gcloud compute instances create bitbot-1 \
     --zone "us-central1-b" \
     --machine-type "f1-micro" \
@@ -28,5 +23,5 @@ gcloud compute ssh bitbot-1 --command '
 	sudo /usr/share/google/safe_format_and_mount -m "mkfs.ext4 -F" /dev/disk/by-id/google-bitbot-data /media/bitbot-data;
 ';
 
-# TODO: still need to edit ~/ssh/config :/
+# TODO: still need to edit ~/.ssh/config :/
 ansible-playbook ansible/setup.yaml -i ansible/gce_hosts -K;
