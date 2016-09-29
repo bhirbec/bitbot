@@ -7,7 +7,7 @@ export GOPATH := $(CURDIR)
 all: js go
 
 go:
-	go install -v bitbot/cmd/...
+	go install -v services/...
 
 js: public/app.js
 
