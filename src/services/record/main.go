@@ -57,21 +57,20 @@ func main() {
 	defer db.Close()
 
 	for {
-		start := time.Now()
-
 		for _, pair := range pairs {
-			go work(db, pair, start)
+			go work(db, pair)
 		}
 
 		time.Sleep(time.Duration(*periodicity) * time.Second)
 	}
 }
 
-func work(db *database.DB, pair string, start time.Time) {
+func work(db *database.DB, pair string) {
 	defer logPanic()
 
 	var wg sync.WaitGroup
 	obs := map[string]*orderbook.OrderBook{}
+	start := time.Now()
 
 	for _, e := range exchangers {
 		if _, ok := e.pairs[pair]; !ok {
