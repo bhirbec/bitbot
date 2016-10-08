@@ -27,12 +27,12 @@ func Open(name, host, port, user, pwd string) *DB {
 	return &DB{db}
 }
 
-func SaveOrderbooks(db *DB, pair string, start time.Time, obs map[string]*orderbook.OrderBook) {
+func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.OrderBook) {
 	ts := start.Format(timeFormat)
 	placeholders := []string{}
 	params := []interface{}{}
 
-	for ex, ob := range obs {
+	for _, ob := range obs {
 		bids, err := json.Marshal(ob.Bids[:10])
 		panicOnError(err)
 		asks, err := json.Marshal(ob.Asks[:10])
@@ -40,7 +40,7 @@ func SaveOrderbooks(db *DB, pair string, start time.Time, obs map[string]*orderb
 
 		params = append(params, ts)
 		params = append(params, pair)
-		params = append(params, ex)
+		params = append(params, ob.Exchanger)
 		params = append(params, string(bids))
 		params = append(params, string(asks))
 		placeholders = append(placeholders, "(?, ?, ?, ?, ?)")
@@ -98,14 +98,14 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 	return output
 }
 
-func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs map[string]*orderbook.OrderBook) {
+func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*orderbook.OrderBook) {
 	ts := start.Format(timeFormat)
 	placeholders := []string{}
 	params := []interface{}{}
 
-	for buyEx, buyOb := range obs {
-		for sellEx, sellOb := range obs {
-			if buyEx == sellEx {
+	for _, buyOb := range obs {
+		for _, sellOb := range obs {
+			if buyOb.Exchanger == sellOb.Exchanger {
 				continue
 			}
 
@@ -119,8 +119,8 @@ func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs map[strin
 			vol := math.Min(buyOrder.Volume, sellOrder.Volume)
 			spread := 100 * (sellOrder.Price/buyOrder.Price - 1)
 
-			params = append(params, buyEx)
-			params = append(params, sellEx)
+			params = append(params, buyOb.Exchanger)
+			params = append(params, sellOb.Exchanger)
 			params = append(params, pair)
 			params = append(params, ts)
 			params = append(params, buyOrder.Price)

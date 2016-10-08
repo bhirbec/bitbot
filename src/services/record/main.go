@@ -69,7 +69,7 @@ func work(db *database.DB, pair string) {
 	defer logPanic()
 
 	var wg sync.WaitGroup
-	obs := map[string]*orderbook.OrderBook{}
+	obs := []*orderbook.OrderBook{}
 	start := time.Now()
 
 	for _, e := range exchangers {
@@ -90,12 +90,11 @@ func work(db *database.DB, pair string) {
 				log.Println(err)
 				return
 			}
-			obs[e.name] = book
+			obs = append(obs, book)
 		}(e)
 	}
 
 	wg.Wait()
-
 	database.SaveOrderbooks(db, pair, start, obs)
 	database.ComputeAndSaveArbitrage(db, pair, start, obs)
 }
