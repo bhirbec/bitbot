@@ -83,7 +83,7 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 
 		output = append(output, map[string]interface{}{
 			"Exchanger": ex,
-			"StartDate": ts,
+			"Date":      ts,
 			"BidPrice":  bidPrice,
 			"AskPrice":  askPrice,
 			"BidVol":    bidVol,

@@ -71,7 +71,7 @@ var Table =  React.createClass({
     render: function () {
         var rows = this.props.data.map(function (r) {
             return <tr>
-                <td>{r.StartDate}</td>
+                <td>{r.Date}</td>
                 <td>{r.Exchanger}</td>
                 <td>{r.BidPrice}</td>
                 <td>{r.AskPrice}</td>
