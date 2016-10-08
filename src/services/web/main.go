@@ -5,7 +5,6 @@ import (
 	"flag"
 	"html/template"
 	"log"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,19 +88,7 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows := []interface{}{}
-
-	for _, rec := range database.SelectRecords(db, pair, 100) {
-		for ex, ob := range rec.Orderbooks {
-			rows = append(rows, map[string]interface{}{
-				"Exchanger": ex,
-				"StartDate": rec.StartDate,
-				"Bids":      ob.Bids,
-				"Asks":      ob.Asks,
-			})
-		}
-	}
-
+	rows := database.SelectBidAsk(db, pair, 100)
 	JSONResponse(w, rows)
 }
 
@@ -129,44 +116,8 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
-	opps := []map[string]interface{}{}
-
-	for _, rec := range database.SelectRecords(db, pair, limit) {
-		for ex1, buy := range rec.Orderbooks {
-			for ex2, sell := range rec.Orderbooks {
-				if ex1 == ex2 {
-					continue
-				}
-
-				if buy.Asks[0].Price >= sell.Bids[0].Price {
-					continue
-				}
-
-				ask := buy.Asks[0]
-				bid := sell.Bids[0]
-				vol := math.Min(ask.Volume, bid.Volume)
-				spread := bid.Price/ask.Price - 1
-
-				if spread < minProfit {
-					continue
-				}
-
-				opp := map[string]interface{}{
-					"Date":          rec.StartDate.Format(timeFormat),
-					"Ask":           ask,
-					"BuyExchanger":  buy.Exchanger,
-					"Bid":           bid,
-					"SellExchanger": sell.Exchanger,
-					"Profit":        vol * (bid.Price - ask.Price),
-					"Spread":        100 * spread,
-				}
-
-				opps = append(opps, opp)
-			}
-		}
-	}
-
-	JSONResponse(w, opps)
+	rows := database.SelectArbitrages(db, pair, minProfit, limit)
+	JSONResponse(w, rows)
 }
 
 func parsePairFromURI(path string) string {

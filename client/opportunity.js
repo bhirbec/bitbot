@@ -82,12 +82,11 @@ var Table = React.createClass({
             return <tr>
                 <td>{r.Date}</td>
                 <td>{r.Spread}%</td>
+                <td>{r.Volume}</td>
                 <td>{r.BuyExchanger}</td>
-                <td>{r.Ask.Price}</td>
-                <td>{r.Ask.Volume}</td>
+                <td>{r.BuyPrice}</td>
                 <td>{r.SellExchanger}</td>
-                <td>{r.Bid.Price}</td>
-                <td>{r.Bid.Volume}</td>
+                <td>{r.SellPrice}</td>
             </tr>
         });
 
@@ -96,8 +95,9 @@ var Table = React.createClass({
                 <tr>
                     <th>Date</th>
                     <th>Spread</th>
-                    <th colSpan="3">Buy</th>
-                    <th colSpan="3">Sell</th>
+                    <td>Volume</td>
+                    <th colSpan="2">Buy</th>
+                    <th colSpan="2">Sell</th>
                 </tr>
             </thead>
             <tbody>

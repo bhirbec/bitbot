@@ -76,7 +76,6 @@ func work(db *database.DB, pair string) {
 		if _, ok := e.pairs[pair]; !ok {
 			continue
 		}
-
 		wg.Add(1)
 
 		go func(e *exchanger) {
@@ -89,14 +88,14 @@ func work(db *database.DB, pair string) {
 
 			if err != nil {
 				log.Println(err)
-			} else {
-				book.Bids = book.Bids[:10]
-				book.Asks = book.Asks[:10]
-				obs[e.name] = book
+				return
 			}
+			obs[e.name] = book
 		}(e)
 	}
 
 	wg.Wait()
-	database.SaveRecord(db, pair, start, obs)
+
+	database.SaveOrderbooks(db, pair, start, obs)
+	database.ComputeAndSaveArbitrage(db, pair, start, obs)
 }

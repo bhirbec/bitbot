@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -18,11 +20,6 @@ type DB struct {
 	*sql.DB
 }
 
-type Record struct {
-	StartDate  time.Time
-	Orderbooks map[string]*orderbook.OrderBook
-}
-
 func Open(name, host, port, user, pwd string) *DB {
 	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", user, pwd, host, port, name)
 	db, err := sql.Open("mysql", source)
@@ -30,71 +27,163 @@ func Open(name, host, port, user, pwd string) *DB {
 	return &DB{db}
 }
 
-func SaveRecord(db *DB, pair string, start time.Time, obs map[string]*orderbook.OrderBook) {
-	obsJSON, err := json.Marshal(obs)
-	panicOnError(err)
-
-	const stmt = "insert into %s (ts, orderbooks) values (?, ?)"
+func SaveOrderbooks(db *DB, pair string, start time.Time, obs map[string]*orderbook.OrderBook) {
 	ts := start.Format(timeFormat)
-	_, err = db.Exec(fmt.Sprintf(stmt, pair), ts, obsJSON)
+	placeholders := []string{}
+	params := []interface{}{}
+
+	for ex, ob := range obs {
+		bids, err := json.Marshal(ob.Bids[:10])
+		panicOnError(err)
+		asks, err := json.Marshal(ob.Asks[:10])
+		panicOnError(err)
+
+		params = append(params, ts)
+		params = append(params, pair)
+		params = append(params, ex)
+		params = append(params, string(bids))
+		params = append(params, string(asks))
+		placeholders = append(placeholders, "(?, ?, ?, ?, ?)")
+	}
+
+	stmt := "insert into orderbooks (ts, pair, exchanger, bids, asks) values " + strings.Join(placeholders, ",")
+	_, err := db.Exec(stmt, params...)
 	panicOnError(err)
 }
 
-func SelectRecords(db *DB, pair string, limit int64) []*Record {
-	stmt := `
+func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
+	const stmt = `
         select
             ts,
-            json_object(
-                "Exchangers", orderbooks->'$.*.Exchanger',
-                "Bids", orderbooks->'$.*.Bids[0]',
-                "Asks", orderbooks->'$.*.Asks[0]'
-            )
+            exchanger,
+            bids->'$[0].Price',
+            asks->'$[0].Price',
+            bids->'$[0].Volume',
+            asks->'$[0].Volume'
         from
-            %s
+            orderbooks
+        where
+            pair = ?
         order by
             ts desc
         limit
             %d
     `
-	records := []*Record{}
-	rows, err := db.Query(fmt.Sprintf(stmt, pair, limit))
-	panicOnError(err)
 
-	var ts string
-	var jsonData []byte
+	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair)
+	panicOnError(err)
+	defer rows.Close()
+
+	var ts, ex string
+	var bidPrice, bidVol, askPrice, askVol float64
+	output := []map[string]interface{}{}
 
 	for rows.Next() {
-		err = rows.Scan(&ts, &jsonData)
+		err = rows.Scan(&ts, &ex, &bidPrice, &askPrice, &bidVol, &askVol)
 		panicOnError(err)
 
-		startDate, err := time.Parse(timeFormat, ts)
-		panicOnError(err)
-
-		var dest struct {
-			Exchangers []string
-			Bids       []*orderbook.Order
-			Asks       []*orderbook.Order
-		}
-		err = json.Unmarshal(jsonData, &dest)
-		panicOnError(err)
-
-		obs := map[string]*orderbook.OrderBook{}
-
-		for i, ex := range dest.Exchangers {
-			obs[ex] = &orderbook.OrderBook{
-				Exchanger: ex,
-				Bids:      []*orderbook.Order{dest.Bids[i]},
-				Asks:      []*orderbook.Order{dest.Asks[i]},
-			}
-		}
-
-		records = append(records, &Record{
-			StartDate:  startDate,
-			Orderbooks: obs,
+		output = append(output, map[string]interface{}{
+			"Exchanger": ex,
+			"StartDate": ts,
+			"BidPrice":  bidPrice,
+			"AskPrice":  askPrice,
+			"BidVol":    bidVol,
+			"AskVol":    askVol,
 		})
 	}
 
-	return records
+	err = rows.Err()
+	panicOnError(err)
+
+	return output
+}
+
+func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs map[string]*orderbook.OrderBook) {
+	ts := start.Format(timeFormat)
+	placeholders := []string{}
+	params := []interface{}{}
+
+	for buyEx, buyOb := range obs {
+		for sellEx, sellOb := range obs {
+			if buyEx == sellEx {
+				continue
+			}
+
+			buyOrder := buyOb.Asks[0]
+			sellOrder := sellOb.Bids[0]
+
+			if buyOrder.Price >= sellOrder.Price {
+				continue
+			}
+
+			vol := math.Min(buyOrder.Volume, sellOrder.Volume)
+			spread := 100 * (sellOrder.Price/buyOrder.Price - 1)
+
+			params = append(params, buyEx)
+			params = append(params, sellEx)
+			params = append(params, pair)
+			params = append(params, ts)
+			params = append(params, buyOrder.Price)
+			params = append(params, sellOrder.Price)
+			params = append(params, vol)
+			params = append(params, spread)
+			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?, ?)")
+		}
+	}
+
+	stmt := "insert into arbitrages (buy_ex, sell_ex, pair, ts, buy_price, sell_price, vol, spread) values " + strings.Join(placeholders, ",")
+	_, err := db.Exec(stmt, params...)
+	panicOnError(err)
+}
+
+func SelectArbitrages(db *DB, pair string, minProfit float64, limit int64) []map[string]interface{} {
+	const stmt = `
+        select
+            buy_ex,
+            sell_ex,
+            ts,
+            buy_price,
+            sell_price,
+            vol,
+            spread
+        from
+            arbitrages
+        where
+            pair = ?
+            and spread >= ?
+        order by
+            ts desc
+        limit
+            %d
+    `
+
+	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair, minProfit)
+	panicOnError(err)
+	defer rows.Close()
+
+	var buyEx, sellEx, ts string
+	var buyPrice, sellPrice, vol, spread float64
+	output := []map[string]interface{}{}
+
+	for rows.Next() {
+		err = rows.Scan(&buyEx, &sellEx, &ts, &buyPrice, &sellPrice, &vol, &spread)
+		panicOnError(err)
+
+		output = append(output, map[string]interface{}{
+			"Date":          ts,
+			"BuyPrice":      buyPrice,
+			"BuyExchanger":  buyEx,
+			"SellPrice":     sellPrice,
+			"SellExchanger": sellEx,
+			"Volume":        vol,
+			"Spread":        spread,
+		})
+	}
+
+	err = rows.Err()
+	panicOnError(err)
+
+	return output
 }
 
 func panicOnError(err error) {

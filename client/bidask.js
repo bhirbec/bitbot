@@ -73,8 +73,8 @@ var Table =  React.createClass({
             return <tr>
                 <td>{r.StartDate}</td>
                 <td>{r.Exchanger}</td>
-                <td>{r.Bids[0].Price}</td>
-                <td>{r.Asks[0].Price}</td>
+                <td>{r.BidPrice}</td>
+                <td>{r.AskPrice}</td>
             </tr>
         });
 
