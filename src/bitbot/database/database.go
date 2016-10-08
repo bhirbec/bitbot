@@ -41,8 +41,8 @@ func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.Order
 		params = append(params, ts)
 		params = append(params, pair)
 		params = append(params, ob.Exchanger)
-		params = append(params, string(bids))
-		params = append(params, string(asks))
+		params = append(params, bids)
+		params = append(params, asks)
 		placeholders = append(placeholders, "(?, ?, ?, ?, ?)")
 	}
 
