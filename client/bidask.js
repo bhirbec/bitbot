@@ -7,6 +7,8 @@ var SelectField = require('material-ui/lib/select-field'),
 
 var pairs = require('./pairs');
 
+var LineChart = require('./line-chart');
+
 module.exports = React.createClass({
     getInitialState: function () {
         return {data: []};
@@ -31,7 +33,12 @@ module.exports = React.createClass({
         return <div>
             <h1>Bid/Ask</h1>
             <SearchForm location={this.props.location} pair={this.props.params.pair} />
-            <Table data={this.state.data} />
+            <LineChart data={this.state.data} exchanger={'Cex'} />
+            <LineChart data={this.state.data} exchanger={'Kraken'} />
+            <LineChart data={this.state.data} exchanger={'Btce'} />
+            <LineChart data={this.state.data} exchanger={'Hitbtc'} />
+            <LineChart data={this.state.data} exchanger={'Bitfinex'} />
+            { /* <Table data={this.state.data} /> */}
         </div>
     }
 });
