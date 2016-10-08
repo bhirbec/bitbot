@@ -18,8 +18,7 @@ import (
 // TODO: make the static dir indepedent of the working directory
 
 const (
-	staticDir  = "public"
-	timeFormat = "2006-01-02 15:04:05"
+	staticDir = "public"
 )
 
 var db *database.DB

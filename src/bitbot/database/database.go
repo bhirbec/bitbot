@@ -13,7 +13,12 @@ import (
 	"bitbot/exchanger/orderbook"
 )
 
-const timeFormat = "2006-1-2 15:04:05.000"
+// TODO: can we do time formatting on the client instead?
+
+const (
+	timeFormat        = "2006-01-02 15:04:05.000"
+	displayTimeFormat = "2006-01-02 15:04"
+)
 
 // TODO: remove this struct?
 type DB struct {
@@ -81,9 +86,12 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 		err = rows.Scan(&ts, &ex, &bidPrice, &askPrice, &bidVol, &askVol)
 		panicOnError(err)
 
+		date, err := time.Parse(timeFormat, ts)
+		panicOnError(err)
+
 		output = append(output, map[string]interface{}{
 			"Exchanger": ex,
-			"Date":      ts,
+			"Date":      date.Format(displayTimeFormat),
 			"BidPrice":  bidPrice,
 			"AskPrice":  askPrice,
 			"BidVol":    bidVol,
@@ -167,8 +175,11 @@ func SelectArbitrages(db *DB, pair string, minProfit float64, limit int64) []map
 		err = rows.Scan(&buyEx, &sellEx, &ts, &buyPrice, &sellPrice, &vol, &spread)
 		panicOnError(err)
 
+		date, err := time.Parse(timeFormat, ts)
+		panicOnError(err)
+
 		output = append(output, map[string]interface{}{
-			"Date":          ts,
+			"Date":          date.Format(displayTimeFormat),
 			"BuyPrice":      buyPrice,
 			"BuyExchanger":  buyEx,
 			"SellPrice":     sellPrice,
