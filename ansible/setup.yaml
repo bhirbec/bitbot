@@ -4,10 +4,9 @@
   vars:
     go_version: 1.7.1
     mysql_db: bitbot
-    mysql_root_pwd: password
     mysql_user: bitbot
     mysql_user_pwd: password
-    disk_mount: /media/bitbot-data
+    disk_mount: /mnt/bitbot-data
     mysql_data_dir: "{{ disk_mount }}/mysql"
     mysql_log_dir: "{{ disk_mount }}/mysql/log"
 
@@ -46,38 +45,35 @@
     - name: Copy mysql.list
       copy: src=mysql/mysql.list dest=/etc/apt/sources.list.d/mysql.list
 
-    - name: Setup MySQL password
-      shell: |
-        debconf-set-selections <<< 'mysql-server mysql-server/root_password password {{ mysql_root_pwd }}'
-        debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {{ mysql_root_pwd }}'
-      args:
-        executable: /bin/bash
-
     - name: Install MySQL packages
       apt: name=mysql-server update_cache=true
 
+    # change MySQL data dir like explained here
+    # https://www.digitalocean.com/community/tutorials/how-to-move-a-mysql-data-directory-to-a-new-location-on-ubuntu-16-04
     - name: Stop MySQL
       shell: service mysql stop
 
-    # TODO: this broke the first time I ran it :/
     - name: Make MySQL directories
       file: path={{ item }} state=directory owner=mysql
       with_items:
         - "{{ mysql_data_dir }}"
-        - "{{ mysql_log_dir }}"
+        # - "{{ mysql_log_dir }}"
 
     # TODO: this may delete existing data.
     - name: Copy Mysql data
       shell: rsync -apv /var/lib/mysql/ {{ mysql_data_dir }}
 
-    - name: Copy MySQL config
-      template: src=mysql/my.cnf dest=/etc/mysql/conf.d/my.cnf
+    - name: Configure MySQL
+      template: src=mysql/mysql.conf.d/mysqld.cnf dest=/etc/mysql/mysql.conf.d/mysqld.cnf
 
-    - name: Copy AppArmor config
-      template: src=mysql/usr.sbin.mysqld dest=/etc/apparmor.d/usr.sbin.mysqld
+    - name: Configure AppArmor
+      template: src=mysql/alias dest=/etc/apparmor.d/tunables/alias
 
-    - name: Start MySQL
+    - name: Restar MySQL
       shell: service mysql start
+
+    - name: Restart AppArmor
+      shell: service apparmor restart
 
     # TODO: we need db/init.sql but haven't cloned the repo yet
     - name: Setup database

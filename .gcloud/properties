@@ -1,7 +1,0 @@
-[compute]
-zone = us-central1-b
-
-[core]
-account = benoit.hirbec@gmail.com
-project = the-bitbot-project
-
