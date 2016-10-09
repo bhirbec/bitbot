@@ -79,7 +79,6 @@
     - name: Setup database
       shell: |
         mysql -u root -e "
-          create database if not exists {{ mysql_db }};
           create user if not exists '{{ mysql_user }}' identified by '{{ mysql_user_pwd }}';
           grant all privileges on {{ mysql_db }} . * to {{ mysql_user }};
         "

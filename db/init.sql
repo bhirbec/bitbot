@@ -1,4 +1,6 @@
 -- TODO: use innodb/myisam?
+create database if not exists bitbot;
+use bitbot;
 
 create table orderbooks (
     exchanger varchar(50) not null,

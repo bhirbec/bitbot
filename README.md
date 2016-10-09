@@ -25,9 +25,8 @@ Create the Vagrant machine:
 Connect to the VM:  
 `$ vagrant ssh`
 
-Create MySQL database:  
-`$ mysql -u bitbot -p bitbot < db/init.sql`  
-password
+Create the MySQL database:  
+`$ sudo mysql -u root < db/init.sql`
 
 ## Start the Services
 
@@ -58,9 +57,15 @@ Open your browser and point it at [localhost:8080](http://localhost:8080)
 `$ git submodule update --init --recursive`  
 `$ sudo make install`
 
-## Create a VM Instance and Disk
+## Create the Server 
+
+Create the VM, the disk and provision the VM:
 
 `$ ./ansible/server-create.sh`
+
+Connect to the MV and initialize the MySQL database "manually":
+
+`$ gcloud compute ssh bitbot-1`
 
 ## Deployment
 
