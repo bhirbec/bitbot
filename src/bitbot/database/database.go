@@ -137,6 +137,10 @@ func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*orderb
 		}
 	}
 
+	if len(params) == 0 {
+		return
+	}
+
 	stmt := "insert into arbitrages (buy_ex, sell_ex, pair, ts, buy_price, sell_price, vol, spread) values " + strings.Join(placeholders, ",")
 	_, err := db.Exec(stmt, params...)
 	panicOnError(err)
