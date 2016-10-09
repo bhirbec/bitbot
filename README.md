@@ -13,11 +13,9 @@ Technical stack includes:
   * [Ansible](http://docs.ansible.com/)
   * [Google Compute Engine](https://cloud.google.com/compute/)
  
-Install
-=======
+# Install
 
-Vagrant Install
----------------
+## Vagrant Install
 
 Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](https://www.vagrantup.com/).
 
@@ -31,36 +29,28 @@ Create MySQL database:
 `$ mysql -u bitbot -p bitbot < db/init.sql`  
 password
 
-Start the Services
-------------------
+## Start the Services
 
 You first need to compile the Go code and build the JavaScript application:  
 `$ cd /vagrant`  
 `$ make`  
 
-Now you can start the "record" service which fetches Bitcoin orderbooks from several exchangers:  
+Now you can start the `record` service which fetches Bitcoin orderbooks from several exchangers:
+
 `$ bin/record`
 
-Start the "web" service that power the UI and provides the API (you will need another SSH session):  
+Start the `web` service that powers the UI and provides the API (you will need another SSH session):
 
-`$ bin/web`
+`$ bin/web -b 0.0.0.0:8080`
 
 Open your browser and point it at [localhost:8080](http://localhost:8080)
 
 **Note**: you will need to run make and restart the services each time you make a change to the code.
 
+# Deploy the Code on GCE
 
-Deploy the Code on GCE
-======================
+## Install Ansible
 
-Create a VM Instance and Disk
------------------------------
-`$ ./ansible/setup.sh`
-
-Deployment
-----------
-
-Install Ansible  
 `$ git clone git://github.com/ansible/ansible.git --recursive`  
 `$ cd ./ansible`  
 `$ source ./hacking/env-setup`  
@@ -68,5 +58,12 @@ Install Ansible
 `$ git submodule update --init --recursive`  
 `$ sudo make install`
 
-Run ansible-playbook  
+## Create a VM Instance and Disk
+
+`$ ./ansible/server-create.sh`
+
+## Deployment
+
+Run ansible-playbook:
+
 `$ ansible-playbook ansible/deploy.yaml -i ansible/gce_hosts`  
