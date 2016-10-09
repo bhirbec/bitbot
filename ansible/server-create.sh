@@ -37,4 +37,4 @@ gcloud compute ssh bitbot-1 --zone "us-central1-b" --command '
     echo UUID=`sudo blkid -s UUID -o value /dev/disk/by-id/google-bitbot-data` /mnt/bitbot-data ext4 discard,defaults,[NOFAIL] 0 2 | sudo tee -a /etc/fstab;
 ';
 
-ansible-playbook ansible/setup.yaml -i ansible/gce_hosts
+ansible-playbook ansible/provision.yaml -i ansible/gce_hosts

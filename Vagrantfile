@@ -9,6 +9,6 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder ".", "/vagrant", :nfs => true
 
     config.vm.provision "ansible" do |ansible|
-        ansible.playbook = "ansible/setup.yaml"
+        ansible.playbook = "ansible/provision.yaml"
     end
 end
