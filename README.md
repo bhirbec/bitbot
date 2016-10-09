@@ -17,7 +17,7 @@ Technical stack includes:
 
 ## Vagrant Install
 
-Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](https://www.vagrantup.com/).
+Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads), [Vagrant](https://www.vagrantup.com/), and [Google Cloud SDK](https://cloud.google.com/sdk/).
 
 Create the Vagrant machine:  
 `$ vagrant up`
@@ -50,12 +50,14 @@ Open your browser and point it at [localhost:8080](http://localhost:8080)
 
 ## Install Ansible
 
-`$ git clone git://github.com/ansible/ansible.git --recursive`  
-`$ cd ./ansible`  
-`$ source ./hacking/env-setup`  
-`$ git pull --rebase`  
-`$ git submodule update --init --recursive`  
-`$ sudo make install`
+```
+$ git clone git://github.com/ansible/ansible.git --recursive
+$ cd ./ansible
+$ source ./hacking/env-setup
+$ git pull --rebase
+$ git submodule update --init --recursive
+$ sudo make install
+```
 
 ## Create the Server 
 
