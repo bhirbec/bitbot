@@ -5,7 +5,14 @@ var React = require('react'),
 var SelectField = require('material-ui/lib/select-field'),
     MenuItem = require('material-ui/lib/menus/menu-item');
 
-var pairs = require('./pairs');
+var pairs = require('./utils').pairs,
+    exchangers = require('./utils').exchangers;
+
+var LineChart = require('./line-chart');
+
+function filterExchangerData(data, exchanger) {
+    return data.filter(function (r) {return r.Exchanger == exchanger})
+}
 
 module.exports = React.createClass({
     getInitialState: function () {
@@ -69,21 +76,26 @@ var SearchForm = React.createClass({
 var Table =  React.createClass({
 
     render: function () {
-        var rows = this.props.data.map(function (r) {
+        var data = this.props.data;
+
+        var rows = exchangers.map(function (ex) {
+            var filteredData = filterExchangerData(data, ex)
+            var n = filteredData.length;
+
             return <tr>
-                <td>{r.Date}</td>
-                <td>{r.Exchanger}</td>
-                <td>{r.BidPrice}</td>
-                <td>{r.AskPrice}</td>
+                <td>{ex}</td>
+                <td>{filteredData[0] ? filteredData[0].BidPrice : '-'}</td>
+                <td><LineChart data={filteredData} /></td>
+                <td>{filteredData[0] ? filteredData[0].AskPrice : '-'}</td>
             </tr>
         });
 
         return <table>
             <thead>
                 <tr>
-                    <th>Date</th>
                     <th>Exchanger</th>
                     <th>Bid</th>
+                    <th>Bid/Ask Evolution</th>
                     <th>Ask</th>
                 </tr>
             </thead>

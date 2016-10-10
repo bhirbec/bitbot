@@ -5,7 +5,7 @@ var React = require('react'),
 var SelectField = require('material-ui/lib/select-field'),
     MenuItem = require('material-ui/lib/menus/menu-item');
 
-var pairs = require('./pairs');
+var pairs = require('./utils').pairs;
 
 module.exports = React.createClass({
     getInitialState: function () {
