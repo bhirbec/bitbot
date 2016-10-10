@@ -112,7 +112,7 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	limitParam := r.FormValue("limit")
 	limit, _ := strconv.ParseInt(limitParam, 10, 64)
 	if limit == 0 {
-		limit = 1000
+		limit = 100
 	}
 
 	rows := database.SelectArbitrages(db, pair, minProfit, limit)
