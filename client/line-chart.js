@@ -5,7 +5,7 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(props, state) {
         var el = this.getDOMNode();
         el.innerHTML = "";
-        el.appendChild(createLineChart(el, props.data));
+        el.appendChild(createLineChart(props.data));
     },
 
     render: function() {
@@ -17,7 +17,7 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 800 - margin.left - margin.right,
     height = 140 - margin.top - margin.bottom;
 
-function createLineChart(el, data) {
+function createLineChart(data) {
     var formatDate = d3.time.format("%Y-%m-%d %H:%M");
 
     for (var i=0; i < data.length; i++) {
