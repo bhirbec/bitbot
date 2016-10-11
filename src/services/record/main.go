@@ -47,6 +47,8 @@ var pairs = []string{
 	"btc_usd",
 	"btc_eur",
 	"ltc_btc",
+	"eth_btc",
+	"etc_btc",
 }
 
 func main() {

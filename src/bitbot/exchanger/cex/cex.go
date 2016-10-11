@@ -15,6 +15,7 @@ var Pairs = map[string]string{
 	"btc_eur": "BTC/EUR",
 	"btc_usd": "BTC/USD",
 	"ltc_btc": "LTC/BTC",
+	"eth_btc": "ETH/BTC",
 }
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {

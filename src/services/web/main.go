@@ -37,6 +37,8 @@ var pairs = map[string]bool{
 	"btc_usd": true,
 	"btc_eur": true,
 	"ltc_btc": true,
+	"eth_btc": true,
+	"etc_btc": true,
 }
 
 func main() {
