@@ -12,4 +12,4 @@ go:
 js: public/app.js
 
 public/app.js: $(shell find client -name "*.js")
-	./node_modules/.bin/browserify -t [ babelify --presets [ react ] ] client/main.js > $@
+	node_modules/browserify/bin/cmd.js  -t [ babelify --presets [ react ] ] client/main.js > $@
