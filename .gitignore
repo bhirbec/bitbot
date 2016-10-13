@@ -4,4 +4,6 @@
 /pkg
 /bin
 /doc
-/public/build
+/node_modules/.hooks
+/public/lib.js
+/public/app.js
