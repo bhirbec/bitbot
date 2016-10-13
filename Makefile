@@ -15,10 +15,9 @@ public/app.js: $(shell find client -name "*.js")
 	node_modules/browserify/bin/cmd.js  \
 		-t [ babelify --presets [ react ] ] \
 		-x d3 \
-		-x material-ui/lib/select-field \
-		-x material-ui/lib/menus/menu-item \
-		-x material-ui/lib/tabs/tabs \
-		-x material-ui/lib/tabs/tab \
+		-x material-ui/SelectField \
+		-x material-ui/MenuItem \
+		-x material-ui/Tabs \
 		-x react \
 		-x react-dom \
 		-x react-router \
@@ -30,10 +29,9 @@ public/app.js: $(shell find client -name "*.js")
 public/lib.js: node_modules/rebuild node_modules/.hooks/postinstall
 	node_modules/browserify/bin/cmd.js \
 		-r d3 \
-		-r material-ui/lib/select-field \
-		-r material-ui/lib/menus/menu-item \
-		-r material-ui/lib/tabs/tabs \
-		-r material-ui/lib/tabs/tab \
+		-r material-ui/SelectField \
+		-r material-ui/MenuItem \
+		-r material-ui/Tabs \
 		-r react \
 		-r react-dom \
 		-r react-router \

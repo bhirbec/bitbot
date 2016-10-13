@@ -14,15 +14,13 @@ var _invariant = require('invariant');
 
 var _invariant2 = _interopRequireDefault(_invariant);
 
+var _PathUtils = require('./PathUtils');
+
 var _Actions = require('./Actions');
 
 var _createHistory = require('./createHistory');
 
 var _createHistory2 = _interopRequireDefault(_createHistory);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 function createStateStorage(entries) {
   return entries.filter(function (entry) {
@@ -87,23 +85,24 @@ function createMemoryHistory() {
 
   function getCurrentLocation() {
     var entry = entries[current];
-    var key = entry.key;
     var basename = entry.basename;
     var pathname = entry.pathname;
     var search = entry.search;
 
     var path = (basename || '') + pathname + (search || '');
 
-    var state = undefined;
-    if (key) {
+    var key = undefined,
+        state = undefined;
+    if (entry.key) {
+      key = entry.key;
       state = readState(key);
     } else {
-      state = null;
       key = history.createKey();
+      state = null;
       entry.key = key;
     }
 
-    var location = _parsePath2['default'](path);
+    var location = _PathUtils.parsePath(path);
 
     return history.createLocation(_extends({}, location, { state: state }), undefined, key);
   }

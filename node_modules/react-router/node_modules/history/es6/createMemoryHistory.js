@@ -4,9 +4,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 import warning from 'warning';
 import invariant from 'invariant';
+import { parsePath } from './PathUtils';
 import { PUSH, REPLACE, POP } from './Actions';
 import createHistory from './createHistory';
-import parsePath from './parsePath';
 
 function createStateStorage(entries) {
   return entries.filter(function (entry) {
@@ -71,19 +71,20 @@ function createMemoryHistory() {
 
   function getCurrentLocation() {
     var entry = entries[current];
-    var key = entry.key;
     var basename = entry.basename;
     var pathname = entry.pathname;
     var search = entry.search;
 
     var path = (basename || '') + pathname + (search || '');
 
-    var state = undefined;
-    if (key) {
+    var key = undefined,
+        state = undefined;
+    if (entry.key) {
+      key = entry.key;
       state = readState(key);
     } else {
-      state = null;
       key = history.createKey();
+      state = null;
       entry.key = key;
     }
 
