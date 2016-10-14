@@ -25,13 +25,11 @@ class App extends React.Component {
     }
 
     render() {
-        var that = this;
-
         return <MuiThemeProvider>
             <div>
                 <Tabs value={this.state.value}>
-                    <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={that.handleActive.bind(that)}></Tab>
-                    <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={that.handleActive.bind(that)}></Tab>
+                    <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={this.handleActive.bind(this)}></Tab>
+                    <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={this.handleActive.bind(this)}></Tab>
                 </Tabs>
                 <div id="content">
                     {this.props.children}
