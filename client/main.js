@@ -1,42 +1,45 @@
-var React = require('react'),
-    ReactDOM = require('react-dom'),
-    Router = require('react-router').Router,
-    Route = require('react-router').Route,
-    hashHistory = require('react-router').hashHistory;
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Router, Route } from 'react-router'
+import {hashHistory} from 'react-router';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+import {Tabs, Tab} from 'material-ui/Tabs';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-var Tabs = require('material-ui/lib/tabs/tabs'),
-    Tab = require('material-ui/lib/tabs/tab'),
-    injectTapEventPlugin = require('react-tap-event-plugin');
+import BidAskTab from './bidask.js';
+import OpportunityTab from './opportunity.js';
 
-var BidAskTab = require('./bidask.js'),
-    OpportunityTab = require('./opportunity.js');
 
 injectTapEventPlugin();
 
-var App = React.createClass({
-    getInitialState: function () {
-        return {value: this.props.location.pathname}
-    },
+class App extends React.Component {
 
-    handleActive: function (tab) {
+    constructor(props) {
+        super(props);
+        this.state = {value: this.props.location.pathname};
+    }
+
+    handleActive(tab) {
         this.setState({value: tab.props.value});
         hashHistory.push(tab.props.value);
-    },
+    }
 
-    render: function () {
+    render() {
         var that = this;
 
-        return <div>
-            <Tabs value={this.state.value}>
-                <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={that.handleActive}></Tab>
-                <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={that.handleActive}></Tab>
-            </Tabs>
-            <div id="content">
-                {this.props.children}
+        return <MuiThemeProvider>
+            <div>
+                <Tabs value={this.state.value}>
+                    <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={that.handleActive.bind(that)}></Tab>
+                    <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={that.handleActive.bind(that)}></Tab>
+                </Tabs>
+                <div id="content">
+                    {this.props.children}
+                </div>
             </div>
-        </div>
+        </MuiThemeProvider>
     }
-});
+};
 
 ReactDOM.render((
     <Router history={hashHistory}>

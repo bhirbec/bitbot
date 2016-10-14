@@ -1,67 +1,69 @@
-var React = require('react'),
-    ReactDOM = require('react-dom'),
-    hashHistory = require('react-router').hashHistory;
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {hashHistory} from 'react-router';
 
-var SelectField = require('material-ui/lib/select-field'),
-    MenuItem = require('material-ui/lib/menus/menu-item');
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
+import LineChart from './line-chart';
 
-var pairs = require('./utils').pairs,
-    exchangers = require('./utils').exchangers;
+import {pairs, exchangers} from './utils';
 
-var LineChart = require('./line-chart');
 
 function filterExchangerData(data, exchanger) {
     return data.filter(function (r) {return r.Exchanger == exchanger})
 }
 
-module.exports = React.createClass({
-    getInitialState: function () {
-        return {data: []};
-    },
+export default class extends React.Component {
 
-    componentDidMount: function () {
+    constructor(props) {
+        super(props);
+        this.state = {data: []};
+    }
+
+    componentDidMount() {
         this._updateState(this.props.location);
-    },
+    }
 
-    componentWillReceiveProps: function (nextProps) {
+    componentWillReceiveProps(nextProps) {
         this._updateState(nextProps.location)
-    },
+    }
 
-    _updateState: function (location) {
+    _updateState(location) {
         var that = this;
         $.get(location.pathname, location.query, function (data) {
             that.setState({data: data});
         });
-    },
+    }
 
-    render: function () {
+    render() {
         return <div>
             <h1>Bid/Ask</h1>
             <SearchForm location={this.props.location} pair={this.props.params.pair} />
             <Table data={this.state.data} />
         </div>
     }
-});
+};
 
-var SearchForm = React.createClass({
-    handleChange: function (e, i, pair) {
+class SearchForm extends React.Component {
+
+    handleChange(e, i, pair) {
         this._submit(pair);
         e.preventDefault();
-    },
+    }
 
-    handleSubmit: function (e) {
+    handleSubmit(e) {
         this._submit(this.props.pair);
         e.preventDefault();
-    },
+    }
 
-    _submit: function (pair) {
+    _submit(pair) {
         var form = ReactDOM.findDOMNode(this);
         hashHistory.push('/bid_ask/' + pair);
-    },
+    }
 
-    render: function () {
-        return <form onSubmit={this.handleSubmit}>
-            <SelectField value={this.props.pair} onChange={this.handleChange}>
+    render() {
+        return <form onSubmit={this.handleSubmit.bind(this)}>
+            <SelectField value={this.props.pair} onChange={this.handleChange.bind(this)}>
                 {pairs.map(function (p) {
                     return <MenuItem value={p.symbol} primaryText={p.label} />
                 })}
@@ -71,11 +73,11 @@ var SearchForm = React.createClass({
             <input type="submit" value="send" />
         </form>
     }
-});
+};
 
-var Table =  React.createClass({
+class Table extends React.Component {
 
-    render: function () {
+    render() {
         var data = this.props.data;
 
         var rows = exchangers.map(function (ex) {
@@ -104,4 +106,4 @@ var Table =  React.createClass({
             </tbody>
         </table>
     }
-});
+};

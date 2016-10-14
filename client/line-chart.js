@@ -1,31 +1,33 @@
-var React = require('react');
+import React from 'react';
+import ReactDOM from 'react-dom';
 var d3 = require('d3');
 
-module.exports = React.createClass({
-    componentWillReceiveProps: function(props, state) {
-        var el = this.getDOMNode();
+export default class extends React.Component {
+
+    componentWillReceiveProps(props, state) {
+        var el = ReactDOM.findDOMNode(this);
         el.innerHTML = "";
         el.appendChild(createLineChart(props.data));
-    },
+    }
 
-    render: function() {
+    render() {
         return <div className="chart" />
     }
-});
+};
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 800 - margin.left - margin.right,
     height = 140 - margin.top - margin.bottom;
 
 function createLineChart(data) {
-    var formatDate = d3.time.format("%Y-%m-%d %H:%M");
+    var formatDate = d3.timeParse("%Y-%m-%d %H:%M");
 
     for (var i=0; i < data.length; i++) {
         var row = data[i];
-        row.date = formatDate.parse(row.Date);
+        row.date = formatDate(row.Date);
     }
 
-    var svgRoot = document.createElementNS(d3.ns.prefix.svg, 'svg');
+    var svgRoot = document.createElementNS(d3.namespaces.svg, 'svg');
 
     var svg = d3.select(svgRoot)
         .attr("width", width + margin.left + margin.right)
@@ -38,32 +40,30 @@ function createLineChart(data) {
 
 function addLineChart(data) {
     // x axis
-    var x = d3.time.scale().range([0, width]);
+    var x = d3.scaleTime().range([0, width]);
     x.domain(d3.extent(data, function(d) { return d.date; }));
 
-    var xAxis = d3.svg
-        .axis()
+    var xAxis = d3
+        .axisBottom()
         .scale(x)
-        .orient("bottom")
-        .ticks(d3.time.minutes, 5)
-        .tickFormat(d3.time.format("%H:%M"));
+        .ticks(d3.timeMinute, 5)
+        .tickFormat(d3.timeFormat("%H:%M"));
 
     // y axis
     var ymin = d3.min(data, function(d) { return d.BidPrice}),
         ymax = d3.max(data, function(d) { return d.AskPrice}),
         delta = (ymax - ymin) * 0.1;
 
-    var y = d3.scale.linear()
+    var y = d3.scaleLinear()
         .domain([ymin - delta, ymax + delta])
         .range([height, 0]);
 
-    var yAxis = d3.svg
-        .axis()
+    var yAxis = d3
+        .axisLeft()
         .scale(y)
-        .orient("left")
         .ticks(4);
 
-    var g = document.createElementNS(d3.ns.prefix.svg, 'g');
+    var g = document.createElementNS(d3.namespaces.svg, 'g');
 
     var container = d3
         .select(g)
@@ -85,7 +85,7 @@ function addLineChart(data) {
         // .text("Price ($)");
 
     function addLine(container, attr, color) {
-        var line = d3.svg.line()
+        var line = d3.line()
             .x(function(d) { return x(d.date); })
             .y(function(d) { return y(d[attr]); });
 
@@ -100,5 +100,3 @@ function addLineChart(data) {
     addLine(container, 'AskPrice', '#FC9E27');
     return g;
 }
-
-
