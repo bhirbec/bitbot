@@ -19,6 +19,7 @@ public/app.js: $(shell find client -name "*.js")
 		-x material-ui/MenuItem \
 		-x material-ui/Tabs \
 		-x material-ui/styles/MuiThemeProvider \
+		-x material-ui/Table \
 		-x react \
 		-x react-dom \
 		-x react-router \
@@ -34,6 +35,7 @@ public/lib.js: node_modules/rebuild node_modules/.hooks/postinstall
 		-r material-ui/MenuItem \
 		-r material-ui/Tabs \
 		-r material-ui/styles/MuiThemeProvider \
+		-r material-ui/Table \
 		-r react \
 		-r react-dom \
 		-r react-router \

@@ -16,7 +16,7 @@ export default class extends React.Component {
 };
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 800 - margin.left - margin.right,
+    width = 600 - margin.left - margin.right,
     height = 140 - margin.top - margin.bottom;
 
 function createLineChart(data) {

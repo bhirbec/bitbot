@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {hashHistory} from 'react-router';
-
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 
 import {pairs} from './utils';
 
@@ -34,7 +34,7 @@ export default class extends React.Component {
         return <div>
             <h1>Search for opportunities</h1>
             <SearchForm location={this.props.location} pair={this.props.params.pair} />
-            <Table data={this.state.data} />
+            <ArbitrageTable data={this.state.data} />
         </div>
     }
 };
@@ -76,7 +76,7 @@ class SearchForm extends React.Component {
     }
 };
 
-class Table extends React.Component {
+class ArbitrageTable extends React.Component {
 
     render() {
         if (this.props.data.length == 0) {
@@ -84,30 +84,32 @@ class Table extends React.Component {
         }
 
         var rows = this.props.data.map(function (r) {
-            return <tr>
-                <td>{r.Date}</td>
-                <td>{r.Spread}%</td>
-                <td>{r.Volume}</td>
-                <td>{r.BuyExchanger}</td>
-                <td>{r.BuyPrice}</td>
-                <td>{r.SellExchanger}</td>
-                <td>{r.SellPrice}</td>
-            </tr>
+            return <TableRow>
+                <TableRowColumn>{r.Date}</TableRowColumn>
+                <TableRowColumn>{r.Spread}%</TableRowColumn>
+                <TableRowColumn>{r.Volume}</TableRowColumn>
+                <TableRowColumn>{r.BuyExchanger}</TableRowColumn>
+                <TableRowColumn>{r.BuyPrice}</TableRowColumn>
+                <TableRowColumn>{r.SellExchanger}</TableRowColumn>
+                <TableRowColumn>{r.SellPrice}</TableRowColumn>
+            </TableRow>
         });
 
-        return <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Spread</th>
-                    <td>Volume</td>
-                    <th colSpan="2">Buy</th>
-                    <th colSpan="2">Sell</th>
-                </tr>
-            </thead>
-            <tbody>
+        return <Table>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+                <TableRow>
+                    <TableHeaderColumn>Date</TableHeaderColumn>
+                    <TableHeaderColumn>Spread</TableHeaderColumn>
+                    <TableHeaderColumn>Volume</TableHeaderColumn>
+                    <TableHeaderColumn>Buy Exchanger</TableHeaderColumn>
+                    <TableHeaderColumn>Buy Price</TableHeaderColumn>
+                    <TableHeaderColumn>Sell Exchanger</TableHeaderColumn>
+                    <TableHeaderColumn>Sell Price</TableHeaderColumn>
+                </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
                 {rows}
-            </tbody>
-        </table>
+            </TableBody>
+        </Table>
     }
 };

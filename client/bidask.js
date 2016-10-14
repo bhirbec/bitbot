@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {hashHistory} from 'react-router';
-
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import LineChart from './line-chart';
 
 import {pairs, exchangers} from './utils';
@@ -39,7 +39,7 @@ export default class extends React.Component {
         return <div>
             <h1>Bid/Ask</h1>
             <SearchForm location={this.props.location} pair={this.props.params.pair} />
-            <Table data={this.state.data} />
+            <BidAskTable data={this.state.data} />
         </div>
     }
 };
@@ -75,7 +75,7 @@ class SearchForm extends React.Component {
     }
 };
 
-class Table extends React.Component {
+class BidAskTable extends React.Component {
 
     render() {
         var data = this.props.data;
@@ -84,26 +84,26 @@ class Table extends React.Component {
             var filteredData = filterExchangerData(data, ex)
             var n = filteredData.length;
 
-            return <tr>
-                <td>{ex}</td>
-                <td>{filteredData[0] ? filteredData[0].BidPrice : '-'}</td>
-                <td><LineChart data={filteredData} /></td>
-                <td>{filteredData[0] ? filteredData[0].AskPrice : '-'}</td>
-            </tr>
+            return <TableRow>
+                <TableRowColumn>{ex}</TableRowColumn>
+                <TableRowColumn>{filteredData[0] ? filteredData[0].BidPrice : '-'}</TableRowColumn>
+                <TableRowColumn style={ {width: 600} }><LineChart data={filteredData} /></TableRowColumn>
+                <TableRowColumn>{filteredData[0] ? filteredData[0].AskPrice : '-'}</TableRowColumn>
+            </TableRow>
         });
 
-        return <table>
-            <thead>
-                <tr>
-                    <th>Exchanger</th>
-                    <th>Bid</th>
-                    <th>Bid/Ask Evolution</th>
-                    <th>Ask</th>
-                </tr>
-            </thead>
-            <tbody>
+        return <Table selectable={false} style={ {'max-width': 1000} }>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+                <TableRow>
+                    <TableHeaderColumn>Exchanger</TableHeaderColumn>
+                    <TableHeaderColumn>Bid</TableHeaderColumn>
+                    <TableHeaderColumn>Bid/Ask Evolution</TableHeaderColumn>
+                    <TableHeaderColumn>Ask</TableHeaderColumn>
+                </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
                 {rows}
-            </tbody>
-        </table>
+            </TableBody>
+        </Table>
     }
 };
