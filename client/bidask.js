@@ -97,7 +97,7 @@ class BidAskTable extends React.Component {
                 <TableRow>
                     <TableHeaderColumn>Exchanger</TableHeaderColumn>
                     <TableHeaderColumn>Bid</TableHeaderColumn>
-                    <TableHeaderColumn>Bid/Ask Evolution</TableHeaderColumn>
+                    <TableHeaderColumn style={ {width: 600} }>Bid/Ask Evolution</TableHeaderColumn>
                     <TableHeaderColumn>Ask</TableHeaderColumn>
                 </TableRow>
             </TableHeader>
