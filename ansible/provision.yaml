@@ -30,15 +30,12 @@
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
       # [WARNING]: Consider using file module with state=link rather than running ln
 
-    # Node.js install
+    # # Node.js install
     - name: Setup APT for Nodejs
-      shell: curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+      shell: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 
     - name: Install Node.js
       apt: pkg=nodejs
-
-    - name: Install npm
-      npm: global=yes name=npm version=3.8.10
 
     # MySQL 5.7 install (http://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-installing)
     - name: Add APT key for mysql 5.7
