@@ -13,6 +13,7 @@ import (
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/orderbook"
+	"bitbot/exchanger/therocktrading"
 )
 
 // NOTE: use Ticker endpoint to retrieve bid/ask info for several pairs at the same time?
@@ -41,6 +42,7 @@ var exchangers = []*exchanger{
 	&exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
 	&exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
+	&exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
 }
 
 var pairs = []string{
@@ -97,6 +99,11 @@ func work(db *database.DB, pair string) {
 	}
 
 	wg.Wait()
+
+	if len(obs) == 0 {
+		return
+	}
+
 	database.SaveOrderbooks(db, pair, start, obs)
 	database.ComputeAndSaveArbitrage(db, pair, start, obs)
 }
