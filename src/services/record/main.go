@@ -9,6 +9,7 @@ import (
 	"bitbot/database"
 	"bitbot/exchanger/bitfinex"
 	"bitbot/exchanger/btce"
+	"bitbot/exchanger/bter"
 	"bitbot/exchanger/cex"
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
@@ -40,6 +41,7 @@ var exchangers = []*exchanger{
 	&exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
 	&exchanger{bitfinex.ExchangerName, bitfinex.Pairs, bitfinex.OrderBook},
 	&exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
+	&exchanger{bter.ExchangerName, bter.Pairs, bter.OrderBook},
 	&exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
 	&exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},

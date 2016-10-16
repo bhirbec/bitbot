@@ -49,6 +49,9 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
+	// asks orders come in decreasing order
+	asks = reverse(asks)
+
 	return orderbook.NewOrderbook(ExchangerName, bids, asks)
 }
 
@@ -87,4 +90,13 @@ func parseValue(v interface{}) (float64, error) {
 	default:
 		return 0, fmt.Errorf("Bter API error: cannot parse %s", v)
 	}
+}
+
+func reverse(orders []*orderbook.Order) []*orderbook.Order {
+	n := len(orders)
+	output := make([]*orderbook.Order, n)
+	for i := 0; i < n; i++ {
+		output[i] = orders[n-1-i]
+	}
+	return output
 }

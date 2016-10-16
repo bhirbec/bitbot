@@ -6,4 +6,4 @@ module.exports.pairs = [
     {symbol: 'eth_btc', label: 'ETH_BTC'},
 ];
 
-module.exports.exchangers = ['Cex', 'Kraken', 'Btce', 'Hitbtc', 'Bitfinex', 'The Rock Trading'];
+module.exports.exchangers = ['Cex', 'Kraken', 'Btce', 'Hitbtc', 'Bitfinex', 'The Rock Trading', 'Bter'];
