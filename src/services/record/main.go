@@ -11,10 +11,12 @@ import (
 	"bitbot/exchanger/btce"
 	"bitbot/exchanger/bter"
 	"bitbot/exchanger/cex"
+	"bitbot/exchanger/gemini"
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
-	"bitbot/exchanger/orderbook"
 	"bitbot/exchanger/therocktrading"
+
+	"bitbot/exchanger/orderbook"
 )
 
 // NOTE: use Ticker endpoint to retrieve bid/ask info for several pairs at the same time?
@@ -38,12 +40,13 @@ type exchanger struct {
 }
 
 var exchangers = []*exchanger{
-	&exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
 	&exchanger{bitfinex.ExchangerName, bitfinex.Pairs, bitfinex.OrderBook},
 	&exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
 	&exchanger{bter.ExchangerName, bter.Pairs, bter.OrderBook},
 	&exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
+	&exchanger{gemini.ExchangerName, gemini.Pairs, gemini.OrderBook},
+	&exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
 	&exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
 }
 
