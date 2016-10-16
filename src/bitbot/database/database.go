@@ -35,11 +35,21 @@ func Open(name, host, port, user, pwd string) *DB {
 func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.OrderBook) {
 	placeholders := []string{}
 	params := []interface{}{}
+	var n int
 
 	for _, ob := range obs {
-		bids, err := json.Marshal(ob.Bids[:10])
+		n = len(ob.Bids)
+		if n >= 10 {
+			n = 10
+		}
+		bids, err := json.Marshal(ob.Bids)
 		panicOnError(err)
-		asks, err := json.Marshal(ob.Asks[:10])
+
+		n = len(ob.Asks)
+		if n >= 10 {
+			n = 10
+		}
+		asks, err := json.Marshal(ob.Asks)
 		panicOnError(err)
 
 		params = append(params, start)
