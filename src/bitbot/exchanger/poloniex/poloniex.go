@@ -13,9 +13,9 @@ const (
 )
 
 var Pairs = map[string]string{
-	"btc_eth": "BTC_ETH",
-	"btc_etc": "BTC_ETC",
-	"btc_ltc": "BTC_LTC",
+	"eth_btc": "BTC_ETH",
+	"etc_btc": "BTC_ETC",
+	"ltc_btc": "BTC_LTC",
 }
 
 func OrderBook(pair string) (*orderbook.OrderBook, error) {
