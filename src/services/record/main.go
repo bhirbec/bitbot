@@ -84,7 +84,6 @@ func work(db *database.DB, pair string) {
 	reversedPair := reversePair(pair)
 
 	var _work = func(pair string, reverse bool, e *exchanger) {
-		wg.Add(1)
 		defer wg.Done()
 
 		log.Printf("Fetching %s for pair %s...", e.name, pair)
@@ -106,8 +105,10 @@ func work(db *database.DB, pair string) {
 
 	for _, e := range exchangers {
 		if _, ok := e.pairs[pair]; ok {
+			wg.Add(1)
 			go _work(pair, false, e)
 		} else if _, ok := e.pairs[reversedPair]; ok {
+			wg.Add(1)
 			go _work(reversedPair, true, e)
 		}
 	}
