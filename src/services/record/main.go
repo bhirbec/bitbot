@@ -14,6 +14,7 @@ import (
 	"bitbot/exchanger/gemini"
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
+	"bitbot/exchanger/poloniex"
 	"bitbot/exchanger/therocktrading"
 
 	"bitbot/exchanger/orderbook"
@@ -47,6 +48,7 @@ var exchangers = []*exchanger{
 	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
 	&exchanger{gemini.ExchangerName, gemini.Pairs, gemini.OrderBook},
 	&exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
+	&exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
 	&exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
 }
 
@@ -80,27 +82,35 @@ func work(db *database.DB, pair string) {
 	var wg sync.WaitGroup
 	obs := []*orderbook.OrderBook{}
 	start := time.Now()
+	reversedPair := reversePair(pair)
+
+	var _work = func(pair string, reverse bool, e *exchanger) {
+		wg.Add(1)
+		defer wg.Done()
+
+		log.Printf("Fetching %s for pair %s...", e.name, pair)
+		book, err := e.f(pair)
+		// end := time.Now()
+		// duration := int64(time.Since(start) / time.Microsecond)
+
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		if reverse {
+			reverseBidAsk(book)
+		}
+
+		obs = append(obs, book)
+	}
 
 	for _, e := range exchangers {
-		if _, ok := e.pairs[pair]; !ok {
-			continue
+		if _, ok := e.pairs[pair]; ok {
+			go _work(pair, false, e)
+		} else if _, ok := e.pairs[reversedPair]; ok {
+			go _work(reversedPair, true, e)
 		}
-		wg.Add(1)
-
-		go func(e *exchanger) {
-			defer wg.Done()
-
-			log.Printf("Fetching %s for pair %s...", e.name, pair)
-			book, err := e.f(pair)
-			// end := time.Now()
-			// duration := int64(time.Since(start) / time.Microsecond)
-
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			obs = append(obs, book)
-		}(e)
 	}
 
 	wg.Wait()
@@ -111,4 +121,22 @@ func work(db *database.DB, pair string) {
 
 	database.SaveOrderbooks(db, pair, start, obs)
 	database.ComputeAndSaveArbitrage(db, pair, start, obs)
+}
+
+func reversePair(pair string) string {
+	return pair[4:7] + "_" + pair[:3]
+}
+
+func reverseBidAsk(ob *orderbook.OrderBook) {
+	for _, order := range ob.Bids {
+		order.Volume = order.Price * order.Volume
+		order.Price = 1 / order.Price
+	}
+
+	for _, order := range ob.Asks {
+		order.Volume = order.Price * order.Volume
+		order.Price = 1 / order.Price
+	}
+
+	ob.Bids, ob.Asks = ob.Asks, ob.Bids
 }
