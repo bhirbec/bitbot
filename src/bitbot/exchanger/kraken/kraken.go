@@ -16,7 +16,7 @@ var Pairs = map[string]string{
 	"btc_eur": "XXBTZEUR",
 	"btc_usd": "XXBTZUSD",
 	"ltc_usd": "XLTCZUSD",
-	"btc_ltc": "XXBTXLTC",
+	"ltc_btc": "XLTCXXBT",
 	// "eth_usd": "XETHZUSD",
 	"eth_btc": "XETHXXBT",
 	// "etc_usd": "XETCZUSD",
