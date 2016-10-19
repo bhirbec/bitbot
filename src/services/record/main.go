@@ -70,9 +70,8 @@ func main() {
 	for {
 		for _, pair := range pairs {
 			go work(db, pair)
+			time.Sleep(time.Duration(*periodicity) * time.Second)
 		}
-
-		time.Sleep(time.Duration(*periodicity) * time.Second)
 	}
 }
 
