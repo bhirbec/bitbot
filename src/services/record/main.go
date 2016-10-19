@@ -31,7 +31,7 @@ var (
 	dbPort      = flag.String("p", "3306", "MySQL port.")
 	dbUser      = flag.String("u", "bitbot", "MySQL user.")
 	dbPwd       = flag.String("w", "password", "MySQL user's password.")
-	periodicity = flag.Int64("t", 10, "Periodicity expressed in seconds.")
+	periodicity = flag.Int64("t", 10, "Wait t seconds between each pair.")
 )
 
 type exchanger struct {
