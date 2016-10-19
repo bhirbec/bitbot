@@ -54,3 +54,12 @@ func NewOrderbook(Exchanger string, bids, asks []*Order) (*OrderBook, error) {
 func FetchOrderBook(url string, v interface{}) error {
 	return httpreq.Get(url, nil, v)
 }
+
+func ReverseOrders(orders []*Order) []*Order {
+	n := len(orders)
+	output := make([]*Order, n)
+	for i := 0; i < n; i++ {
+		output[i] = orders[n-1-i]
+	}
+	return output
+}

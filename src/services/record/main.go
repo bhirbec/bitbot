@@ -138,5 +138,7 @@ func reverseBidAsk(ob *orderbook.OrderBook) {
 		order.Price = 1 / order.Price
 	}
 
-	ob.Bids, ob.Asks = ob.Asks, ob.Bids
+	bids := orderbook.ReverseOrders(ob.Bids)
+	asks := orderbook.ReverseOrders(ob.Asks)
+	ob.Bids, ob.Asks = asks, bids
 }
