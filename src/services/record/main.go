@@ -9,7 +9,6 @@ import (
 	"bitbot/database"
 	"bitbot/exchanger/bitfinex"
 	"bitbot/exchanger/btce"
-	"bitbot/exchanger/bter"
 	"bitbot/exchanger/cex"
 	"bitbot/exchanger/gemini"
 	"bitbot/exchanger/hitbtc"
@@ -43,7 +42,6 @@ type exchanger struct {
 var exchangers = []*exchanger{
 	&exchanger{bitfinex.ExchangerName, bitfinex.Pairs, bitfinex.OrderBook},
 	&exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
-	&exchanger{bter.ExchangerName, bter.Pairs, bter.OrderBook},
 	&exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
 	&exchanger{gemini.ExchangerName, gemini.Pairs, gemini.OrderBook},
