@@ -122,7 +122,7 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		minVolStr = "0"
 	}
 
-	minVol, err := strconv.ParseInt(minVolStr, 10, 64)
+	minVol, err := strconv.ParseFloat(minVolStr, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
