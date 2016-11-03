@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {hashHistory} from 'react-router';
-import SelectField from 'material-ui/SelectField';
-import MenuItem from 'material-ui/MenuItem';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 
 import {pairs} from './utils';
@@ -33,7 +31,7 @@ export default class extends React.Component {
     render() {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm location={this.props.location} pair={this.props.params.pair} />
+            <SearchForm location={this.props.location} params={this.props.params} />
             <ArbitrageTable data={this.state.data} />
         </div>
     }
@@ -41,32 +39,26 @@ export default class extends React.Component {
 
 class SearchForm extends React.Component {
 
-    handleChange(e, i, pair) {
-        this._submit(pair);
-        e.preventDefault();
-    }
-
-    handleSubmit(e) {
-        this._submit(this.props.pair);
-        e.preventDefault();
-    }
-
-    _submit(pair) {
+    submit() {
         var form = ReactDOM.findDOMNode(this);
-        var minProfit = form.min_profit.value;
-        var limit = form.limit.value;
-        hashHistory.push('/opportunity/' + pair + '?min_profit=' + minProfit + '&limit=' + limit);
+        var qs = $.param({
+            minProfit: form.min_profit.value,
+            limit: form.limit.value
+        })
+        hashHistory.push('/opportunity/' + form.pair.value + '?' + qs)
     }
 
     render() {
-        return <form onSubmit={this.handleSubmit.bind(this)} style={ {'float': 'left', 'width': '22em'} }>
+        var that = this;
+
+        return <form onSubmit={this.submit.bind(this)} style={ {'float': 'left', 'width': '22em'} }>
             <div className="form-field">
                 <label>Pair</label>
-                <SelectField value={this.props.pair} onChange={this.handleChange.bind(this)}>
+                <select name="pair" onChange={this.submit.bind(this)}>
                     {pairs.map(function (p) {
-                        return <MenuItem value={p.symbol} primaryText={p.label} />
+                        return <option value={p.symbol} selected={that.props.params.pair == p.symbol}>{p.label}</option>
                     })}
-                </SelectField>
+                </select>
             </div>
             <div className="form-field">
                 <label>Min Arbitrage Spread</label>

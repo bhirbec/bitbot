@@ -2,7 +2,12 @@ html,
 body {
 	padding: 0;
 	margin: 0;
+}
+
+body,
+select {
 	font-family: Roboto, sans-serif;
+	font-size: 0.9em;
 }
 
 #content {
@@ -40,9 +45,4 @@ body {
 .form-field label {
 	color: #bbb;
 	display: block;
-	margin-bottom: -0.5em;
-}
-
-.form-field input {
-	margin-top: 1em;
 }
