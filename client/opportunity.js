@@ -47,6 +47,7 @@ class SearchForm extends React.Component {
             buy_ex: form.buy_ex.value,
             sell_ex: form.sell_ex.value,
             min_profit: form.min_profit.value,
+            min_vol: form.min_vol.value,
             limit: form.limit.value
         })
         hashHistory.push('/opportunity/' + form.pair.value + '?' + qs)
@@ -87,7 +88,11 @@ class SearchForm extends React.Component {
                 <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
             </div>
             <div className="form-field">
-                <label>Limit {this.props.params.limit}</label>
+                <label>Min Volume</label>
+                <input name="min_vol" type='text' size="10" defaultValue={this.props.params.min_vol} />
+            </div>
+            <div className="form-field">
+                <label>Limit</label>
                 <input name="limit" type='text' size="10" defaultValue={this.props.params.limit} />
             </div>
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.

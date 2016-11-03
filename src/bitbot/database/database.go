@@ -156,7 +156,7 @@ func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*orderb
 	panicOnError(err)
 }
 
-func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfit float64, limit int64) []map[string]interface{} {
+func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfit float64, minVol, limit int64) []map[string]interface{} {
 	const stmt = `
         select
             buy_ex,
@@ -173,13 +173,14 @@ func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfi
             and (? = '' or buy_ex = ?)
             and (? = '' or sell_ex = ?)
             and spread >= ?
+            and vol >= ?
         order by
             ts desc
         limit
             %d
     `
 
-	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair, buyExchanger, buyExchanger, sellExchanger, sellExchanger, minProfit)
+	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair, buyExchanger, buyExchanger, sellExchanger, sellExchanger, minProfit, minVol)
 	panicOnError(err)
 	defer rows.Close()
 

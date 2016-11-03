@@ -117,11 +117,21 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		limit = 100
 	}
 
+	minVolStr := r.FormValue("min_vol")
+	if minVolStr == "" {
+		minVolStr = "0"
+	}
+
+	minVol, err := strconv.ParseInt(minVolStr, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	// TODO: validate?
 	buyExchanger := r.FormValue("buy_ex")
 	sellExchanger := r.FormValue("sell_ex")
 
-	rows := database.SelectArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, limit)
+	rows := database.SelectArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, minVol, limit)
 	JSONResponse(w, rows)
 }
 
