@@ -32,3 +32,17 @@ body {
   fill: none;
   stroke-width: 1.75px;
 }
+
+.form-field {
+	margin: 2em 0;
+}
+
+.form-field label {
+	color: #bbb;
+	display: block;
+	margin-bottom: -0.5em;
+}
+
+.form-field input {
+	margin-top: 1em;
+}

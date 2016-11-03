@@ -59,16 +59,23 @@ class SearchForm extends React.Component {
     }
 
     render() {
-        return <form onSubmit={this.handleSubmit.bind(this)}>
-            <SelectField value={this.props.pair} onChange={this.handleChange.bind(this)}>
-                {pairs.map(function (p) {
-                    return <MenuItem value={p.symbol} primaryText={p.label} />
-                })}
-            </SelectField>
-            <label>Min profit</label>
-            <input name="min_profit" type="text" size="10" defaultValue={this.props.location.query.min_profit} />
-            <label>Limit</label>
-            <input name="limit" type='text' size="10" defaultValue={this.props.location.query.limit} />
+        return <form onSubmit={this.handleSubmit.bind(this)} style={ {'float': 'left', 'width': '22em'} }>
+            <div className="form-field">
+                <label>Pair</label>
+                <SelectField value={this.props.pair} onChange={this.handleChange.bind(this)}>
+                    {pairs.map(function (p) {
+                        return <MenuItem value={p.symbol} primaryText={p.label} />
+                    })}
+                </SelectField>
+            </div>
+            <div className="form-field">
+                <label>Min Arbitrage Spread</label>
+                <input name="min_profit" type="text" size="10" defaultValue={this.props.location.query.min_profit} />
+            </div>
+            <div className="form-field">
+                <label>Limit</label>
+                <input name="limit" type='text' size="10" defaultValue={this.props.location.query.limit} />
+            </div>
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
             I don't understand why... */}
             <input type="submit" value="send" />
@@ -99,7 +106,7 @@ class ArbitrageTable extends React.Component {
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
                 <TableRow>
                     <TableHeaderColumn>Date</TableHeaderColumn>
-                    <TableHeaderColumn>Spread</TableHeaderColumn>
+                    <TableHeaderColumn>Arbitrage Spread</TableHeaderColumn>
                     <TableHeaderColumn>Volume</TableHeaderColumn>
                     <TableHeaderColumn>Buy Exchanger</TableHeaderColumn>
                     <TableHeaderColumn>Buy Price</TableHeaderColumn>
