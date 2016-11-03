@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {hashHistory} from 'react-router';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 
-import {pairs} from './utils';
+import {pairs, exchangers} from './utils';
 
 
 export default class extends React.Component {
@@ -39,10 +39,14 @@ export default class extends React.Component {
 
 class SearchForm extends React.Component {
 
-    submit() {
+    submit(e) {
+        e.preventDefault()
+
         var form = ReactDOM.findDOMNode(this);
         var qs = $.param({
-            minProfit: form.min_profit.value,
+            buy_ex: form.buy_ex.value,
+            sell_ex: form.sell_ex.value,
+            min_profit: form.min_profit.value,
             limit: form.limit.value
         })
         hashHistory.push('/opportunity/' + form.pair.value + '?' + qs)
@@ -51,7 +55,7 @@ class SearchForm extends React.Component {
     render() {
         var that = this;
 
-        return <form onSubmit={this.submit.bind(this)} style={ {'float': 'left', 'width': '22em'} }>
+        return <form onSubmit={this.submit.bind(this)} style={ {'float': 'left', 'width': '15em'} }>
             <div className="form-field">
                 <label>Pair</label>
                 <select name="pair" onChange={this.submit.bind(this)}>
@@ -61,12 +65,30 @@ class SearchForm extends React.Component {
                 </select>
             </div>
             <div className="form-field">
-                <label>Min Arbitrage Spread</label>
-                <input name="min_profit" type="text" size="10" defaultValue={this.props.location.query.min_profit} />
+                <label>Buy Exchanger</label>
+                <select name="buy_ex" onChange={this.submit.bind(this)}>
+                    <option value="">All</option>
+                    {exchangers.map(function (e) {
+                        return <option value={e}>{e}</option>
+                    })}
+                </select>
             </div>
             <div className="form-field">
-                <label>Limit</label>
-                <input name="limit" type='text' size="10" defaultValue={this.props.location.query.limit} />
+                <label>Sell Exchanger</label>
+                <select name="sell_ex" onChange={this.submit.bind(this)}>
+                    <option value="">All</option>
+                    {exchangers.map(function (e) {
+                        return <option value={e}>{e}</option>
+                    })}
+                </select>
+            </div>
+            <div className="form-field">
+                <label>Min Arbitrage Spread</label>
+                <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
+            </div>
+            <div className="form-field">
+                <label>Limit {this.props.params.limit}</label>
+                <input name="limit" type='text' size="10" defaultValue={this.props.params.limit} />
             </div>
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
             I don't understand why... */}

@@ -45,4 +45,5 @@ select {
 .form-field label {
 	color: #bbb;
 	display: block;
+	margin-bottom: .25em;
 }

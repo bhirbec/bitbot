@@ -117,7 +117,11 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 		limit = 100
 	}
 
-	rows := database.SelectArbitrages(db, pair, minProfit, limit)
+	// TODO: validate?
+	buyExchanger := r.FormValue("buy_ex")
+	sellExchanger := r.FormValue("sell_ex")
+
+	rows := database.SelectArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, limit)
 	JSONResponse(w, rows)
 }
 
