@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -19,7 +19,7 @@ var Pairs = map[string]string{
 	"etc_btc": "ETC_BTC",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/depth/%s", APIURL, pair)
 
@@ -29,7 +29,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		Bids   [][]interface{}
 	}
 
-	err := orderbook.FetchOrderBook(url, &result)
+	err := exchanger.FetchOrderBook(url, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +52,11 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 	// asks orders come in decreasing order
 	asks = reverseOrders(asks)
 
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {
-	orders := make([]*orderbook.Order, len(rows))
+func parseOrders(rows [][]interface{}) ([]*exchanger.Order, error) {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
 
 		price, err := parseValue(row[0])
@@ -69,7 +69,7 @@ func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {
 			return nil, err
 		}
 
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  price,
 			Volume: volume,
 		}
@@ -92,9 +92,9 @@ func parseValue(v interface{}) (float64, error) {
 	}
 }
 
-func reverseOrders(orders []*orderbook.Order) []*orderbook.Order {
+func reverseOrders(orders []*exchanger.Order) []*exchanger.Order {
 	n := len(orders)
-	output := make([]*orderbook.Order, n)
+	output := make([]*exchanger.Order, n)
 	for i := 0; i < n; i++ {
 		output[i] = orders[n-1-i]
 	}

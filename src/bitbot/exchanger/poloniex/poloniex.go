@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -19,7 +19,7 @@ var Pairs = map[string]string{
 	"zec_btc": "BTC_ZEC",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s?command=returnOrderBook&currencyPair=%s&depth=10", APIURL, pair)
 
@@ -28,7 +28,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		Asks [][]interface{}
 	}
 
-	if err := orderbook.FetchOrderBook(url, &result); err != nil {
+	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
@@ -42,18 +42,18 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func parseOrders(rows [][]interface{}) ([]*orderbook.Order, error) {
-	orders := make([]*orderbook.Order, len(rows))
+func parseOrders(rows [][]interface{}) ([]*exchanger.Order, error) {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
 		price, err := strconv.ParseFloat(row[0].(string), 64)
 		if err != nil {
 			return nil, err
 		}
 
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  price,
 			Volume: row[1].(float64),
 		}

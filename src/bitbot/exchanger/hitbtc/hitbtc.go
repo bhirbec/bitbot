@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"bitbot/config"
+	"bitbot/exchanger"
 	"bitbot/httpreq"
-	"bitbot/orderbook"
 )
 
 // TODO: defined struct to be returned instead of interface{}
@@ -40,7 +40,7 @@ var Pairs = map[string]string{
 	"zec_btc": "ZECBTC",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, pair)
 
@@ -63,11 +63,11 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func parseOrders(rows [][]string) ([]*orderbook.Order, error) {
-	orders := make([]*orderbook.Order, len(rows))
+func parseOrders(rows [][]string) ([]*exchanger.Order, error) {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
 		price, err := strconv.ParseFloat(row[0], 64)
 		if err != nil {
@@ -79,7 +79,7 @@ func parseOrders(rows [][]string) ([]*orderbook.Order, error) {
 			return nil, err
 		}
 
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  price,
 			Volume: volume,
 		}

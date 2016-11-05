@@ -8,7 +8,7 @@ import (
 
 	"bitbot/database"
 	"bitbot/errorutils"
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 
 	"bitbot/exchanger/bitfinex"
 	"bitbot/exchanger/btce"
@@ -34,21 +34,21 @@ var (
 	periodicity = flag.Int64("t", 10, "Wait t seconds between each pair.")
 )
 
-type exchanger struct {
+type Exchanger struct {
 	name  string
 	pairs map[string]string
-	f     func(string) (*orderbook.OrderBook, error)
+	f     func(string) (*exchanger.OrderBook, error)
 }
 
-var exchangers = []*exchanger{
-	&exchanger{bitfinex.ExchangerName, bitfinex.Pairs, bitfinex.OrderBook},
-	&exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
-	&exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
-	&exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
-	&exchanger{gemini.ExchangerName, gemini.Pairs, gemini.OrderBook},
-	&exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
-	&exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
-	&exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
+var exchangers = []*Exchanger{
+	&Exchanger{bitfinex.ExchangerName, bitfinex.Pairs, bitfinex.OrderBook},
+	&Exchanger{btce.ExchangerName, btce.Pairs, btce.OrderBook},
+	&Exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
+	&Exchanger{cex.ExchangerName, cex.Pairs, cex.OrderBook},
+	&Exchanger{gemini.ExchangerName, gemini.Pairs, gemini.OrderBook},
+	&Exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
+	&Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
+	&Exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
 }
 
 var pairs = []string{
@@ -79,10 +79,10 @@ func work(db *database.DB, pair string) {
 	defer errorutils.LogPanic()
 
 	var wg sync.WaitGroup
-	obs := []*orderbook.OrderBook{}
+	obs := []*exchanger.OrderBook{}
 	start := time.Now()
 
-	var _work = func(pair string, e *exchanger) {
+	var _work = func(pair string, e *Exchanger) {
 		defer wg.Done()
 
 		log.Printf("Fetching %s for pair %s...", e.name, pair)

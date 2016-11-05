@@ -11,7 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"bitbot/errorutils"
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 // TODO: can we do time formatting on the client instead?
@@ -33,7 +33,7 @@ func Open(name, host, port, user, pwd string) *DB {
 	return &DB{db}
 }
 
-func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.OrderBook) {
+func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*exchanger.OrderBook) {
 	placeholders := []string{}
 	params := []interface{}{}
 
@@ -118,7 +118,7 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 	return output
 }
 
-func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*orderbook.OrderBook) {
+func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*exchanger.OrderBook) {
 	placeholders := []string{}
 	params := []interface{}{}
 

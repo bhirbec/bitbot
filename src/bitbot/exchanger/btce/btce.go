@@ -3,7 +3,7 @@ package btce
 import (
 	"fmt"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -18,7 +18,7 @@ var Pairs = map[string]string{
 	"eth_btc": "eth_btc",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/depth/%s", APIURL, pair)
 
@@ -27,19 +27,19 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		Bids [][]float64
 	}
 
-	if err := orderbook.FetchOrderBook(url, &result); err != nil {
+	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
 	bids := makeOrders(result[pair].Bids)
 	asks := makeOrders(result[pair].Asks)
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func makeOrders(rows [][]float64) []*orderbook.Order {
-	orders := make([]*orderbook.Order, len(rows))
+func makeOrders(rows [][]float64) []*exchanger.Order {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  row[0],
 			Volume: row[1],
 		}

@@ -3,7 +3,7 @@ package bittrex
 import (
 	"fmt"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -15,7 +15,7 @@ type order struct {
 	Quantity, Rate float64
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	url := fmt.Sprintf("%s/getorderbook?market=%s&type=both", APIURL, pair)
 
 	var result struct {
@@ -27,7 +27,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		}
 	}
 
-	if err := orderbook.FetchOrderBook(url, &result); err != nil {
+	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
@@ -37,13 +37,13 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 
 	bids := makeOrders(result.Result.Buy)
 	asks := makeOrders(result.Result.Sell)
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func makeOrders(rows []*order) []*orderbook.Order {
-	orders := make([]*orderbook.Order, len(rows))
+func makeOrders(rows []*order) []*exchanger.Order {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  row.Rate,
 			Volume: row.Quantity,
 		}

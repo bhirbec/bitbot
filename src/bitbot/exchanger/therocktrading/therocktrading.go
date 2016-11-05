@@ -3,7 +3,7 @@ package therocktrading
 import (
 	"fmt"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -16,7 +16,7 @@ var Pairs = map[string]string{
 	"eth_btc": "ETHBTC",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/funds/%s/orderbook", APIURL, pair)
 
@@ -25,7 +25,7 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		Bids []map[string]float64
 	}
 
-	if err := orderbook.FetchOrderBook(url, &result); err != nil {
+	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
@@ -39,13 +39,13 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		return nil, err
 	}
 
-	return orderbook.NewOrderbook(ExchangerName, bids, asks)
+	return exchanger.NewOrderbook(ExchangerName, bids, asks)
 }
 
-func parseOrders(rows []map[string]float64) ([]*orderbook.Order, error) {
-	orders := make([]*orderbook.Order, len(rows))
+func parseOrders(rows []map[string]float64) ([]*exchanger.Order, error) {
+	orders := make([]*exchanger.Order, len(rows))
 	for i, row := range rows {
-		orders[i] = &orderbook.Order{
+		orders[i] = &exchanger.Order{
 			Price:  row["price"],
 			Volume: row["amount"],
 		}

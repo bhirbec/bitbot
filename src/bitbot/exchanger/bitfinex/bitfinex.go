@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbot/orderbook"
+	"bitbot/exchanger"
 )
 
 const (
@@ -24,7 +24,7 @@ var Pairs = map[string]string{
 	"zec_btc": "ZECBTC",
 }
 
-func OrderBook(pair string) (*orderbook.OrderBook, error) {
+func OrderBook(pair string) (*exchanger.OrderBook, error) {
 	pair = Pairs[pair]
 	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
 
@@ -33,14 +33,14 @@ func OrderBook(pair string) (*orderbook.OrderBook, error) {
 		Bids orders
 	}
 
-	if err := orderbook.FetchOrderBook(url, &result); err != nil {
+	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
 
-	return orderbook.NewOrderbook(ExchangerName, result.Bids, result.Asks)
+	return exchanger.NewOrderbook(ExchangerName, result.Bids, result.Asks)
 }
 
-type orders []*orderbook.Order
+type orders []*exchanger.Order
 
 func (ko *orders) UnmarshalJSON(b []byte) error {
 	rows := []map[string]string{}
@@ -65,7 +65,7 @@ func (ko *orders) UnmarshalJSON(b []byte) error {
 			return err
 		}
 
-		*ko = append(*ko, &orderbook.Order{price, volume, timestamp})
+		*ko = append(*ko, &exchanger.Order{price, volume, timestamp})
 	}
 	return nil
 }
