@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"bitbot/config"
-	"bitbot/exchanger/orderbook"
 	"bitbot/httpreq"
+	"bitbot/orderbook"
 )
 
 // TODO: defined struct to be returned instead of interface{}

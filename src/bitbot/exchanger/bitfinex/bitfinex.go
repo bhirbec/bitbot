@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbot/exchanger/orderbook"
+	"bitbot/orderbook"
 )
 
 const (

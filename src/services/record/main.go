@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"bitbot/database"
+	"bitbot/orderbook"
+
 	"bitbot/exchanger/bitfinex"
 	"bitbot/exchanger/btce"
 	"bitbot/exchanger/cex"
@@ -15,8 +17,6 @@ import (
 	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/poloniex"
 	"bitbot/exchanger/therocktrading"
-
-	"bitbot/exchanger/orderbook"
 )
 
 // NOTE: use Ticker endpoint to retrieve bid/ask info for several pairs at the same time?

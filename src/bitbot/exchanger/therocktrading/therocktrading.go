@@ -3,7 +3,7 @@ package therocktrading
 import (
 	"fmt"
 
-	"bitbot/exchanger/orderbook"
+	"bitbot/orderbook"
 )
 
 const (

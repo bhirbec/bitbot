@@ -3,7 +3,7 @@ package cex
 import (
 	"fmt"
 
-	"bitbot/exchanger/orderbook"
+	"bitbot/orderbook"
 )
 
 const (

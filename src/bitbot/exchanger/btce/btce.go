@@ -3,7 +3,7 @@ package btce
 import (
 	"fmt"
 
-	"bitbot/exchanger/orderbook"
+	"bitbot/orderbook"
 )
 
 const (

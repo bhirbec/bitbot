@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"bitbot/exchanger/orderbook"
+	"bitbot/orderbook"
 )
 
 // TODO: can we do time formatting on the client instead?
