@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bitbot/database"
+	"bitbot/errorutils"
 	"bitbot/orderbook"
 
 	"bitbot/exchanger/bitfinex"
@@ -75,7 +76,7 @@ func main() {
 }
 
 func work(db *database.DB, pair string) {
-	defer logPanic()
+	defer errorutils.LogPanic()
 
 	var wg sync.WaitGroup
 	obs := []*orderbook.OrderBook{}
