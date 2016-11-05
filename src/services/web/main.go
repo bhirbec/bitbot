@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"bitbot/database"
+	"bitbot/errorutils"
 )
 
 // TODO: HTTP handler are not panic safe
@@ -61,9 +62,7 @@ func main() {
 	log.Printf("Starting webserver on %s\n", *address)
 	http.HandleFunc("/", timeItWrapper(m))
 	err := http.ListenAndServe(*address, nil)
-	if err != nil {
-		panic(err)
-	}
+	errorutils.PanicOnError(err)
 }
 
 func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) {
@@ -77,9 +76,7 @@ func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) 
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("client/index.html")
-	if err != nil {
-		panic(err)
-	}
+	errorutils.PanicOnError(err)
 	t.Execute(w, nil)
 }
 
