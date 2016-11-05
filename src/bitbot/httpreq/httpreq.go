@@ -53,7 +53,13 @@ func doRequest(req *http.Request, h http.Header, v interface{}) error {
 	// or 522 (like CEX maintenance)
 	if resp.StatusCode != http.StatusOK {
 		status := http.StatusText(resp.StatusCode)
-		return fmt.Errorf("Request error: %s - %d %s\n%s", req.URL.String(), resp.StatusCode, status, respBody[:1000])
+
+		limit := 1000
+		if len(respBody) <= limit {
+			limit = len(respBody)
+		}
+
+		return fmt.Errorf("Request error: %s - %d %s\n%s", req.URL.String(), resp.StatusCode, status, respBody[:limit])
 	}
 
 	return json.Unmarshal(respBody, v)
