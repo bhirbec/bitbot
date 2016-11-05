@@ -80,9 +80,8 @@ func work(db *database.DB, pair string) {
 	var wg sync.WaitGroup
 	obs := []*orderbook.OrderBook{}
 	start := time.Now()
-	reversedPair := reversePair(pair)
 
-	var _work = func(pair string, reverse bool, e *exchanger) {
+	var _work = func(pair string, e *exchanger) {
 		defer wg.Done()
 
 		log.Printf("Fetching %s for pair %s...", e.name, pair)
@@ -95,20 +94,13 @@ func work(db *database.DB, pair string) {
 			return
 		}
 
-		if reverse {
-			reverseBidAsk(book)
-		}
-
 		obs = append(obs, book)
 	}
 
 	for _, e := range exchangers {
 		if _, ok := e.pairs[pair]; ok {
 			wg.Add(1)
-			go _work(pair, false, e)
-		} else if _, ok := e.pairs[reversedPair]; ok {
-			wg.Add(1)
-			go _work(reversedPair, true, e)
+			go _work(pair, e)
 		}
 	}
 
@@ -120,24 +112,4 @@ func work(db *database.DB, pair string) {
 
 	database.SaveOrderbooks(db, pair, start, obs)
 	database.ComputeAndSaveArbitrage(db, pair, start, obs)
-}
-
-func reversePair(pair string) string {
-	return pair[4:7] + "_" + pair[:3]
-}
-
-func reverseBidAsk(ob *orderbook.OrderBook) {
-	for _, order := range ob.Bids {
-		order.Volume = order.Price * order.Volume
-		order.Price = 1 / order.Price
-	}
-
-	for _, order := range ob.Asks {
-		order.Volume = order.Price * order.Volume
-		order.Price = 1 / order.Price
-	}
-
-	bids := orderbook.ReverseOrders(ob.Bids)
-	asks := orderbook.ReverseOrders(ob.Asks)
-	ob.Bids, ob.Asks = asks, bids
 }
