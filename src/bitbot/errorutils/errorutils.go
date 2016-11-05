@@ -15,3 +15,10 @@ func LogPanic() {
 		log.Printf("Error: %v\n%s", err, stack)
 	}
 }
+
+// PanicOnError panic if the given err is not nil.
+func PanicOnError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

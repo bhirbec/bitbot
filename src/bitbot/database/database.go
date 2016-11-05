@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"bitbot/errorutils"
 	"bitbot/orderbook"
 )
 
@@ -28,7 +29,7 @@ type DB struct {
 func Open(name, host, port, user, pwd string) *DB {
 	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", user, pwd, host, port, name)
 	db, err := sql.Open("mysql", source)
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 	return &DB{db}
 }
 
@@ -48,11 +49,11 @@ func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.Order
 		const limit = 10
 		n := min(len(ob.Bids), limit)
 		bids, err := json.Marshal(ob.Bids[:n])
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		n = min(len(ob.Asks), limit)
 		asks, err := json.Marshal(ob.Asks[:n])
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		params = append(params, start)
 		params = append(params, pair)
@@ -64,7 +65,7 @@ func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*orderbook.Order
 
 	stmt := "insert into orderbooks (ts, pair, exchanger, bids, asks) values " + strings.Join(placeholders, ",")
 	_, err := db.Exec(stmt, params...)
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 }
 
 func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
@@ -87,7 +88,7 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
     `
 
 	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair)
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 	defer rows.Close()
 
 	var ts, ex string
@@ -96,10 +97,10 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 
 	for rows.Next() {
 		err = rows.Scan(&ts, &ex, &bidPrice, &askPrice, &bidVol, &askVol)
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		date, err := time.Parse(timeFormat, ts)
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		output = append(output, map[string]interface{}{
 			"Exchanger": ex,
@@ -112,7 +113,7 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 	}
 
 	err = rows.Err()
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 
 	return output
 }
@@ -155,7 +156,7 @@ func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*orderb
 
 	stmt := "insert into arbitrages (buy_ex, sell_ex, pair, ts, buy_price, sell_price, vol, spread) values " + strings.Join(placeholders, ",")
 	_, err := db.Exec(stmt, params...)
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 }
 
 func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfit, minVol float64, limit int64) []map[string]interface{} {
@@ -183,7 +184,7 @@ func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfi
     `
 
 	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair, buyExchanger, buyExchanger, sellExchanger, sellExchanger, minProfit, minVol)
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 	defer rows.Close()
 
 	var buyEx, sellEx, ts string
@@ -192,10 +193,10 @@ func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfi
 
 	for rows.Next() {
 		err = rows.Scan(&buyEx, &sellEx, &ts, &buyPrice, &sellPrice, &vol, &spread)
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		date, err := time.Parse(timeFormat, ts)
-		panicOnError(err)
+		errorutils.PanicOnError(err)
 
 		output = append(output, map[string]interface{}{
 			"Date":          date.Format(displayTimeFormat),
@@ -209,13 +210,7 @@ func SelectArbitrages(db *DB, pair, buyExchanger, sellExchanger string, minProfi
 	}
 
 	err = rows.Err()
-	panicOnError(err)
+	errorutils.PanicOnError(err)
 
 	return output
-}
-
-func panicOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
