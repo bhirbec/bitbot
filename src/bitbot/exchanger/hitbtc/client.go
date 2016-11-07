@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"bitbot/config"
 	"bitbot/httpreq"
 )
 
@@ -19,21 +18,25 @@ import (
 // TODO: clarify naming between currency and symbol
 // TODO: generate unique clientOrderId for order creation
 
-var (
-	apiKey    = config.String("hitbtc", "api_key")
-	apiSecret = config.String("hitbtc", "api_secret")
-)
+type Client struct {
+	ApiKey    string
+	ApiSecret string
+}
+
+func NewClient(apiKey, apiSecret string) *Client {
+	return &Client{apiKey, apiSecret}
+}
 
 // TradingBalance returns trading balance.
-func TradingBalance() (interface{}, error) {
+func (c *Client) TradingBalance() (interface{}, error) {
 	const path = "/api/1/trading/balance"
 	v := map[string]interface{}{}
-	err := authGet(path, &v)
+	err := c.authGet(path, &v)
 	return v, err
 }
 
-// NewOrder places a new order.
-func NewOrder(side, symbol string, price, quantity float64, orderType string) (interface{}, error) {
+// PlaceOrder places a new order.
+func (c *Client) PlaceOrder(side, symbol string, price, quantity float64, orderType string) (interface{}, error) {
 	const path = "/api/1/trading/new_order"
 
 	// 1 lot equals 0.01 BTC
@@ -50,12 +53,12 @@ func NewOrder(side, symbol string, price, quantity float64, orderType string) (i
 	}
 
 	v := map[string]interface{}{}
-	err := authPost(path, data, &v)
+	err := c.authPost(path, data, &v)
 	return v, err
 }
 
 // CancelOrder cancels an order.
-func CancelOrder(clientOrderId, symbol, side string) (interface{}, error) {
+func (c *Client) CancelOrder(clientOrderId, symbol, side string) (interface{}, error) {
 	const path = "/api/1/trading/cancel_order"
 
 	cancelRequestClientOrderId := fmt.Sprintf("cancel-order-%d", makeTimestamp())
@@ -68,56 +71,56 @@ func CancelOrder(clientOrderId, symbol, side string) (interface{}, error) {
 	}
 
 	v := map[string]interface{}{}
-	err := authPost(path, data, &v)
+	err := c.authPost(path, data, &v)
 	return v, err
 }
 
 // TransfertToTradingAccount transfers funds from main and to trading accounts.
 // It returns a transaction ID.
-func TransfertToTradingAccount(amount float64, currencyCode string) (string, error) {
+func (c *Client) TransfertToTradingAccount(amount float64, currencyCode string) (string, error) {
 	const path = "/api/1/payment/transfer_to_trading"
-	return transfert(path, amount, currencyCode)
+	return c.transfert(path, amount, currencyCode)
 }
 
 // TransfertToMainAccount transfers funds from trading accounts to main.
 // It returns a transaction ID
-func TransfertToMainAccount(amount float64, currencyCode string) (string, error) {
+func (c *Client) TransfertToMainAccount(amount float64, currencyCode string) (string, error) {
 	const path = "/api/1/payment/transfer_to_main"
-	return transfert(path, amount, currencyCode)
+	return c.transfert(path, amount, currencyCode)
 }
 
-func transfert(path string, amount float64, currencyCode string) (string, error) {
+func (c *Client) transfert(path string, amount float64, currencyCode string) (string, error) {
 	data := &url.Values{
 		"amount":        []string{fmt.Sprint(amount)},
 		"currency_code": []string{currencyCode},
 	}
 
 	var v struct{ Transaction string }
-	err := authPost(path, data, &v)
+	err := c.authPost(path, data, &v)
 	return v.Transaction, err
 }
 
 // PaymentAddress returns the last created incoming cryptocurrency address that
 // can be used to deposit.
-func PaymentAddress(currency string) (string, error) {
+func (c *Client) PaymentAddress(currency string) (string, error) {
 	const path = "/api/1/payment/address/"
 	var v struct{ Address string }
-	err := authGet(path+currency, &v)
+	err := c.authGet(path+currency, &v)
 	return v.Address, err
 }
 
 // CreateAddress creates an address that can be used to deposit cryptocurrency to your account.
 // It returns a new cryptocurrency address.
-func CreateAddress(currency string) (string, error) {
+func (c *Client) CreateAddress(currency string) (string, error) {
 	const path = "/api/1/payment/address/"
 	var v struct{ Address string }
-	err := authPost(path+currency, nil, &v)
+	err := c.authPost(path+currency, nil, &v)
 	return v.Address, err
 }
 
 // Withdraw withdraws money and creates an outgoing crypotocurrency transaction. It returns
 // a transaction ID. Withdraw operates on the main account (not the trading account).
-func Withdraw(amount float64, currencyCode, address string) (string, error) {
+func (c *Client) Withdraw(amount float64, currencyCode, address string) (string, error) {
 	const path = "/api/1/payment/payout"
 
 	data := &url.Values{
@@ -127,41 +130,39 @@ func Withdraw(amount float64, currencyCode, address string) (string, error) {
 	}
 
 	var v struct{ Transaction string }
-	err := authPost(path, data, &v)
+	err := c.authPost(path, data, &v)
 	return v.Transaction, err
 }
 
-// ========================================================
-
-func authGet(path string, v interface{}) error {
-	uri := authURI(path)
-	headers := authHeader(uri, "")
+func (c *Client) authGet(path string, v interface{}) error {
+	uri := authURI(path, c.ApiKey)
+	headers := authHeader(uri, "", c.ApiSecret)
 	return httpreq.Get(host+uri, headers, v)
 }
 
-func authPost(path string, data *url.Values, v interface{}) error {
+func (c *Client) authPost(path string, data *url.Values, v interface{}) error {
 	var body string
 	if data != nil {
 		body = data.Encode()
 	}
-	uri := authURI(path)
-	headers := authHeader(uri, body)
+	uri := authURI(path, c.ApiKey)
+	headers := authHeader(uri, body, c.ApiSecret)
 	return httpreq.Post(host+uri, headers, body, v)
 }
 
-func authURI(path string) string {
-	return fmt.Sprintf("%s?nonce=%d&apikey=%s", path, makeTimestamp(), *apiKey)
+func authURI(path, apiKey string) string {
+	return fmt.Sprintf("%s?nonce=%d&apikey=%s", path, makeTimestamp(), apiKey)
 }
 
-func authHeader(uri, body string) http.Header {
-	signature := sign(uri + body)
+func authHeader(uri, body, apiSecret string) http.Header {
+	signature := sign(uri+body, apiSecret)
 	headers := http.Header{}
 	headers.Add("X-Signature", signature)
 	return headers
 }
 
-func sign(msg string) string {
-	h := hmac.New(sha512.New, []byte(*apiSecret))
+func sign(msg, apiSecret string) string {
+	h := hmac.New(sha512.New, []byte(apiSecret))
 	h.Write([]byte(msg))
 	return strings.ToLower(hex.EncodeToString(h.Sum(nil)))
 }
