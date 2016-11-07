@@ -12,21 +12,22 @@ const (
 	ExchangerName = "Kraken"
 )
 
-var Pairs = map[string]string{
-	"btc_eur": "XXBTZEUR",
-	"btc_usd": "XXBTZUSD",
-	"ltc_usd": "XLTCZUSD",
-	"ltc_btc": "XLTCXXBT",
-	// "eth_usd": "XETHZUSD",
-	"eth_btc": "XETHXXBT",
-	// "etc_usd": "XETCZUSD",
-	"etc_btc": "XETCXXBT",
-	"zec_btc": "XZECXXBT",
+// Pairs maps standardized currency pairs to Kraken pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.BTC_EUR: "XXBTZEUR",
+	exchanger.BTC_USD: "XXBTZUSD",
+	exchanger.LTC_USD: "XLTCZUSD",
+	exchanger.LTC_BTC: "XLTCXXBT",
+	// exchanger.ETH_USD: "XETHZUSD",
+	exchanger.ETH_BTC: "XETHXXBT",
+	// exchanger.ETC_USD: "XETCZUSD",
+	exchanger.ETC_BTC: "XETCXXBT",
+	exchanger.ZEC_BTC: "XZECXXBT",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, p)
 
 	var result struct {
 		Error  []string
@@ -44,12 +45,12 @@ func OrderBook(pair string) (*exchanger.OrderBook, error) {
 		return nil, fmt.Errorf("Kraken returned an error. %s", result.Error[0])
 	}
 
-	asks, err := parseOrders(result.Result[pair].Asks)
+	asks, err := parseOrders(result.Result[p].Asks)
 	if err != nil {
 		return nil, err
 	}
 
-	bids, err := parseOrders(result.Result[pair].Bids)
+	bids, err := parseOrders(result.Result[p].Bids)
 	if err != nil {
 		return nil, err
 	}

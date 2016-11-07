@@ -34,6 +34,7 @@ var (
 	address = flag.String("b", "localhost:8080", "host:port TCP informations")
 )
 
+// TODO: use exchanger.Pair?
 var pairs = map[string]bool{
 	"btc_usd": true,
 	"btc_eur": true,

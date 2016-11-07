@@ -36,8 +36,8 @@ var (
 
 type Exchanger struct {
 	name  string
-	pairs map[string]string
-	f     func(string) (*exchanger.OrderBook, error)
+	pairs map[exchanger.Pair]string
+	f     func(exchanger.Pair) (*exchanger.OrderBook, error)
 }
 
 var exchangers = []*Exchanger{
@@ -51,13 +51,13 @@ var exchangers = []*Exchanger{
 	&Exchanger{therocktrading.ExchangerName, therocktrading.Pairs, therocktrading.OrderBook},
 }
 
-var pairs = []string{
-	"btc_usd",
-	"btc_eur",
-	"ltc_btc",
-	"eth_btc",
-	"etc_btc",
-	"zec_btc",
+var pairs = []exchanger.Pair{
+	exchanger.BTC_USD,
+	exchanger.BTC_EUR,
+	exchanger.LTC_BTC,
+	exchanger.ETH_BTC,
+	exchanger.ETC_BTC,
+	exchanger.ZEC_BTC,
 }
 
 func main() {
@@ -75,14 +75,14 @@ func main() {
 	}
 }
 
-func work(db *database.DB, pair string) {
+func work(db *database.DB, pair exchanger.Pair) {
 	defer errorutils.LogPanic()
 
 	var wg sync.WaitGroup
 	obs := []*exchanger.OrderBook{}
 	start := time.Now()
 
-	var _work = func(pair string, e *Exchanger) {
+	var _work = func(pair exchanger.Pair, e *Exchanger) {
 		defer wg.Done()
 
 		log.Printf("Fetching %s for pair %s...", e.name, pair)

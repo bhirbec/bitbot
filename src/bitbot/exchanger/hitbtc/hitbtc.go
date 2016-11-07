@@ -13,18 +13,19 @@ const (
 	ExchangerName = "Hitbtc"
 )
 
-var Pairs = map[string]string{
-	"btc_eur": "BTCEUR",
-	"btc_usd": "BTCUSD",
-	"ltc_btc": "LTCBTC",
-	"ltc_usd": "LTCUSD",
-	"eth_btc": "ETHBTC",
-	"zec_btc": "ZECBTC",
+// Pairs maps standardized currency pairs to Hitbtc pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.BTC_EUR: "BTCEUR",
+	exchanger.BTC_USD: "BTCUSD",
+	exchanger.LTC_BTC: "LTCBTC",
+	exchanger.LTC_USD: "LTCUSD",
+	exchanger.ETH_BTC: "ETHBTC",
+	exchanger.ZEC_BTC: "ZECBTC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, p)
 
 	var result struct {
 		Asks [][]string

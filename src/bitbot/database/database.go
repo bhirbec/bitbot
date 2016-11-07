@@ -33,7 +33,7 @@ func Open(name, host, port, user, pwd string) *DB {
 	return &DB{db}
 }
 
-func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*exchanger.OrderBook) {
+func SaveOrderbooks(db *DB, pair exchanger.Pair, start time.Time, obs []*exchanger.OrderBook) {
 	placeholders := []string{}
 	params := []interface{}{}
 
@@ -56,7 +56,7 @@ func SaveOrderbooks(db *DB, pair string, start time.Time, obs []*exchanger.Order
 		errorutils.PanicOnError(err)
 
 		params = append(params, start)
-		params = append(params, pair)
+		params = append(params, string(pair))
 		params = append(params, ob.Exchanger)
 		params = append(params, bids)
 		params = append(params, asks)
@@ -118,7 +118,7 @@ func SelectBidAsk(db *DB, pair string, limit int64) []map[string]interface{} {
 	return output
 }
 
-func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*exchanger.OrderBook) {
+func ComputeAndSaveArbitrage(db *DB, pair exchanger.Pair, start time.Time, obs []*exchanger.OrderBook) {
 	placeholders := []string{}
 	params := []interface{}{}
 
@@ -140,7 +140,7 @@ func ComputeAndSaveArbitrage(db *DB, pair string, start time.Time, obs []*exchan
 
 			params = append(params, buyOb.Exchanger)
 			params = append(params, sellOb.Exchanger)
-			params = append(params, pair)
+			params = append(params, string(pair))
 			params = append(params, start)
 			params = append(params, buyOrder.Price)
 			params = append(params, sellOrder.Price)

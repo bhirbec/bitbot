@@ -11,16 +11,17 @@ const (
 	ExchangerName = "Cex"
 )
 
-var Pairs = map[string]string{
-	"btc_eur": "BTC/EUR",
-	"btc_usd": "BTC/USD",
-	"ltc_btc": "LTC/BTC",
-	"eth_btc": "ETH/BTC",
+// Pairs maps standardized currency pairs to Cex pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.BTC_EUR: "BTC/EUR",
+	exchanger.BTC_USD: "BTC/USD",
+	exchanger.LTC_BTC: "LTC/BTC",
+	exchanger.ETH_BTC: "ETH/BTC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%sorder_book/%s", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%sorder_book/%s", APIURL, p)
 
 	var result struct {
 		Timestamp int64

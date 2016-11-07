@@ -12,13 +12,14 @@ const (
 	ExchangerName = "Gemini"
 )
 
-var Pairs = map[string]string{
-	"eth_btc": "ethbtc",
+// Pairs maps standardized currency pairs to Gemini pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.ETH_BTC: "ethbtc",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/book/%s", APIURL, p)
 
 	var result struct {
 		Asks []map[string]string

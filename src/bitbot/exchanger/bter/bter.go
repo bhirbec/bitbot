@@ -12,16 +12,17 @@ const (
 	ExchangerName = "Bter"
 )
 
-var Pairs = map[string]string{
-	"btc_usd": "BTC_USD",
-	"ltc_btc": "LTC_BTC",
-	"eth_btc": "ETH_BTC",
-	"etc_btc": "ETC_BTC",
+// Pairs maps standardized currency pairs to Bter pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.BTC_USD: "BTC_USD",
+	exchanger.LTC_BTC: "LTC_BTC",
+	exchanger.ETH_BTC: "ETH_BTC",
+	exchanger.ETC_BTC: "ETC_BTC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/depth/%s", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/depth/%s", APIURL, p)
 
 	var result struct {
 		Result string

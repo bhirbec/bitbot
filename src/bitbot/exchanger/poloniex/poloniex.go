@@ -12,16 +12,17 @@ const (
 	ExchangerName = "Poloniex"
 )
 
-var Pairs = map[string]string{
-	"eth_btc": "BTC_ETH",
-	"etc_btc": "BTC_ETC",
-	"ltc_btc": "BTC_LTC",
-	"zec_btc": "BTC_ZEC",
+// Pairs maps standardized currency pairs to Poloniex pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.ETH_BTC: "BTC_ETH",
+	exchanger.ETC_BTC: "BTC_ETC",
+	exchanger.LTC_BTC: "BTC_LTC",
+	exchanger.ZEC_BTC: "BTC_ZEC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s?command=returnOrderBook&currencyPair=%s&depth=10", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s?command=returnOrderBook&currencyPair=%s&depth=10", APIURL, p)
 
 	var result struct {
 		Bids [][]interface{}

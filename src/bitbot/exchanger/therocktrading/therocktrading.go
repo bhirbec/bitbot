@@ -11,14 +11,15 @@ const (
 	ExchangerName = "The Rock Trading"
 )
 
-var Pairs = map[string]string{
-	"ltc_btc": "LTCBTC",
-	"eth_btc": "ETHBTC",
+// Pairs maps standardized currency pairs to Poloniex pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.LTC_BTC: "LTCBTC",
+	exchanger.ETH_BTC: "ETHBTC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/funds/%s/orderbook", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/funds/%s/orderbook", APIURL, p)
 
 	var result struct {
 		Asks []map[string]float64

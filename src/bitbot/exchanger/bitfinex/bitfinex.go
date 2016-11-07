@@ -13,20 +13,21 @@ const (
 	ExchangerName = "Bitfinex"
 )
 
-var Pairs = map[string]string{
-	"btc_usd": "BTCUSD",
-	"ltc_usd": "LTCUSD",
-	"ltc_btc": "LTCBTC",
-	"eth_usd": "ETHUSD",
-	"eth_btc": "ETHBTC",
-	"etc_usd": "ETCUSD",
-	"etc_btc": "ETCBTC",
-	"zec_btc": "ZECBTC",
+// Pairs maps standardized currency pairs to Bitfinex pairs as used by the API.
+var Pairs = map[exchanger.Pair]string{
+	exchanger.BTC_USD: "BTCUSD",
+	exchanger.LTC_USD: "LTCUSD",
+	exchanger.LTC_BTC: "LTCBTC",
+	exchanger.ETH_USD: "ETHUSD",
+	exchanger.ETH_BTC: "ETHBTC",
+	exchanger.ETC_USD: "ETCUSD",
+	exchanger.ETC_BTC: "ETCBTC",
+	exchanger.ZEC_BTC: "ZECBTC",
 }
 
-func OrderBook(pair string) (*exchanger.OrderBook, error) {
-	pair = Pairs[pair]
-	url := fmt.Sprintf("%s/book/%s", APIURL, pair)
+func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
+	p := Pairs[pair]
+	url := fmt.Sprintf("%s/book/%s", APIURL, p)
 
 	var result struct {
 		Asks orders
