@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"bitbot/exchanger"
 	"bitbot/httpreq"
 )
 
@@ -17,6 +18,32 @@ import (
 // TODO: check use of fmt.Printf() makes amounts have the right number of decimals
 // TODO: clarify naming between currency and symbol
 // TODO: generate unique clientOrderId for order creation
+
+// lot size as defined on https://hitbtc.com/api under "Currency symbols" section
+var lotSizes = map[exchanger.Pair]float64{
+	exchanger.BTC_USD:   0.01,
+	exchanger.BTC_EUR:   0.01,
+	exchanger.LTC_BTC:   0.1,
+	exchanger.LTC_USD:   0.1,
+	exchanger.LTC_EUR:   0.1,
+	exchanger.DSH_BTC:   1,
+	exchanger.ETH_BTC:   0.001,
+	exchanger.QCN_BTC:   0.01,
+	exchanger.FCN_BTC:   0.01,
+	exchanger.LSK_BTC:   1,
+	exchanger.LSK_EUR:   1,
+	exchanger.STEEM_BTC: 0.001,
+	exchanger.STEEM_EUR: 0.001,
+	exchanger.SBD_BTC:   0.001,
+	exchanger.DASH_BTC:  0.001,
+	exchanger.XEM_BTC:   1,
+	exchanger.XEM_EUR:   1,
+	exchanger.EMC_BTC:   0.1,
+	exchanger.EMC_EUR:   0.01,
+	exchanger.SC_BTC:    100,
+	exchanger.SC_USD:    1100,
+	exchanger.ARDR_BTC:  1,
+}
 
 type Client struct {
 	ApiKey    string
@@ -36,18 +63,25 @@ func (c *Client) TradingBalance() (interface{}, error) {
 }
 
 // PlaceOrder places a new order.
-func (c *Client) PlaceOrder(side, symbol string, price, quantity float64, orderType string) (interface{}, error) {
+func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (interface{}, error) {
 	const path = "/api/1/trading/new_order"
 
-	// 1 lot equals 0.01 BTC
-	qtyInLots := fmt.Sprintf("%.12f", quantity*100)
+	size, ok := lotSizes[pair]
+	if !ok {
+		return nil, fmt.Errorf("%s: No lot size for this currency pair %s", ExchangerName, pair)
+	}
+
+	// TODO: use decimal type?
+	// TODO: Price, in currency units, consider price steps?
+	pr := fmt.Sprint(price)
+	lots := fmt.Sprintf("%.12f", quantity*size)
 
 	data := &url.Values{
 		"clientOrderId": []string{fmt.Sprintf("hitbtc-%d", makeTimestamp())},
-		"symbol":        []string{symbol},
+		"symbol":        []string{string(pair)},
 		"side":          []string{side},
-		"price":         []string{fmt.Sprint(price)},
-		"quantity":      []string{qtyInLots},
+		"price":         []string{pr},
+		"quantity":      []string{lots},
 		"type":          []string{orderType},
 		"timeInForce":   []string{"GTC"},
 	}
