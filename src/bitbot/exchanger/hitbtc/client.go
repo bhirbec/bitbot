@@ -89,24 +89,29 @@ func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity fl
 		return nil, fmt.Errorf("%s: No lot size for this currency pair %s", ExchangerName, pair)
 	}
 
-	// TODO: use decimal type?
-	// TODO: Price, in currency units, consider price steps?
-	pr := fmt.Sprint(price)
-	lots := fmt.Sprintf("%.12f", quantity*size)
 	p, ok := Pairs[pair]
 	if !ok {
 		return nil, fmt.Errorf("%s: Pair not traded on this market %s", ExchangerName, pair)
 	}
 
+	lots := fmt.Sprintf("%f", quantity/size)
 
 	data := &url.Values{
 		"clientOrderId": []string{fmt.Sprintf("hitbtc-%d", makeTimestamp())},
 		"symbol":        []string{p},
 		"side":          []string{side},
-		"price":         []string{pr},
 		"quantity":      []string{lots},
 		"type":          []string{orderType},
-		"timeInForce":   []string{"GTC"},
+	}
+
+	// TODO: use decimal type?
+	// TODO: what about stopLimit type?
+	// TODO: Price, in currency units, consider price steps?
+	if orderType == "limit" {
+		data.Add("price", fmt.Sprint(price))
+		data.Add("timeInForce", "GTC")
+	} else {
+		data.Add("timeInForce", "IOC")
 	}
 
 	v := map[string]interface{}{}
