@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"bitbot/exchanger"
@@ -31,11 +32,24 @@ func NewClient(apiKey, apiSecret string) *Client {
 }
 
 // TradingBalance returns all of your available balances. Sample output:
-// {"BTC":"0.59098578","LTC":"3.31117268", ... }
-func (c *Client) TradingBalances() (map[string]string, error) {
+// {"BTC": 0.59098578,"LTC": 3.31117268, ... }
+func (c *Client) TradingBalances() (map[string]float64, error) {
 	v := map[string]string{}
 	err := c.post("returnBalances", nil, &v)
-	return v, err
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string]float64{}
+	for key, str := range v {
+		value, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return nil, err
+		}
+		out[key] = value
+	}
+
+	return out, nil
 }
 
 // Returns all of your deposit addresses
