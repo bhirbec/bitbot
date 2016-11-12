@@ -55,7 +55,7 @@ func NewClient(apiKey, apiSecret string) *Client {
 }
 
 // TradingBalance returns trading balance.
-func (c *Client) TradingBalance() (interface{}, error) {
+func (c *Client) TradingBalances() (map[string]interface{}, error) {
 	const path = "/api/1/trading/balance"
 	v := map[string]interface{}{}
 	err := c.authGet(path, &v)
