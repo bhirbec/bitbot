@@ -55,11 +55,28 @@ func NewClient(apiKey, apiSecret string) *Client {
 }
 
 // TradingBalance returns trading balance.
-func (c *Client) TradingBalances() (map[string]interface{}, error) {
+func (c *Client) TradingBalances() (map[string]float64, error) {
+	var v struct {
+		Balance []struct {
+			Currency_code string
+			Cash          float64
+			Reserved      float64
+		}
+	}
+
 	const path = "/api/1/trading/balance"
-	v := map[string]interface{}{}
-	err := c.authGet(path, &v)
-	return v, err
+	if err := c.authGet(path, &v); err != nil {
+		return nil, err
+	}
+
+	balances := make(map[string]float64)
+	for _, row := range v.Balance {
+		// the "cash" entry is the available trading balance and there's no need to decrease this value
+		// using the "reserved" value.
+		balances[row.Currency_code] = row.Cash
+	}
+
+	return balances, nil
 }
 
 // PlaceOrder places a new order.
