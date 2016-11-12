@@ -5,10 +5,17 @@ import (
 	"strconv"
 
 	"bitbot/exchanger"
+	"bitbot/httpreq"
 )
 
 const (
-	APIURL        = "https://api.kraken.com/0"
+	// APIURL is the official Kraken API Endpoint
+	APIURL = "https://api.kraken.com"
+
+	// APIVersion is the official Kraken API Version Number
+	APIVersion = "0"
+
+	// "Kraken"
 	ExchangerName = "Kraken"
 )
 
@@ -18,16 +25,16 @@ var Pairs = map[exchanger.Pair]string{
 	exchanger.BTC_USD: "XXBTZUSD",
 	exchanger.LTC_USD: "XLTCZUSD",
 	exchanger.LTC_BTC: "XLTCXXBT",
-	// exchanger.ETH_USD: "XETHZUSD",
+	exchanger.ETH_USD: "XETHZUSD",
 	exchanger.ETH_BTC: "XETHXXBT",
-	// exchanger.ETC_USD: "XETCZUSD",
+	exchanger.ETC_USD: "XETCZUSD",
 	exchanger.ETC_BTC: "XETCXXBT",
 	exchanger.ZEC_BTC: "XZECXXBT",
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
 	p := Pairs[pair]
-	url := fmt.Sprintf("%s/public/Depth?pair=%s", APIURL, p)
+	url := fmt.Sprintf("%s/%s/public/Depth?pair=%s", APIURL, APIVersion, p)
 
 	var result struct {
 		Error  []string
@@ -37,7 +44,7 @@ func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
 		}
 	}
 
-	if err := exchanger.FetchOrderBook(url, &result); err != nil {
+	if err := httpreq.Get(url, nil, &result); err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,7 @@
 package httpreq
 
 // TODO: use this instead https://gowalker.org/github.com/parnurzeal/gorequest
+// TODO: use map[string]interface{} for headers?
 
 import (
 	"bytes"
