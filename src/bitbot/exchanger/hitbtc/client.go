@@ -43,6 +43,7 @@ var lotSizes = map[exchanger.Pair]float64{
 	exchanger.SC_BTC:    100,
 	exchanger.SC_USD:    1100,
 	exchanger.ARDR_BTC:  1,
+	exchanger.ZEC_BTC:   0.001,
 }
 
 type Client struct {
@@ -92,10 +93,15 @@ func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity fl
 	// TODO: Price, in currency units, consider price steps?
 	pr := fmt.Sprint(price)
 	lots := fmt.Sprintf("%.12f", quantity*size)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("%s: Pair not traded on this market %s", ExchangerName, pair)
+	}
+
 
 	data := &url.Values{
 		"clientOrderId": []string{fmt.Sprintf("hitbtc-%d", makeTimestamp())},
-		"symbol":        []string{string(pair)},
+		"symbol":        []string{p},
 		"side":          []string{side},
 		"price":         []string{pr},
 		"quantity":      []string{lots},
@@ -109,15 +115,20 @@ func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity fl
 }
 
 // CancelOrder cancels an order.
-func (c *Client) CancelOrder(clientOrderId, symbol, side string) (interface{}, error) {
+func (c *Client) CancelOrder(clientOrderId string, pair exchanger.Pair, side string) (interface{}, error) {
 	const path = "/api/1/trading/cancel_order"
+
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("%s: Pair not traded on this market %s", ExchangerName, pair)
+	}
 
 	cancelRequestClientOrderId := fmt.Sprintf("cancel-order-%d", makeTimestamp())
 
 	data := &url.Values{
 		"clientOrderId":              []string{clientOrderId},
 		"cancelRequestClientOrderId": []string{cancelRequestClientOrderId},
-		"symbol":                     []string{symbol},
+		"symbol":                     []string{p},
 		"side":                       []string{side},
 	}
 
