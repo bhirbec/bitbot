@@ -85,6 +85,18 @@ func (c *Client) placeOrder(cmd string, pair exchanger.Pair, rate, amount float6
 	return v, err
 }
 
+// Withdraw places a withdrawal for a given currency, with no email confirmation. In order to use
+// this method, the withdrawal privilege must be enabled for your API key.
+func (c *Client) Withdraw(amount float64, currency, address string) (string, error) {
+	data := &url.Values{}
+	data.Add("currency", currency)
+	data.Add("amount", fmt.Sprint(amount))
+	data.Add("address", address)
+	var v struct{ Response string }
+	err := c.post("withdraw", data, &v)
+	return v.Response, err
+}
+
 func (c *Client) post(cmd string, data *url.Values, v interface{}) error {
 	if data == nil {
 		data = &url.Values{}
