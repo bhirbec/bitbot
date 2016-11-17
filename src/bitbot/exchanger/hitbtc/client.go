@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,7 +56,33 @@ func NewClient(apiKey, apiSecret string) *Client {
 	return &Client{apiKey, apiSecret}
 }
 
-// TradingBalance returns trading balance.
+// MainBalances returns multi-currency balance of the main account.
+func (c *Client) MainBalances() (map[string]float64, error) {
+	var v struct {
+		Balance []struct {
+			Currency_code string
+			Balance       string
+		}
+	}
+
+	const path = "/api/1/payment/balance"
+	if err := c.authGet(path, &v); err != nil {
+		return nil, err
+	}
+
+	balances := make(map[string]float64)
+	for _, row := range v.Balance {
+		v, err := strconv.ParseFloat(row.Balance, 64)
+		if err != nil {
+			return nil, err
+		}
+		balances[row.Currency_code] = v
+	}
+
+	return balances, nil
+}
+
+// TradingBalance returns trading account balances.
 func (c *Client) TradingBalances() (map[string]float64, error) {
 	var v struct {
 		Balance []struct {
@@ -199,6 +226,32 @@ func (c *Client) Withdraw(amount float64, currencyCode, address string) (string,
 	var v struct{ Transaction string }
 	err := c.authPost(path, data, &v)
 	return v.Transaction, err
+}
+
+// Transaction returns payment transaction and its status transfert.
+// Return a map[string]interface{} with the following :
+// - external_data
+// - type:payout
+// - created: 1.479274795e+09
+// - currency_code_to: ZEC
+// - destination_data: xxx
+// - bitcoin_address:
+// - bitcoin_return_address:
+// - id: xxx
+// - commission_percent: 0
+// - finished: 1.479275198e+09
+// - amount_from: 0.140731290000000000000000
+// - amount_to: 0.140731290000000000000000
+// - status: pending
+// - currency_code_from: ZEC
+func (c *Client) Transaction(id string) (map[string]interface{}, error) {
+	const path = "/api/1/payment/transactions/"
+	var v struct {
+		Transaction map[string]interface{}
+	}
+	err := c.authGet(path+id, &v)
+	return v.Transaction, err
+
 }
 
 func (c *Client) authGet(path string, v interface{}) error {
