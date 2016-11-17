@@ -56,7 +56,7 @@ func SaveOrderbooks(db *DB, pair exchanger.Pair, start time.Time, obs []*exchang
 		errorutils.PanicOnError(err)
 
 		params = append(params, start)
-		params = append(params, string(pair))
+		params = append(params, pair.String())
 		params = append(params, ob.Exchanger)
 		params = append(params, bids)
 		params = append(params, asks)
@@ -140,7 +140,7 @@ func ComputeAndSaveArbitrage(db *DB, pair exchanger.Pair, start time.Time, obs [
 
 			params = append(params, buyOb.Exchanger)
 			params = append(params, sellOb.Exchanger)
-			params = append(params, string(pair))
+			params = append(params, pair.String())
 			params = append(params, start)
 			params = append(params, buyOrder.Price)
 			params = append(params, sellOrder.Price)
