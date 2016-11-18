@@ -107,7 +107,9 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 	return balances, nil
 }
 
-// PlaceOrder places a new order.
+// BuyMarket place a buy order of type "market" and timeInForce "IOC". (see https://hitbtc.com/api#neworder)
+// PlaceOrder places a new order. Read Hitbtc documentation for a detailed explanation about the
+// arguments (https://hitbtc.com/api#neworder)
 func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (interface{}, error) {
 	const path = "/api/1/trading/new_order"
 
