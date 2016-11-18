@@ -7,7 +7,7 @@
   tasks:
     # TODO: use shallow repo with depth=1?
     - name: Clone repository
-      git: repo=https://github.com/bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
+      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
       sudo: no
 
     - name: Fetch repository
