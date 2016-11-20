@@ -67,7 +67,12 @@ func main() {
 	cred = config["poloniex"]
 	var poloniexClient = poloniex.NewClient(cred.Key, cred.Secret)
 
-	balances, err := getBalances(hitbtcClient, poloniexClient)
+	clients := map[string]Client{
+		"Hitbtc":   hitbtcClient,
+		"Poloniex": poloniexClient,
+	}
+
+	balances, err := getBalances(clients)
 	if err != nil {
 		log.Printf("Cannot retrieve balances: %s", err)
 	} else {
@@ -84,14 +89,19 @@ func main() {
 			availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
-			arbitre(hitbtcClient, poloniexClient, arb, pair)
+			arbitre(clients, arb, pair)
 
 			// TODO: arbitre() should block
 			time.Sleep(1 * time.Minute)
 
-			balances, err = rebalance(hitbtcClient, poloniexClient, arb, pair)
+			err := rebalance(hitbtcClient, poloniexClient, arb, pair)
 			if err != nil {
 				log.Println(err)
+			}
+
+			balances, err = getBalances(clients)
+			if err != nil {
+				log.Printf("Cannot retrieve balances: %s", err)
 			}
 		}
 
@@ -101,92 +111,21 @@ func main() {
 	}
 }
 
-func arbitre(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchanger.Pair) {
-	if arb.buyEx.Exchanger == "Hitbtc" {
-		go executeHitbtc(h, "buy", pair, 0, arb.vol)
-		go executePoloniex(p, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
-	} else {
-		go executePoloniex(p, "buy", pair, arb.buyEx.Asks[0].Price, arb.vol)
-		go executeHitbtc(h, "sell", pair, 0, arb.vol)
-	}
+func arbitre(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) {
+	buyClient := clients[arb.buyEx.Exchanger]
+	sellClient := clients[arb.sellEx.Exchanger]
+	go executeOrder(buyClient, "buy", pair, 0, arb.vol)
+	go executeOrder(sellClient, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
 }
 
-func executeHitbtc(h *hitbtc.Client, side string, pair exchanger.Pair, price, vol float64) {
-	log.Printf("Sending %s order on Hitbtc: %f %s\n", side, vol, exchanger.ZEC_BTC)
-	ack, err := h.PlaceOrder(side, pair, 0, vol, "market")
-	if err != nil {
-		// { ExecutionReport: {
-		//     orderStatus:rejected
-		//     side:sell
-		//     userId:user_142834
-		//     symbol:ZECBTC
-		//     timeInForce:IOC
-		//     lastPrice:
-		//     orderRejectReason:badQuantity
-		//     orderId:N/A
-		//     averagePrice:0
-		//     execReportType:rejected
-		//     type:market
-		//     leavesQuantity:0
-		//     lastQuantity:0
-		//     cumQuantity:0
-		//     clientOrderId:hitbtc-1479089075799175
-		//     quantity:0}
-		// }
-
-		// {"code":"InvalidArgument","message":"Fields are not valid: quantity"}
-		log.Printf("Cannot execute `%s` order on Hitbtc: %s, %s\n", side, ack, err)
-	} else {
-		// {ExecutionReport: {
-		//     orderStatus:new
-		//     leavesQuantity:63
-		//     timestamp:1.479186944972e+12
-		//     side:buy
-		//     type:market
-		//     timeInForce:IOC
-		//     created:1.479186944972e+12
-		//     execReportType:new
-		//     averagePrice:0
-		//     orderId:564643943
-		//     userId:user_142834
-		//     symbol:ZECBTC
-		//     lastQuantity:0
-		//     lastPrice:
-		//     cumQuantity:0
-		//     clientOrderId:hitbtc-1479186945249209
-		//     quantity:63}
-		// }
-		log.Println("Hitbtc order successed", ack)
-	}
-}
-
-func executePoloniex(p *poloniex.Client, side string, pair exchanger.Pair, price, vol float64) {
-	var ack interface{}
-	var err error
-
-	log.Printf("Sending %s order on Poloniex: %f %s\n", side, vol, exchanger.ZEC_BTC)
-	if side == "buy" {
-		ack, err = p.Buy(pair, price, vol)
-	} else {
-		ack, err = p.Sell(pair, price, vol)
-	}
+func executeOrder(c Client, side string, pair exchanger.Pair, price, vol float64) {
+	log.Printf("Sending %s order on %s: %f %s\n", c.Exchanger(), side, vol, pair)
+	ack, err := c.PlaceOrder(side, pair, price, vol)
 
 	if err != nil {
-		// {error: Total must be at least 0.0001.}
-		log.Printf("Cannot executfe `%s` order on Poloniex: %s", err, side)
+		log.Printf("Cannot execute %s order on %s: %s, %s\n", side, c.Exchanger(), ack, err)
 	} else {
-		// {
-		//  orderNumber:3073419682
-		// 	resultingTrades: {
-		// 		amount:0.06300000
-		// 		date:2016-11-15 05:15:45
-		// 		rate:0.15445400
-		// 		total:0.00973060
-		// 		tradeID:620559
-		// 		type:sell
-		// 	 }
-		// }
-		log.Println("Poloniex order successed", ack)
+		log.Printf("Order sent successfully on %s: %s\n", c.Exchanger(), ack)
 	}
 }
 

@@ -22,15 +22,21 @@ var transfertFunctions = map[string]transfertFunc{
 	"Poloniex->Hitbtc": moveFromPoloniexToHitbtc,
 }
 
-func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchanger.Pair) (map[string]map[string]float64, error) {
-	balances, err := getBalances(h, p)
+func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchanger.Pair) error {
+	// TODO: client should passed as a function parameter
+	clients := map[string]Client{
+		h.Exchanger(): h,
+		p.Exchanger(): p,
+	}
+
+	balances, err := getBalances(clients)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	addresses, err := getAddresses(h, p)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
@@ -52,7 +58,7 @@ func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchan
 		)
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -75,11 +81,11 @@ func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchan
 		)
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return getBalances(h, p)
+	return nil
 }
 
 func moveFromHitbtcToPoloniex(h *hitbtc.Client, p *poloniex.Client, cur string, vol float64, address string) error {
@@ -180,20 +186,16 @@ func getAddresses(h *hitbtc.Client, p *poloniex.Client) (map[string]map[string]s
 	return out, nil
 
 }
-func getBalances(h *hitbtc.Client, p *poloniex.Client) (map[string]map[string]float64, error) {
-	b1, err := h.TradingBalances()
-	if err != nil {
-		return nil, err
-	}
 
-	b2, err := p.TradingBalances()
-	if err != nil {
-		return nil, err
-	}
+func getBalances(clients map[string]Client) (map[string]map[string]float64, error) {
+	out := map[string]map[string]float64{}
 
-	out := map[string]map[string]float64{
-		"Hitbtc":   b1,
-		"Poloniex": b2,
+	for _, c := range clients {
+		b, err := c.TradingBalances()
+		if err != nil {
+			return nil, err
+		}
+		out[c.Exchanger()] = b
 	}
 
 	return out, nil

@@ -56,6 +56,11 @@ func NewClient(apiKey, apiSecret string) *Client {
 	return &Client{apiKey, apiSecret}
 }
 
+// Exchanger return the name of the exchanger.
+func (c *Client) Exchanger() string {
+	return ExchangerName
+}
+
 // MainBalances returns multi-currency balance of the main account.
 func (c *Client) MainBalances() (map[string]float64, error) {
 	var v struct {
@@ -107,11 +112,11 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 	return balances, nil
 }
 
-// BuyMarket place a buy order of type "market" and timeInForce "IOC". (see https://hitbtc.com/api#neworder)
 // PlaceOrder places a new order. Read Hitbtc documentation for a detailed explanation about the
 // arguments (https://hitbtc.com/api#neworder)
-func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (interface{}, error) {
+func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64) (map[string]interface{}, error) {
 	const path = "/api/1/trading/new_order"
+	const orderType = "market"
 
 	size, ok := lotSizes[pair]
 	if !ok {
@@ -143,9 +148,34 @@ func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity fl
 		data.Add("timeInForce", "IOC")
 	}
 
-	v := map[string]interface{}{}
+	// Succes response example (status can be `new` or `rejected`)
+	// { ExecutionReport: {
+	//     orderStatus:rejected
+	//     side:sell
+	//     userId:user_142834
+	//     symbol:ZECBTC
+	//     timeInForce:IOC
+	//     lastPrice:
+	//     orderRejectReason:badQuantity
+	//     orderId:N/A
+	//     averagePrice:0
+	//     execReportType:rejected
+	//     type:market
+	//     leavesQuantity:0
+	//     lastQuantity:0
+	//     cumQuantity:0
+	//     clientOrderId:hitbtc-1479089075799175
+	//     quantity:0}
+	// }
+	var v struct {
+		ExecutionReport map[string]interface{}
+	}
+
 	err := c.authPost(path, data, &v)
-	return v, err
+	// err example
+	// {"code":"InvalidArgument","message":"Fields are not valid: quantity"}
+
+	return v.ExecutionReport, err
 }
 
 // CancelOrder cancels an order.
