@@ -7,3 +7,7 @@
 /node_modules/.hooks
 /public/lib.js
 /public/app.js
+
+ansible/deploy.retry
+ansible/provision.retry
+ansible/upstart/trader.json

@@ -1,8 +1,10 @@
 - hosts: all
 
   vars:
+    rev: master
     project_dir: /home/bhirbec/bitbot
     disk_dir: /media/bitbot-data
+    trader_config: /tmp/trader.json
 
   tasks:
     # TODO: use shallow repo with depth=1?
@@ -13,8 +15,8 @@
     - name: Fetch repository
       shell: git fetch origin chdir={{project_dir}}
 
-    - name: Checkout Master branch
-      shell: git reset --hard origin/master chdir={{project_dir}}
+    - name: Checkout {{rev}} branch
+      shell: git reset --hard origin/{{rev}} chdir={{project_dir}}
 
     - name: Run make
       shell: make chdir={{project_dir}}
@@ -33,4 +35,15 @@
 
     - name: Restart web service
       command: service web restart
+      sudo: yes
+
+    - name: Copy trader Upstart config
+      template: src=upstart/trader.conf dest=/etc/init/trader.conf
+      sudo: yes
+
+    - name: Copy trader JSON config
+      copy: src=upstart/trader.json dest={{trader_config}}
+
+    - name: Restart trader service
+      command: service trader restart
       sudo: yes
