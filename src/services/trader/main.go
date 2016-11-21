@@ -62,10 +62,10 @@ func main() {
 	}
 
 	cred := config["hitbtc"]
-	var hitbtcClient = hitbtc.NewClient(cred.Key, cred.Secret)
+	var hitbtcClient = NewHitbtcClient(cred)
 
 	cred = config["poloniex"]
-	var poloniexClient = poloniex.NewClient(cred.Key, cred.Secret)
+	var poloniexClient = NewPoloniexClient(cred)
 
 	clients := map[string]Client{
 		"Hitbtc":   hitbtcClient,

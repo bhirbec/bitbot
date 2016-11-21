@@ -3,11 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"bitbot/exchanger"
-	"bitbot/exchanger/hitbtc"
-	"bitbot/exchanger/poloniex"
 )
 
 var minBalance = map[string]float64{
@@ -15,14 +12,7 @@ var minBalance = map[string]float64{
 	"ZEC": 0.001,
 }
 
-type transfertFunc func(*hitbtc.Client, *poloniex.Client, string, float64, string) error
-
-var transfertFunctions = map[string]transfertFunc{
-	"Hitbtc->Poloniex": moveFromHitbtcToPoloniex,
-	"Poloniex->Hitbtc": moveFromPoloniexToHitbtc,
-}
-
-func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchanger.Pair) error {
+func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
 	// TODO: client should passed as a function parameter
 	clients := map[string]Client{
 		h.Exchanger(): h,
@@ -41,17 +31,11 @@ func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchan
 
 	availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 	if availableSellVol <= minBalance[pair.Base] {
-		key := arb.buyEx.Exchanger + "->" + arb.sellEx.Exchanger
-		transfert, ok := transfertFunctions[key]
-		if !ok {
-			log.Panicf("No transfert function found for: %s", key)
-		}
-
 		printBalances(balances, pair)
 
 		err := transfert(
-			h,
-			p,
+			clients["Hitbtc"],
+			clients["Poloniex"],
 			pair.Base,
 			balances[arb.buyEx.Exchanger][pair.Base],
 			addresses[arb.sellEx.Exchanger][pair.Base],
@@ -64,17 +48,11 @@ func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchan
 
 	availableBuyVol := balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price
 	if availableBuyVol <= minBalance[pair.Quote] {
-		key := arb.sellEx.Exchanger + "->" + arb.buyEx.Exchanger
-		transfert, ok := transfertFunctions[key]
-		if !ok {
-			log.Panicf("No transfert function found for: %s", key)
-		}
-
 		printBalances(balances, pair)
 
 		err := transfert(
-			h,
-			p,
+			clients["Hitbtc"],
+			clients["Poloniex"],
 			pair.Quote,
 			balances[arb.sellEx.Exchanger][pair.Quote],
 			addresses[arb.buyEx.Exchanger][pair.Quote],
@@ -88,99 +66,38 @@ func rebalance(h *hitbtc.Client, p *poloniex.Client, arb *arbitrage, pair exchan
 	return nil
 }
 
-func moveFromHitbtcToPoloniex(h *hitbtc.Client, p *poloniex.Client, cur string, vol float64, address string) error {
-	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, "Hitbtc", "Poloniex")
+func transfert(org, dest Client, cur string, vol float64, address string) error {
+	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
-	result, err := h.TransfertToMainAccount(vol, cur)
-	if err != nil {
-		return fmt.Errorf("Cannot transfert from `%s` trading account to main account: %s\n", cur, err)
-	}
-	log.Printf("Transfert from trading to main account successed: %s\n", result)
-
-	ack, err := h.Withdraw(vol, cur, address)
-	if err != nil {
-		return fmt.Errorf("Cannot withdraw `%s` from Hitbtc: %s\n", cur, err)
-	}
-	log.Printf("Transfered %f %s from %s to %s: %s\n", vol, cur, "Hitbtc", "Poloniex", ack)
-
-	// Wait until balance reaches the min
-	for {
-		bal, err := p.TradingBalances()
-
-		if err != nil {
-			log.Println(err)
-		} else if bal[cur] >= minBalance[cur] {
-			break
-		} else {
-			log.Printf("Wait until %s transfer is complete (%s -> %s)\n", cur, "Hitbtc", "Poloniex")
-		}
-
-		time.Sleep(2 * time.Minute)
-	}
-
-	return nil
-}
-
-func moveFromPoloniexToHitbtc(h *hitbtc.Client, p *poloniex.Client, cur string, vol float64, address string) error {
-	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, "Poloniex", "Hitbtc")
-
-	ack, err := p.Withdraw(vol, cur, address)
+	ack, err := org.Withdraw(vol, cur, address)
 	if err != nil {
 		return fmt.Errorf("Cannot withdraw `%s` from Poloniex: %s\n", cur, err)
+	} else {
+		log.Printf("Transfer registered: %s\n", ack)
 	}
-	log.Printf("Transfered %f %s from %s to %s: %s\n", vol, cur, "Poloniex", "Hitbtc", ack)
 
 	// Wait until we see the amout on Hitbtc main account
-	for {
-		bal, err := h.MainBalances()
-		if err != nil {
-			log.Println(err)
-		} else if bal[cur] >= minBalance[cur] {
-			vol = bal[cur]
-			break
-		} else {
-			log.Printf("Wait until %s transfer is complete (%s -> %s)\n", cur, "Poloniex", "Hitbtc")
-		}
-
-		time.Sleep(2 * time.Minute)
-	}
-
-	result, err := h.TransfertToTradingAccount(vol, cur)
-	if err != nil {
-		return fmt.Errorf("Cannot transfert `%s` from main trading account to trading account: %s\n", cur, err)
-	}
-	log.Printf("Transfert from main to trading account successed: %s\n", result)
-
-	return nil
+	return dest.WaitBalance(cur)
 }
 
-func getAddresses(h *hitbtc.Client, p *poloniex.Client) (map[string]map[string]string, error) {
+func getAddresses(h Client, p Client) (map[string]map[string]string, error) {
 	out := map[string]map[string]string{
 		"Hitbtc":   map[string]string{},
 		"Poloniex": map[string]string{},
 	}
 
-	poloniexAddresses, err := p.DepositAddresses()
-	if err != nil {
-		return nil, err
-	}
-
 	for _, cur := range []string{"BTC", "ZEC"} {
-		add, ok := poloniexAddresses[cur]
-		if !ok {
-			return nil, fmt.Errorf("Missing %s deposit address for Poloniex\n", cur)
-		} else {
-			out["Poloniex"][cur] = add
-		}
-
-		add, err := h.PaymentAddress(cur)
+		add, err := p.PaymentAddress(cur)
 		if err != nil {
-			return nil, fmt.Errorf("Cannot retrieve %s address for Hitbtc: %s\n", cur, err)
-		} else if add == "" {
-			return nil, fmt.Errorf("Missing %s address for Hitbtc: %s\n", cur)
-		} else {
-			out["Hitbtc"][cur] = add
+			return nil, err
 		}
+		out["Poloniex"][cur] = add
+
+		add, err = h.PaymentAddress(cur)
+		if err != nil {
+			return nil, err
+		}
+		out["Hitbtc"][cur] = add
 	}
 
 	return out, nil
