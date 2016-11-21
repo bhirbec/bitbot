@@ -20,34 +20,22 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 
 	availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 	if availableSellVol <= minBalance[pair.Base] {
-		printBalances(balances, pair)
-
-		err := transfert(
-			clients["Hitbtc"],
-			clients["Poloniex"],
+		return transfert(
+			clients[arb.buyEx.Exchanger],
+			clients[arb.sellEx.Exchanger],
 			pair.Base,
 			balances[arb.buyEx.Exchanger][pair.Base],
 		)
-
-		if err != nil {
-			return err
-		}
 	}
 
 	availableBuyVol := balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price
 	if availableBuyVol <= minBalance[pair.Quote] {
-		printBalances(balances, pair)
-
-		err := transfert(
-			clients["Hitbtc"],
-			clients["Poloniex"],
+		return transfert(
+			clients[arb.sellEx.Exchanger],
+			clients[arb.buyEx.Exchanger],
 			pair.Quote,
 			balances[arb.sellEx.Exchanger][pair.Quote],
 		)
-
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -68,7 +56,6 @@ func transfert(org, dest Client, cur string, vol float64) error {
 		log.Printf("Transfer registered: %s\n", ack)
 	}
 
-	// Wait until we see the amout on Hitbtc main account
 	return dest.WaitBalance(cur)
 }
 
@@ -87,10 +74,14 @@ func getBalances(clients map[string]Client) (map[string]map[string]float64, erro
 }
 
 func printBalances(balances map[string]map[string]float64, pair exchanger.Pair) {
-	log.Printf("Balance: Hitbtc %s: %f, %s %f\n", pair.Base, balances["Hitbtc"][pair.Base], pair.Quote, balances["Hitbtc"][pair.Quote])
-	log.Printf("Balance: Poloniex %s: %f, %s %f\n", pair.Base, balances["Poloniex"][pair.Base], pair.Quote, balances["Poloniex"][pair.Quote])
+	var totalBase float64
+	var totalQuote float64
 
-	totalBase := balances["Hitbtc"][pair.Base] + balances["Poloniex"][pair.Base]
-	totalQuote := balances["Hitbtc"][pair.Quote] + balances["Poloniex"][pair.Quote]
+	for ex, bal := range balances {
+		totalBase += bal[pair.Base]
+		totalQuote += bal[pair.Quote]
+		log.Printf("Balance: %s %s: %f, %s %f\n", ex, pair.Base, bal[pair.Base], pair.Quote, bal[pair.Quote])
+	}
+
 	log.Printf("Balance: Total %s: %f, %s %f\n", pair.Base, totalBase, pair.Quote, totalQuote)
 }
