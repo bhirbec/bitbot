@@ -24,11 +24,6 @@ func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
 		return err
 	}
 
-	addresses, err := getAddresses(h, p)
-	if err != nil {
-		return err
-	}
-
 	availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 	if availableSellVol <= minBalance[pair.Base] {
 		printBalances(balances, pair)
@@ -38,7 +33,6 @@ func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
 			clients["Poloniex"],
 			pair.Base,
 			balances[arb.buyEx.Exchanger][pair.Base],
-			addresses[arb.sellEx.Exchanger][pair.Base],
 		)
 
 		if err != nil {
@@ -55,7 +49,6 @@ func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
 			clients["Poloniex"],
 			pair.Quote,
 			balances[arb.sellEx.Exchanger][pair.Quote],
-			addresses[arb.buyEx.Exchanger][pair.Quote],
 		)
 
 		if err != nil {
@@ -66,42 +59,23 @@ func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
 	return nil
 }
 
-func transfert(org, dest Client, cur string, vol float64, address string) error {
+func transfert(org, dest Client, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
+
+	address, err := dest.PaymentAddress(cur)
+	if err != nil {
+		return err
+	}
 
 	ack, err := org.Withdraw(vol, cur, address)
 	if err != nil {
-		return fmt.Errorf("Cannot withdraw `%s` from Poloniex: %s\n", cur, err)
+		return fmt.Errorf("Cannot withdraw `%s` from %s: %s\n", cur, err, org.Exchanger())
 	} else {
 		log.Printf("Transfer registered: %s\n", ack)
 	}
 
 	// Wait until we see the amout on Hitbtc main account
 	return dest.WaitBalance(cur)
-}
-
-func getAddresses(h Client, p Client) (map[string]map[string]string, error) {
-	out := map[string]map[string]string{
-		"Hitbtc":   map[string]string{},
-		"Poloniex": map[string]string{},
-	}
-
-	for _, cur := range []string{"BTC", "ZEC"} {
-		add, err := p.PaymentAddress(cur)
-		if err != nil {
-			return nil, err
-		}
-		out["Poloniex"][cur] = add
-
-		add, err = h.PaymentAddress(cur)
-		if err != nil {
-			return nil, err
-		}
-		out["Hitbtc"][cur] = add
-	}
-
-	return out, nil
-
 }
 
 func getBalances(clients map[string]Client) (map[string]map[string]float64, error) {
