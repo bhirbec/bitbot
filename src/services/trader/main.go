@@ -94,7 +94,7 @@ func main() {
 			// TODO: arbitre() should block
 			time.Sleep(1 * time.Minute)
 
-			err := rebalance(hitbtcClient, poloniexClient, arb, pair)
+			err := rebalance(clients, arb, pair)
 			if err != nil {
 				log.Println(err)
 			}

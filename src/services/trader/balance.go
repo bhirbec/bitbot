@@ -12,13 +12,7 @@ var minBalance = map[string]float64{
 	"ZEC": 0.001,
 }
 
-func rebalance(h Client, p Client, arb *arbitrage, pair exchanger.Pair) error {
-	// TODO: client should passed as a function parameter
-	clients := map[string]Client{
-		h.Exchanger(): h,
-		p.Exchanger(): p,
-	}
-
+func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) error {
 	balances, err := getBalances(clients)
 	if err != nil {
 		return err
