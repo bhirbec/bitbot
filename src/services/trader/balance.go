@@ -18,8 +18,9 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 		return err
 	}
 
-	availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
-	if availableSellVol <= minBalance[pair.Base] {
+	// ex: sell Poloniex ZEC: 0.000000, BTC 0.12
+	vol := balances[arb.buyEx.Exchanger][pair.Base]
+	if vol <= minBalance[pair.Base] {
 		return transfert(
 			clients[arb.buyEx.Exchanger],
 			clients[arb.sellEx.Exchanger],
@@ -28,8 +29,9 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 		)
 	}
 
-	availableBuyVol := balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price
-	if availableBuyVol <= minBalance[pair.Quote] {
+	// ex: buy Poloniex ZEC: 0.9, BTC 0.006104
+	vol = balances[arb.buyEx.Exchanger][pair.Quote]
+	if vol <= minBalance[pair.Quote] {
 		return transfert(
 			clients[arb.sellEx.Exchanger],
 			clients[arb.buyEx.Exchanger],
