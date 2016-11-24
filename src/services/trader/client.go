@@ -13,7 +13,7 @@ import (
 
 type Client interface {
 	Exchanger() string
-	TradingBalances() (map[string]float64, error)
+	TradingBalances(currencies ...string) (map[string]float64, error)
 	PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error)
 	Withdraw(vol float64, cur, address string) (string, error)
 	WaitBalance(cur string) error
@@ -28,6 +28,10 @@ type HitbtcClient struct {
 func NewHitbtcClient(cred credential) *HitbtcClient {
 	c := hitbtc.NewClient(cred.Key, cred.Secret)
 	return &HitbtcClient{c}
+}
+
+func (c *HitbtcClient) TradingBalances(currencies ...string) (map[string]float64, error) {
+	return c.Client.TradingBalances()
 }
 
 func (c *HitbtcClient) Withdraw(vol float64, cur, address string) (string, error) {
@@ -77,6 +81,10 @@ type PoloniexClient struct {
 func NewPoloniexClient(cred credential) *PoloniexClient {
 	c := poloniex.NewClient(cred.Key, cred.Secret)
 	return &PoloniexClient{c, map[string]string{}}
+}
+
+func (c *PoloniexClient) TradingBalances(currencies ...string) (map[string]float64, error) {
+	return c.Client.TradingBalances()
 }
 
 func (c *PoloniexClient) WaitBalance(cur string) error {
@@ -130,11 +138,8 @@ func (c *KrakenClient) Exchanger() string {
 	return "Kraken"
 }
 
-func (c *KrakenClient) TradingBalances() (map[string]float64, error) {
+func (c *KrakenClient) TradingBalances(currencies ...string) (map[string]float64, error) {
 	out := map[string]float64{}
-
-	// TODO: this must be passed somewhere
-	currencies := []string{"BTC", "ZEC"}
 
 	for _, cur := range currencies {
 		bal, err := c.Client.TradeBalance(cur)

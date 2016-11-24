@@ -13,7 +13,7 @@ var minBalance = map[string]float64{
 }
 
 func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) error {
-	balances, err := getBalances(clients)
+	balances, err := getBalances(clients, pair)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func transfert(org, dest Client, cur string, vol float64) error {
 	return dest.WaitBalance(cur)
 }
 
-func getBalances(clients map[string]Client) (map[string]map[string]float64, error) {
+func getBalances(clients map[string]Client, pair exchanger.Pair) (map[string]map[string]float64, error) {
 	out := map[string]map[string]float64{}
 
 	for _, c := range clients {
