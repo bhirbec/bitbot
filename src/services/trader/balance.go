@@ -46,9 +46,19 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 func transfert(org, dest Client, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
-	address, err := dest.PaymentAddress(cur)
-	if err != nil {
-		return err
+	var address string
+	var err error
+
+	if org.Exchanger() == "Kraken" {
+		// Kraken requires to input the withdrawal addresses in the UI and to
+		// give them unique name. The convention is ExchangerName + "-" + cur.
+		// Example: Poloniex-ZEC
+		address = fmt.Sprintf("%s-%s", dest.Exchanger(), cur)
+	} else {
+		address, err = dest.PaymentAddress(cur)
+		if err != nil {
+			return err
+		}
 	}
 
 	ack, err := org.Withdraw(vol, cur, address)

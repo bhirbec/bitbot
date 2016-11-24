@@ -8,16 +8,9 @@ import (
 	"bitbot/exchanger"
 
 	"bitbot/exchanger/hitbtc"
-	"bitbot/exchanger/poloniex"
+	"bitbot/exchanger/kraken"
+	_ "bitbot/exchanger/poloniex"
 )
-
-// external_data:76c7a3678b69011963976a814782b7e3b724a24fb247ead6c9845882e707547d
-// type:payout created:1.479274795e+09
-// currency_code_to:ZEC
-// destination_data:t1aUX5GXFFpxtDugJpfY2Zabv2mGvxKQ9a5
-// bitcoin_address:
-// bitcoin_return_address:
-// id:d317d2e9-77b9-4750-bde3-29487c06592e
 
 type Exchanger struct {
 	name  string
@@ -58,18 +51,14 @@ func main() {
 
 	var exchangers = []*Exchanger{
 		&Exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
-		&Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
+		// &Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
+		&Exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	}
 
-	cred := config["hitbtc"]
-	var hitbtcClient = NewHitbtcClient(cred)
-
-	cred = config["poloniex"]
-	var poloniexClient = NewPoloniexClient(cred)
-
 	clients := map[string]Client{
-		"Hitbtc":   hitbtcClient,
-		"Poloniex": poloniexClient,
+		"Hitbtc": NewHitbtcClient(config["hitbtc"]),
+		// "Poloniex": NewPoloniexClient(config["poloniex"]),
+		"Kraken": NewKrakenClient(config["kraken"]),
 	}
 
 	balances, err := getBalances(clients)

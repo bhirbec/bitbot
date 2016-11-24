@@ -7,6 +7,7 @@ import (
 
 	"bitbot/exchanger"
 	"bitbot/exchanger/hitbtc"
+	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/poloniex"
 )
 
@@ -113,4 +114,108 @@ func (c *PoloniexClient) PaymentAddress(cur string) (string, error) {
 	} else {
 		return address, nil
 	}
+}
+
+// Kraken
+type KrakenClient struct {
+	*kraken.Client
+}
+
+func NewKrakenClient(cred credential) *KrakenClient {
+	c := kraken.NewClient(cred.Key, cred.Secret)
+	return &KrakenClient{c}
+}
+
+func (c *KrakenClient) Exchanger() string {
+	return "Kraken"
+}
+
+func (c *KrakenClient) TradingBalances() (map[string]float64, error) {
+	out := map[string]float64{}
+
+	// TODO: this must be passed somewhere
+	currencies := []string{"BTC", "ZEC"}
+
+	for _, cur := range currencies {
+		bal, err := c.Client.TradeBalance(cur)
+		if err != nil {
+			return nil, err
+		}
+
+		out[cur] = bal
+	}
+
+	return out, nil
+}
+
+func (c *KrakenClient) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
+	return c.Client.AddOrder(side, pair, price, vol)
+}
+
+func (c *KrakenClient) Withdraw(vol float64, cur, key string) (string, error) {
+	cur, ok := kraken.Currencies[cur]
+	if !ok {
+		return "", fmt.Errorf("Kraken: currency not supported %s", cur)
+	}
+
+	data := map[string]string{
+		"asset":  cur,
+		"key":    key,
+		"amount": fmt.Sprint(vol),
+	}
+
+	resp := map[string]string{}
+	err := c.Client.Query("Withdraw", data, &resp)
+	if err != nil {
+		return "", err
+	}
+
+	return resp["refid"], nil
+}
+
+func (c *KrakenClient) WaitBalance(cur string) error {
+	for {
+		bal, err := c.Client.TradeBalance(cur)
+
+		if err != nil {
+			return err
+		} else if bal >= minBalance[cur] {
+			break
+		} else {
+			log.Printf("Kraken: Wait until %s transfer is complete\n", cur)
+		}
+
+		time.Sleep(2 * time.Minute)
+	}
+
+	return nil
+}
+
+// PaymentAddress retrieve the first payment address for the given currency.
+func (c *KrakenClient) PaymentAddress(cur string) (string, error) {
+	// Apparently kraken does the translation from "BTC" to "XBT"
+	data := map[string]string{"asset": cur}
+	resp := []map[string]interface{}{}
+
+	err := c.Client.Query("DepositMethods", data, &resp)
+	if err != nil {
+		return "", fmt.Errorf("Kraken: call to DepositMethods failed - %s", err)
+	} else if len(resp) == 0 {
+		return "", fmt.Errorf("Kraken: call to DepositMethods failed - empty list", err)
+	}
+
+	data = map[string]string{
+		"asset":  cur,
+		"method": resp[0]["method"].(string),
+	}
+
+	resp = []map[string]interface{}{}
+	err = c.Client.Query("DepositAddresses", data, &resp)
+	if err != nil {
+		return "", fmt.Errorf("Kraken: call to DepositAddresses failed - %s", err)
+	} else if len(resp) == 0 {
+		return "", fmt.Errorf("Kraken: no address for %s", cur)
+	}
+
+	return resp[0]["address"].(string), nil
 }
