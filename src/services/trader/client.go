@@ -13,7 +13,7 @@ import (
 
 type Trader interface {
 	Exchanger() string
-	TradingBalances(currencies ...string) (map[string]float64, error)
+	TradingBalances() (map[string]float64, error)
 	PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error)
 	Withdraw(vol float64, cur, address string) (string, error)
 	WaitBalance(cur string) error
@@ -35,7 +35,7 @@ func (t *HitbtcTrader) Exchanger() string {
 	return hitbtc.ExchangerName
 }
 
-func (t *HitbtcTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
+func (t *HitbtcTrader) TradingBalances() (map[string]float64, error) {
 	return t.Client.TradingBalances()
 }
 
@@ -97,7 +97,7 @@ func (t *PoloniexTrader) Exchanger() string {
 	return poloniex.ExchangerName
 }
 
-func (t *PoloniexTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
+func (t *PoloniexTrader) TradingBalances() (map[string]float64, error) {
 	return t.Client.TradingBalances()
 }
 
@@ -153,19 +153,8 @@ func (t *KrakenTrader) Exchanger() string {
 	return kraken.ExchangerName
 }
 
-func (t *KrakenTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
-	out := map[string]float64{}
-
-	for _, cur := range currencies {
-		bal, err := t.Client.TradeBalance(cur)
-		if err != nil {
-			return nil, fmt.Errorf("Kraken: missing balance for currency %s", cur)
-		}
-
-		out[cur] = bal
-	}
-
-	return out, nil
+func (t *KrakenTrader) TradingBalances() (map[string]float64, error) {
+	return t.Client.AccountBalance()
 }
 
 func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {

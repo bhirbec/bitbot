@@ -16,8 +16,16 @@ import (
 )
 
 var Currencies = map[string]string{
-	"BTC": "XBT",
-	"ZEC": "ZEC",
+	"BTC": "XXBT",
+	"ZEC": "XZEC",
+}
+
+var reversedCurrencies = map[string]string{}
+
+func init() {
+	for k, v := range Currencies {
+		reversedCurrencies[v] = k
+	}
 }
 
 type Client struct {
@@ -27,6 +35,33 @@ type Client struct {
 
 func NewClient(apiKey, apiSecret string) *Client {
 	return &Client{apiKey, apiSecret}
+}
+
+// AccountBalance returns account balance.
+func (c *Client) AccountBalance() (map[string]float64, error) {
+	resp := map[string]string{}
+	data := map[string]string{}
+	err := c.Query("Balance", data, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string]float64{}
+	for k, s := range resp {
+		cur, ok := reversedCurrencies[k]
+		if !ok {
+			return nil, fmt.Errorf("Kraken: missing currency translation %s", k)
+		}
+
+		value, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return nil, fmt.Errorf("Kraken: float parsing of `%s` failed - %s", s, err)
+		}
+
+		out[cur] = value
+	}
+
+	return out, err
 }
 
 // TradingBalance returns trading balance.

@@ -61,7 +61,7 @@ func main() {
 		"Kraken": NewKrakenTrader(config["kraken"]),
 	}
 
-	balances, err := getBalances(traders, pair)
+	balances, err := getBalances(traders)
 	if err != nil {
 		log.Printf("Cannot retrieve balances: %s", err)
 	} else {
@@ -88,7 +88,7 @@ func main() {
 				log.Println(err)
 			}
 
-			balances, err = getBalances(traders, pair)
+			balances, err = getBalances(traders)
 			if err != nil {
 				log.Printf("Cannot retrieve balances: %s", err)
 			}
