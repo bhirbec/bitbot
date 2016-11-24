@@ -31,11 +31,6 @@ func NewClient(apiKey, apiSecret string) *Client {
 	return &Client{apiKey, apiSecret}
 }
 
-// Exchanger return the name of the exchanger.
-func (c *Client) Exchanger() string {
-	return ExchangerName
-}
-
 // TradingBalance returns all of your available balances. Sample output:
 // {"BTC": 0.59098578,"LTC": 3.31117268, ... }
 func (c *Client) TradingBalances() (map[string]float64, error) {

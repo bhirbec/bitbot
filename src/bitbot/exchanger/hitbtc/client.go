@@ -56,11 +56,6 @@ func NewClient(apiKey, apiSecret string) *Client {
 	return &Client{apiKey, apiSecret}
 }
 
-// Exchanger return the name of the exchanger.
-func (c *Client) Exchanger() string {
-	return ExchangerName
-}
-
 // MainBalances returns multi-currency balance of the main account.
 func (c *Client) MainBalances() (map[string]float64, error) {
 	var v struct {
@@ -114,9 +109,8 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 
 // PlaceOrder places a new order. Read Hitbtc documentation for a detailed explanation about the
 // arguments (https://hitbtc.com/api#neworder)
-func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64) (map[string]interface{}, error) {
+func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (map[string]interface{}, error) {
 	const path = "/api/1/trading/new_order"
-	const orderType = "market"
 
 	size, ok := lotSizes[pair]
 	if !ok {

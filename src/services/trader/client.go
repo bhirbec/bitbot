@@ -20,7 +20,8 @@ type Client interface {
 	PaymentAddress(cur string) (string, error)
 }
 
-// Hitbtc
+// ***************** Hitbtc *****************
+
 type HitbtcClient struct {
 	*hitbtc.Client
 }
@@ -30,14 +31,22 @@ func NewHitbtcClient(cred credential) *HitbtcClient {
 	return &HitbtcClient{c}
 }
 
+func (c *HitbtcClient) Exchanger() string {
+	return hitbtc.ExchangerName
+}
+
 func (c *HitbtcClient) TradingBalances(currencies ...string) (map[string]float64, error) {
 	return c.Client.TradingBalances()
+}
+
+func (c *HitbtcClient) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
+	return c.Client.PlaceOrder(side, pair, price, vol, "market")
 }
 
 func (c *HitbtcClient) Withdraw(vol float64, cur, address string) (string, error) {
 	result, err := c.Client.TransfertToMainAccount(vol, cur)
 	if err != nil {
-		return "", fmt.Errorf("Hitbtc: cannot transfert from `%s` trading account to main account: %s\n", cur, err)
+		return "", fmt.Errorf("Hitbtc: cannot transfert from `%s` trading account to main account: %s", cur, err)
 	} else {
 		log.Printf("Hitbtc: transfert from trading to main account successed: %s\n", result)
 	}
@@ -65,14 +74,15 @@ func (c *HitbtcClient) WaitBalance(cur string) error {
 
 	result, err := c.Client.TransfertToTradingAccount(vol, cur)
 	if err != nil {
-		return fmt.Errorf("Cannot transfert `%s` from main trading account to trading account: %s\n", cur, err)
+		return fmt.Errorf("Hitbtc: Cannot transfert `%s` from main trading account to trading account: %s", cur, err)
 	}
 
-	log.Printf("Transfert from main to trading account successed: %s\n", result)
+	log.Printf("Hitbtc: transfert from main to trading account successed: %s\n", result)
 	return nil
 }
 
-// Poloniex
+// ***************** Poloniex *****************
+
 type PoloniexClient struct {
 	*poloniex.Client
 	addresses map[string]string
@@ -81,6 +91,10 @@ type PoloniexClient struct {
 func NewPoloniexClient(cred credential) *PoloniexClient {
 	c := poloniex.NewClient(cred.Key, cred.Secret)
 	return &PoloniexClient{c, map[string]string{}}
+}
+
+func (c *PoloniexClient) Exchanger() string {
+	return poloniex.ExchangerName
 }
 
 func (c *PoloniexClient) TradingBalances(currencies ...string) (map[string]float64, error) {
@@ -110,7 +124,7 @@ func (c *PoloniexClient) PaymentAddress(cur string) (string, error) {
 	if len(c.addresses) == 0 {
 		addresses, err := c.Client.DepositAddresses()
 		if err != nil {
-			return "", fmt.Errorf("Poloniex: cannot retrieve address for %s: %s\n", cur, err)
+			return "", fmt.Errorf("Poloniex: cannot retrieve address for %s: %s", cur, err)
 		} else {
 			c.addresses = addresses
 		}
@@ -118,13 +132,14 @@ func (c *PoloniexClient) PaymentAddress(cur string) (string, error) {
 
 	address, ok := c.addresses[cur]
 	if !ok {
-		return "", fmt.Errorf("Poloniex: missing %s address\n", cur)
+		return "", fmt.Errorf("Poloniex: missing %s address", cur)
 	} else {
 		return address, nil
 	}
 }
 
-// Kraken
+// ***************** Kraken *****************
+
 type KrakenClient struct {
 	*kraken.Client
 }
@@ -135,7 +150,7 @@ func NewKrakenClient(cred credential) *KrakenClient {
 }
 
 func (c *KrakenClient) Exchanger() string {
-	return "Kraken"
+	return kraken.ExchangerName
 }
 
 func (c *KrakenClient) TradingBalances(currencies ...string) (map[string]float64, error) {
@@ -144,7 +159,7 @@ func (c *KrakenClient) TradingBalances(currencies ...string) (map[string]float64
 	for _, cur := range currencies {
 		bal, err := c.Client.TradeBalance(cur)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Kraken: missing balance for currency %s", cur)
 		}
 
 		out[cur] = bal
@@ -172,7 +187,7 @@ func (c *KrakenClient) Withdraw(vol float64, cur, key string) (string, error) {
 	resp := map[string]string{}
 	err := c.Client.Query("Withdraw", data, &resp)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Kraken: call to Withdraw failed - %s", err)
 	}
 
 	return resp["refid"], nil
@@ -206,7 +221,7 @@ func (c *KrakenClient) PaymentAddress(cur string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Kraken: call to DepositMethods failed - %s", err)
 	} else if len(resp) == 0 {
-		return "", fmt.Errorf("Kraken: call to DepositMethods failed - empty list", err)
+		return "", fmt.Errorf("Kraken: call to DepositMethods failed - empty list")
 	}
 
 	data = map[string]string{
@@ -219,7 +234,7 @@ func (c *KrakenClient) PaymentAddress(cur string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Kraken: call to DepositAddresses failed - %s", err)
 	} else if len(resp) == 0 {
-		return "", fmt.Errorf("Kraken: no address for %s", cur)
+		return "", fmt.Errorf("Kraken: missing address for currency %s", cur)
 	}
 
 	return resp[0]["address"].(string), nil
