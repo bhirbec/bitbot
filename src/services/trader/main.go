@@ -108,7 +108,7 @@ func arbitre(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) {
 }
 
 func executeOrder(c Client, side string, pair exchanger.Pair, price, vol float64) {
-	log.Printf("Sending %s order on %s: %f %s\n", c.Exchanger(), side, vol, pair)
+	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", c.Exchanger(), side, pair, price, vol)
 	ack, err := c.PlaceOrder(side, pair, price, vol)
 
 	if err != nil {
