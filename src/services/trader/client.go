@@ -11,7 +11,7 @@ import (
 	"bitbot/exchanger/poloniex"
 )
 
-type Client interface {
+type Trader interface {
 	Exchanger() string
 	TradingBalances(currencies ...string) (map[string]float64, error)
 	PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error)
@@ -22,44 +22,44 @@ type Client interface {
 
 // ***************** Hitbtc *****************
 
-type HitbtcClient struct {
+type HitbtcTrader struct {
 	*hitbtc.Client
 }
 
-func NewHitbtcClient(cred credential) *HitbtcClient {
+func NewHitbtcTrader(cred credential) *HitbtcTrader {
 	c := hitbtc.NewClient(cred.Key, cred.Secret)
-	return &HitbtcClient{c}
+	return &HitbtcTrader{c}
 }
 
-func (c *HitbtcClient) Exchanger() string {
+func (t *HitbtcTrader) Exchanger() string {
 	return hitbtc.ExchangerName
 }
 
-func (c *HitbtcClient) TradingBalances(currencies ...string) (map[string]float64, error) {
-	return c.Client.TradingBalances()
+func (t *HitbtcTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
+	return t.Client.TradingBalances()
 }
 
-func (c *HitbtcClient) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
-	return c.Client.PlaceOrder(side, pair, price, vol, "market")
+func (t *HitbtcTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
+	return t.Client.PlaceOrder(side, pair, price, vol, "market")
 }
 
-func (c *HitbtcClient) Withdraw(vol float64, cur, address string) (string, error) {
-	result, err := c.Client.TransfertToMainAccount(vol, cur)
+func (t *HitbtcTrader) Withdraw(vol float64, cur, address string) (string, error) {
+	result, err := t.Client.TransfertToMainAccount(vol, cur)
 	if err != nil {
 		return "", fmt.Errorf("Hitbtc: cannot transfert from `%s` trading account to main account: %s", cur, err)
 	} else {
 		log.Printf("Hitbtc: transfert from trading to main account successed: %s\n", result)
 	}
 
-	_, err = c.Client.Withdraw(vol, cur, address)
+	_, err = t.Client.Withdraw(vol, cur, address)
 	return "ok", err
 }
 
-func (c *HitbtcClient) WaitBalance(cur string) error {
+func (t *HitbtcTrader) WaitBalance(cur string) error {
 	var vol float64
 
 	for {
-		bal, err := c.Client.MainBalances()
+		bal, err := t.Client.MainBalances()
 		if err != nil {
 			log.Println(err)
 		} else if bal[cur] >= minBalance[cur] {
@@ -72,7 +72,7 @@ func (c *HitbtcClient) WaitBalance(cur string) error {
 		time.Sleep(2 * time.Minute)
 	}
 
-	result, err := c.Client.TransfertToTradingAccount(vol, cur)
+	result, err := t.Client.TransfertToTradingAccount(vol, cur)
 	if err != nil {
 		return fmt.Errorf("Hitbtc: Cannot transfert `%s` from main trading account to trading account: %s", cur, err)
 	}
@@ -83,27 +83,27 @@ func (c *HitbtcClient) WaitBalance(cur string) error {
 
 // ***************** Poloniex *****************
 
-type PoloniexClient struct {
+type PoloniexTrader struct {
 	*poloniex.Client
 	addresses map[string]string
 }
 
-func NewPoloniexClient(cred credential) *PoloniexClient {
+func NewPoloniexTrader(cred credential) *PoloniexTrader {
 	c := poloniex.NewClient(cred.Key, cred.Secret)
-	return &PoloniexClient{c, map[string]string{}}
+	return &PoloniexTrader{c, map[string]string{}}
 }
 
-func (c *PoloniexClient) Exchanger() string {
+func (t *PoloniexTrader) Exchanger() string {
 	return poloniex.ExchangerName
 }
 
-func (c *PoloniexClient) TradingBalances(currencies ...string) (map[string]float64, error) {
-	return c.Client.TradingBalances()
+func (t *PoloniexTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
+	return t.Client.TradingBalances()
 }
 
-func (c *PoloniexClient) WaitBalance(cur string) error {
+func (t *PoloniexTrader) WaitBalance(cur string) error {
 	for {
-		bal, err := c.Client.TradingBalances()
+		bal, err := t.Client.TradingBalances()
 
 		if err != nil {
 			return err
@@ -119,18 +119,18 @@ func (c *PoloniexClient) WaitBalance(cur string) error {
 	return nil
 }
 
-func (c *PoloniexClient) PaymentAddress(cur string) (string, error) {
+func (t *PoloniexTrader) PaymentAddress(cur string) (string, error) {
 	// we first load the addresses and then cache them
-	if len(c.addresses) == 0 {
-		addresses, err := c.Client.DepositAddresses()
+	if len(t.addresses) == 0 {
+		addresses, err := t.Client.DepositAddresses()
 		if err != nil {
 			return "", fmt.Errorf("Poloniex: cannot retrieve address for %s: %s", cur, err)
 		} else {
-			c.addresses = addresses
+			t.addresses = addresses
 		}
 	}
 
-	address, ok := c.addresses[cur]
+	address, ok := t.addresses[cur]
 	if !ok {
 		return "", fmt.Errorf("Poloniex: missing %s address", cur)
 	} else {
@@ -140,24 +140,24 @@ func (c *PoloniexClient) PaymentAddress(cur string) (string, error) {
 
 // ***************** Kraken *****************
 
-type KrakenClient struct {
+type KrakenTrader struct {
 	*kraken.Client
 }
 
-func NewKrakenClient(cred credential) *KrakenClient {
+func NewKrakenTrader(cred credential) *KrakenTrader {
 	c := kraken.NewClient(cred.Key, cred.Secret)
-	return &KrakenClient{c}
+	return &KrakenTrader{c}
 }
 
-func (c *KrakenClient) Exchanger() string {
+func (t *KrakenTrader) Exchanger() string {
 	return kraken.ExchangerName
 }
 
-func (c *KrakenClient) TradingBalances(currencies ...string) (map[string]float64, error) {
+func (t *KrakenTrader) TradingBalances(currencies ...string) (map[string]float64, error) {
 	out := map[string]float64{}
 
 	for _, cur := range currencies {
-		bal, err := c.Client.TradeBalance(cur)
+		bal, err := t.Client.TradeBalance(cur)
 		if err != nil {
 			return nil, fmt.Errorf("Kraken: missing balance for currency %s", cur)
 		}
@@ -168,11 +168,11 @@ func (c *KrakenClient) TradingBalances(currencies ...string) (map[string]float64
 	return out, nil
 }
 
-func (c *KrakenClient) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
-	return c.Client.AddOrder(side, pair, price, vol)
+func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
+	return t.Client.AddOrder(side, pair, price, vol)
 }
 
-func (c *KrakenClient) Withdraw(vol float64, cur, key string) (string, error) {
+func (t *KrakenTrader) Withdraw(vol float64, cur, key string) (string, error) {
 	cur, ok := kraken.Currencies[cur]
 	if !ok {
 		return "", fmt.Errorf("Kraken: currency not supported %s", cur)
@@ -185,7 +185,7 @@ func (c *KrakenClient) Withdraw(vol float64, cur, key string) (string, error) {
 	}
 
 	resp := map[string]string{}
-	err := c.Client.Query("Withdraw", data, &resp)
+	err := t.Client.Query("Withdraw", data, &resp)
 	if err != nil {
 		return "", fmt.Errorf("Kraken: call to Withdraw failed - %s", err)
 	}
@@ -193,9 +193,9 @@ func (c *KrakenClient) Withdraw(vol float64, cur, key string) (string, error) {
 	return resp["refid"], nil
 }
 
-func (c *KrakenClient) WaitBalance(cur string) error {
+func (t *KrakenTrader) WaitBalance(cur string) error {
 	for {
-		bal, err := c.Client.TradeBalance(cur)
+		bal, err := t.Client.TradeBalance(cur)
 
 		if err != nil {
 			return err
@@ -212,12 +212,12 @@ func (c *KrakenClient) WaitBalance(cur string) error {
 }
 
 // PaymentAddress retrieve the first payment address for the given currency.
-func (c *KrakenClient) PaymentAddress(cur string) (string, error) {
+func (t *KrakenTrader) PaymentAddress(cur string) (string, error) {
 	// Apparently kraken does the translation from "BTC" to "XBT"
 	data := map[string]string{"asset": cur}
 	resp := []map[string]interface{}{}
 
-	err := c.Client.Query("DepositMethods", data, &resp)
+	err := t.Client.Query("DepositMethods", data, &resp)
 	if err != nil {
 		return "", fmt.Errorf("Kraken: call to DepositMethods failed - %s", err)
 	} else if len(resp) == 0 {
@@ -230,7 +230,7 @@ func (c *KrakenClient) PaymentAddress(cur string) (string, error) {
 	}
 
 	resp = []map[string]interface{}{}
-	err = c.Client.Query("DepositAddresses", data, &resp)
+	err = t.Client.Query("DepositAddresses", data, &resp)
 	if err != nil {
 		return "", fmt.Errorf("Kraken: call to DepositAddresses failed - %s", err)
 	} else if len(resp) == 0 {

@@ -12,8 +12,8 @@ var minBalance = map[string]float64{
 	"ZEC": 0.001,
 }
 
-func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) error {
-	balances, err := getBalances(clients, pair)
+func rebalance(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) error {
+	balances, err := getBalances(traders, pair)
 	if err != nil {
 		return err
 	}
@@ -22,8 +22,8 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 	vol := balances[arb.buyEx.Exchanger][pair.Base]
 	if vol <= minBalance[pair.Base] {
 		return transfert(
-			clients[arb.buyEx.Exchanger],
-			clients[arb.sellEx.Exchanger],
+			traders[arb.buyEx.Exchanger],
+			traders[arb.sellEx.Exchanger],
 			pair.Base,
 			balances[arb.buyEx.Exchanger][pair.Base],
 		)
@@ -33,8 +33,8 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 	vol = balances[arb.buyEx.Exchanger][pair.Quote]
 	if vol <= minBalance[pair.Quote] {
 		return transfert(
-			clients[arb.sellEx.Exchanger],
-			clients[arb.buyEx.Exchanger],
+			traders[arb.sellEx.Exchanger],
+			traders[arb.buyEx.Exchanger],
 			pair.Quote,
 			balances[arb.sellEx.Exchanger][pair.Quote],
 		)
@@ -43,7 +43,7 @@ func rebalance(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) e
 	return nil
 }
 
-func transfert(org, dest Client, cur string, vol float64) error {
+func transfert(org, dest Trader, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
 	var address string
@@ -71,15 +71,15 @@ func transfert(org, dest Client, cur string, vol float64) error {
 	return dest.WaitBalance(cur)
 }
 
-func getBalances(clients map[string]Client, pair exchanger.Pair) (map[string]map[string]float64, error) {
+func getBalances(traders map[string]Trader, pair exchanger.Pair) (map[string]map[string]float64, error) {
 	out := map[string]map[string]float64{}
 
-	for _, c := range clients {
-		b, err := c.TradingBalances()
+	for _, t := range traders {
+		b, err := t.TradingBalances()
 		if err != nil {
 			return nil, err
 		}
-		out[c.Exchanger()] = b
+		out[t.Exchanger()] = b
 	}
 
 	return out, nil

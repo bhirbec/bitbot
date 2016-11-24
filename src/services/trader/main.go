@@ -55,13 +55,13 @@ func main() {
 		&Exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	}
 
-	clients := map[string]Client{
-		"Hitbtc": NewHitbtcClient(config["hitbtc"]),
-		// "Poloniex": NewPoloniexClient(config["poloniex"]),
-		"Kraken": NewKrakenClient(config["kraken"]),
+	traders := map[string]Trader{
+		"Hitbtc": NewHitbtcTrader(config["hitbtc"]),
+		// "Poloniex": NewPoloniexTrader(config["poloniex"]),
+		"Kraken": NewKrakenTrader(config["kraken"]),
 	}
 
-	balances, err := getBalances(clients, pair)
+	balances, err := getBalances(traders, pair)
 	if err != nil {
 		log.Printf("Cannot retrieve balances: %s", err)
 	} else {
@@ -78,17 +78,17 @@ func main() {
 			availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
-			arbitre(clients, arb, pair)
+			arbitre(traders, arb, pair)
 
 			// TODO: arbitre() should block
 			time.Sleep(1 * time.Minute)
 
-			err := rebalance(clients, arb, pair)
+			err := rebalance(traders, arb, pair)
 			if err != nil {
 				log.Println(err)
 			}
 
-			balances, err = getBalances(clients, pair)
+			balances, err = getBalances(traders, pair)
 			if err != nil {
 				log.Printf("Cannot retrieve balances: %s", err)
 			}
@@ -100,14 +100,14 @@ func main() {
 	}
 }
 
-func arbitre(clients map[string]Client, arb *arbitrage, pair exchanger.Pair) {
-	buyClient := clients[arb.buyEx.Exchanger]
-	sellClient := clients[arb.sellEx.Exchanger]
-	go executeOrder(buyClient, "buy", pair, 0, arb.vol)
-	go executeOrder(sellClient, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
+func arbitre(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) {
+	buyTrader := traders[arb.buyEx.Exchanger]
+	sellTrader := traders[arb.sellEx.Exchanger]
+	go executeOrder(buyTrader, "buy", pair, 0, arb.vol)
+	go executeOrder(sellTrader, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
 }
 
-func executeOrder(c Client, side string, pair exchanger.Pair, price, vol float64) {
+func executeOrder(c Trader, side string, pair exchanger.Pair, price, vol float64) {
 	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", c.Exchanger(), side, pair, price, vol)
 	ack, err := c.PlaceOrder(side, pair, price, vol)
 
