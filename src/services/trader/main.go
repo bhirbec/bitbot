@@ -10,7 +10,7 @@ import (
 
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
-	_ "bitbot/exchanger/poloniex"
+	"bitbot/exchanger/poloniex"
 )
 
 type Exchanger struct {
@@ -52,14 +52,14 @@ func main() {
 
 	var exchangers = []*Exchanger{
 		&Exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
-		// &Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
+		&Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
 		&Exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
 	}
 
 	traders := map[string]Trader{
-		"Hitbtc": NewHitbtcTrader(config["hitbtc"]),
-		// "Poloniex": NewPoloniexTrader(config["poloniex"]),
-		"Kraken": NewKrakenTrader(config["kraken"]),
+		"Hitbtc":   NewHitbtcTrader(config["hitbtc"]),
+		"Poloniex": NewPoloniexTrader(config["poloniex"]),
+		"Kraken":   NewKrakenTrader(config["kraken"]),
 	}
 
 	balances, err := getBalances(traders)
@@ -103,6 +103,8 @@ func main() {
 			if err != nil {
 				log.Printf("Cannot retrieve balances: %s", err)
 			}
+
+			break
 		}
 
 		log.Printf("Waiting %d seconds before fetching orderbooks...\n", periodicity)
