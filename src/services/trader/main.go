@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sync"
 	"time"
 
 	"bitbot/exchanger"
@@ -80,13 +81,23 @@ func main() {
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
 			arbitre(traders, arb, pair)
 
-			// TODO: arbitre() should block
+			// TODO: arbitre() should block?
 			time.Sleep(1 * time.Minute)
 
-			err := rebalance(traders, arb, pair)
-			if err != nil {
-				log.Println(err)
-			}
+			wg := sync.WaitGroup{}
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				ExecRebalanceTransactions(traders, pair.Base)
+			}()
+
+			go func() {
+				defer wg.Done()
+				ExecRebalanceTransactions(traders, pair.Quote)
+			}()
+
+			wg.Wait()
 
 			balances, err = getBalances(traders)
 			if err != nil {

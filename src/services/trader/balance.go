@@ -3,47 +3,105 @@ package main
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"bitbot/exchanger"
 )
 
-var minBalance = map[string]float64{
-	"BTC": 0.0005,
-	"ZEC": 0.001,
+type transaction struct {
+	orig   string
+	dest   string
+	amount float64
 }
 
-func rebalance(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) error {
-	balances, err := getBalances(traders)
+func ExecRebalanceTransactions(traders map[string]Trader, cur string) {
+	masterBal, err := getBalances(traders)
 	if err != nil {
-		return err
+		log.Printf("ExecRebalanceTransactions: call to getBalances() failed - %s (%s)", err, cur)
+		return
 	}
 
-	// ex: sell Poloniex ZEC: 0.000000, BTC 0.12
-	vol := balances[arb.buyEx.Exchanger][pair.Base]
-	if vol <= minBalance[pair.Base] {
-		return transfert(
-			traders[arb.buyEx.Exchanger],
-			traders[arb.sellEx.Exchanger],
-			pair.Base,
-			balances[arb.buyEx.Exchanger][pair.Base],
-		)
+	curBal := map[string]float64{}
+	for ex, bal := range masterBal {
+		curBal[ex] = bal[cur]
 	}
 
-	// ex: buy Poloniex ZEC: 0.9, BTC 0.006104
-	vol = balances[arb.buyEx.Exchanger][pair.Quote]
-	if vol <= minBalance[pair.Quote] {
-		return transfert(
-			traders[arb.sellEx.Exchanger],
-			traders[arb.buyEx.Exchanger],
-			pair.Quote,
-			balances[arb.sellEx.Exchanger][pair.Quote],
-		)
+	var wg sync.WaitGroup
+	total := map[string]float64{}
+
+	for _, t := range findRebalanceTransactions(curBal) {
+		wg.Add(1)
+
+		go func(t *transaction) {
+			defer wg.Done()
+			err := execTransaction(traders[t.orig], traders[t.dest], cur, t.amount)
+			if err != nil {
+				log.Printf("ExecRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
+			} else {
+				total[traders[t.dest].Exchanger()] += t.amount
+			}
+		}(t)
 	}
 
-	return nil
+	wg.Wait()
+
+	for ex, amount := range total {
+		// we only take 90% to remove the transaction fee
+		target := 0.9 * (curBal[ex] + amount)
+		err = traders[ex].WaitBalance(cur, target)
+		if err != nil {
+			log.Printf("ExecRebalanceTransactions: call to waitBalanceChange() failed - %s (%s)", err, cur)
+		}
+	}
 }
 
-func transfert(org, dest Trader, cur string, vol float64) error {
+func findRebalanceTransactions(balances map[string]float64) []*transaction {
+	var total float64
+	for _, balance := range balances {
+		total += balance
+	}
+
+	const threshold = 0.05
+	targetBal := total / float64(len(balances))
+	positives := map[string]float64{}
+	negatives := map[string]float64{}
+
+	for exchanger, balance := range balances {
+		alloc := balance / total
+		delta := balance - targetBal
+
+		if alloc < threshold {
+			negatives[exchanger] = -delta
+		} else if delta > 0 {
+			positives[exchanger] = delta
+		}
+	}
+
+	var amount float64
+	transactions := []*transaction{}
+
+	for dest, negDelta := range negatives {
+		for orig, posDelta := range positives {
+			if posDelta <= 0 || negDelta == 0 {
+				continue
+			} else if posDelta > negDelta {
+				amount = negDelta
+				positives[orig] -= amount
+			} else {
+				amount = posDelta
+				negDelta -= posDelta
+				delete(positives, orig)
+			}
+
+			t := &transaction{orig, dest, amount}
+			transactions = append(transactions, t)
+		}
+	}
+
+	return transactions
+}
+
+func execTransaction(org, dest Trader, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
 	var address string
@@ -68,7 +126,7 @@ func transfert(org, dest Trader, cur string, vol float64) error {
 		log.Printf("Transfer registered: %s\n", ack)
 	}
 
-	return dest.WaitBalance(cur)
+	return nil
 }
 
 func getBalances(traders map[string]Trader) (map[string]map[string]float64, error) {

@@ -16,9 +16,11 @@ type Trader interface {
 	TradingBalances() (map[string]float64, error)
 	PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error)
 	Withdraw(vol float64, cur, address string) (string, error)
-	WaitBalance(cur string) error
+	WaitBalance(cur string, amount float64) error
 	PaymentAddress(cur string) (string, error)
 }
+
+var balanceWaintingDuration = 2 * time.Minute
 
 // ***************** Hitbtc *****************
 
@@ -55,21 +57,21 @@ func (t *HitbtcTrader) Withdraw(vol float64, cur, address string) (string, error
 	return "ok", err
 }
 
-func (t *HitbtcTrader) WaitBalance(cur string) error {
+func (t *HitbtcTrader) WaitBalance(cur string, amount float64) error {
 	var vol float64
 
 	for {
 		bal, err := t.Client.MainBalances()
 		if err != nil {
 			log.Println(err)
-		} else if bal[cur] >= minBalance[cur] {
+		} else if bal[cur] > amount {
 			vol = bal[cur]
 			break
 		} else {
 			log.Printf("Hitbtc: Wait until %s transfer is complete\n", cur)
 		}
 
-		time.Sleep(2 * time.Minute)
+		time.Sleep(balanceWaintingDuration)
 	}
 
 	result, err := t.Client.TransfertToTradingAccount(vol, cur)
@@ -101,19 +103,19 @@ func (t *PoloniexTrader) TradingBalances() (map[string]float64, error) {
 	return t.Client.TradingBalances()
 }
 
-func (t *PoloniexTrader) WaitBalance(cur string) error {
+func (t *PoloniexTrader) WaitBalance(cur string, amount float64) error {
 	for {
 		bal, err := t.Client.TradingBalances()
 
 		if err != nil {
 			return err
-		} else if bal[cur] >= minBalance[cur] {
+		} else if bal[cur] >= amount {
 			break
 		} else {
 			log.Printf("Poloniex: Wait until %s transfer is complete\n", cur)
 		}
 
-		time.Sleep(2 * time.Minute)
+		time.Sleep(balanceWaintingDuration)
 	}
 
 	return nil
@@ -182,19 +184,19 @@ func (t *KrakenTrader) Withdraw(vol float64, cur, key string) (string, error) {
 	return resp["refid"], nil
 }
 
-func (t *KrakenTrader) WaitBalance(cur string) error {
+func (t *KrakenTrader) WaitBalance(cur string, amount float64) error {
 	for {
 		bal, err := t.Client.TradeBalance(cur)
 
 		if err != nil {
 			return err
-		} else if bal >= minBalance[cur] {
+		} else if bal >= amount {
 			break
 		} else {
 			log.Printf("Kraken: Wait until %s transfer is complete\n", cur)
 		}
 
-		time.Sleep(2 * time.Minute)
+		time.Sleep(balanceWaintingDuration)
 	}
 
 	return nil
