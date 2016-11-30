@@ -163,24 +163,35 @@ func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol f
 	return t.Client.AddOrder(side, pair, price, vol)
 }
 
-func (t *KrakenTrader) Withdraw(vol float64, cur, key string) (string, error) {
-	cur, ok := kraken.Currencies[cur]
-	if !ok {
-		return "", fmt.Errorf("Kraken: currency not supported %s", cur)
-	}
-
+// Withdraw withdraws some fund from the registered account.
+//
+// Withdraw status:
+// - initiated: the withdraw was received by Kraken
+// - on hold: email confirmation was sent and transaction is waiting for approval
+// - pending: confirmation link was clicked
+// - sending: sending transaction
+// - success:
+//
+// Fees:
+// - BTC: ฿0.00050
+// - ZEC: ⓩ0.00010
+func (t *KrakenTrader) Withdraw(vol float64, cur, account string) (string, error) {
+	// After some testing it appears that the currencies doesn't need to be translated to
+	// kraken symbol. It works with ZEC, XZEC, BTC and XBT.
 	data := map[string]string{
 		"asset":  cur,
-		"key":    key,
+		"key":    account,
 		"amount": fmt.Sprint(vol),
 	}
 
 	resp := map[string]string{}
 	err := t.Client.Query("Withdraw", data, &resp)
 	if err != nil {
-		return "", fmt.Errorf("Kraken: call to Withdraw failed - %s", err)
+		return "", fmt.Errorf("Kraken: %s withdraw failed - %s", cur, err)
 	}
 
+	// TODO: need to fetch gmail to get confirmation code and then
+	// curl -X POST --data "code=4yR4ope7X32I1fTrVpSm1xuou69VrYpCRp4KjTYJI9XBDT0D" https://www.kraken.com/withdrawal-approve
 	return resp["refid"], nil
 }
 
