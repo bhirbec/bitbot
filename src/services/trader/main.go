@@ -21,7 +21,7 @@ type Exchanger struct {
 
 var (
 	p          = flag.String("p", "zec_btc", "Currency pair.")
-	configPath = flag.String("config", "", "JSON file that stores exchanger credentials.")
+	configPath = flag.String("config", "ansible/secrets/trader.json", "JSON file that stores exchanger credentials.")
 )
 
 var pairs = map[string]exchanger.Pair{
