@@ -32,7 +32,7 @@ func main() {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
 
-	config, err := google.ConfigFromJSON(b, gmail.MailGoogleComScope)
+	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope, gmail.GmailModifyScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
