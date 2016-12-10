@@ -11,3 +11,4 @@
 ansible/deploy.retry
 ansible/provision.retry
 ansible/upstart/trader.json
+ansible/secrets
