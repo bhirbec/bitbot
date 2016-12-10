@@ -3,7 +3,7 @@ needs to click on in order to validate the withdrawn. The purpose of this servic
 
 First you will need to authorize the application 
 
-$ withdrawn-confirm init --api-keys <path>
+$ withdrawn-confirm -api-keys <path> authorize
 
 Follow the instructions printed on the console. This operation needs to be ran once on the server (for now this 
 is done manually). 
