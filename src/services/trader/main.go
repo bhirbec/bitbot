@@ -92,6 +92,12 @@ func main() {
 				ExecRebalanceTransactions(traders, pair.Base)
 			}()
 
+			// ExecRebalanceTransactions triggers several API requests. With latency issues, the exchanger
+			// could receive requests in a different order than what we sent. This involves that the nounce
+			// will be invalid and a "Kraken errors: [EAPI:Invalid nonce]" can occur. To fix this quickly
+			// we just wait 10 seconds here...
+			time.Sleep(10 * time.Second)
+
 			go func() {
 				defer wg.Done()
 				ExecRebalanceTransactions(traders, pair.Quote)
