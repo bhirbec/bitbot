@@ -116,7 +116,7 @@ func main() {
 func arbitre(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) {
 	buyTrader := traders[arb.buyEx.Exchanger]
 	sellTrader := traders[arb.sellEx.Exchanger]
-	go executeOrder(buyTrader, "buy", pair, 0, arb.vol)
+	go executeOrder(buyTrader, "buy", pair, arb.buyEx.Asks[0].Price, arb.vol)
 	go executeOrder(sellTrader, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
 }
 

@@ -42,7 +42,7 @@ func (t *HitbtcTrader) TradingBalances() (map[string]float64, error) {
 }
 
 func (t *HitbtcTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
-	return t.Client.PlaceOrder(side, pair, price, vol, "market")
+	return t.Client.PlaceOrder(side, pair, 0, vol, "market")
 }
 
 func (t *HitbtcTrader) Withdraw(vol float64, cur, address string) (string, error) {
