@@ -42,7 +42,7 @@ func (s searchOptions) Get() (key, value string) {
 func fetch(config *oauth2.Config) {
 	fmt.Println("Starting...")
 
-	for range time.Tick(dur * time.Minute) {
+	for _ = range time.Tick(dur * time.Minute) {
 		work(config)
 		fmt.Println("Waiting...")
 	}
