@@ -4,25 +4,18 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"os/user"
-	"path/filepath"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 )
 
-var (
-	tokenPath   string
-	apiKeysPath = flag.String("api-keys", "ansible/secrets/gmail_api_keys.json", "Path to JSON file holding the Gmail API secret keys")
+const (
+	tokenPath = "/tmp/gmail-token.json"
 )
 
-func init() {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatalf("user.Current() failed: %s\n", err)
-	}
-	tokenPath = filepath.Join(usr.HomeDir, "gmail-token.json")
-}
+var (
+	apiKeysPath = flag.String("api-keys", "ansible/secrets/gmail_api_keys.json", "Path to JSON file holding the Gmail API secret keys")
+)
 
 func main() {
 	flag.Parse()
