@@ -15,6 +15,7 @@ const (
 var Pairs = map[exchanger.Pair]string{
 	exchanger.LTC_BTC: "LTCBTC",
 	exchanger.ETH_BTC: "ETHBTC",
+	exchanger.ZEC_BTC: "ZECBTC",
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
