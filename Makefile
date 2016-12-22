@@ -2,7 +2,7 @@ SHELL=/bin/bash
 
 export GOPATH := $(CURDIR)
 
-.PHONY: all js go
+.PHONY: all js go test
 
 all: js go
 
@@ -46,3 +46,6 @@ node_modules/.hooks/postinstall:
 	mkdir -p $(@D)
 	echo touch $(CURDIR)/node_modules/rebuild > $@
 	chmod +x $@
+
+test: go
+	go test services/...
