@@ -14,8 +14,8 @@ type transaction struct {
 	amount float64
 }
 
-func ExecRebalanceTransactions(traders map[string]Trader, cur string) {
-	masterBal, err := getBalances(traders)
+func ExecRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
+	masterBal, err := getBalances(withdrawers)
 	if err != nil {
 		log.Printf("ExecRebalanceTransactions: call to getBalances() failed - %s (%s)", err, cur)
 		return
@@ -34,11 +34,11 @@ func ExecRebalanceTransactions(traders map[string]Trader, cur string) {
 
 		go func(t *transaction) {
 			defer wg.Done()
-			err := execTransaction(traders[t.orig], traders[t.dest], cur, t.amount)
+			err := execTransaction(withdrawers[t.orig], withdrawers[t.dest], cur, t.amount)
 			if err != nil {
 				log.Printf("ExecRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
 			} else {
-				total[traders[t.dest].Exchanger()] += t.amount
+				total[withdrawers[t.dest].Exchanger()] += t.amount
 			}
 		}(t)
 	}
@@ -48,7 +48,7 @@ func ExecRebalanceTransactions(traders map[string]Trader, cur string) {
 	for ex, amount := range total {
 		// we only take 90% to remove the transaction fee
 		target := 0.9 * (curBal[ex] + amount)
-		err = traders[ex].WaitBalance(cur, target)
+		err = withdrawers[ex].WaitBalance(cur, target)
 		if err != nil {
 			log.Printf("ExecRebalanceTransactions: call to waitBalanceChange() failed - %s (%s)", err, cur)
 		}
@@ -101,7 +101,7 @@ func findRebalanceTransactions(balances map[string]float64) []*transaction {
 	return transactions
 }
 
-func execTransaction(org, dest Trader, cur string, vol float64) error {
+func execTransaction(org, dest Withdrawer, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
 	var address string
@@ -129,15 +129,15 @@ func execTransaction(org, dest Trader, cur string, vol float64) error {
 	return nil
 }
 
-func getBalances(traders map[string]Trader) (map[string]map[string]float64, error) {
+func getBalances(withdrawers map[string]Withdrawer) (map[string]map[string]float64, error) {
 	out := map[string]map[string]float64{}
 
-	for _, t := range traders {
-		b, err := t.TradingBalances()
+	for _, w := range withdrawers {
+		b, err := w.TradingBalances()
 		if err != nil {
 			return nil, err
 		}
-		out[t.Exchanger()] = b
+		out[w.Exchanger()] = b
 	}
 
 	return out, nil

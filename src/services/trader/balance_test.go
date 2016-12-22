@@ -4,32 +4,26 @@ import (
 	"log"
 	"testing"
 	"time"
-
-	"bitbot/exchanger"
 )
 
-type TestTrader struct {
+type TestWithdrawer struct {
 	exchangerName string
 	balances      map[string]map[string]float64
 }
 
-func (t *TestTrader) Exchanger() string {
+func (t *TestWithdrawer) Exchanger() string {
 	return t.exchangerName
 }
 
-func (t *TestTrader) TradingBalances() (map[string]float64, error) {
+func (t *TestWithdrawer) TradingBalances() (map[string]float64, error) {
 	return t.balances[t.exchangerName], nil
 }
 
-func (t *TestTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
-	return nil, nil
-}
-
-func (t *TestTrader) PaymentAddress(cur string) (string, error) {
+func (t *TestWithdrawer) PaymentAddress(cur string) (string, error) {
 	return t.exchangerName, nil
 }
 
-func (t *TestTrader) Withdraw(vol float64, cur, address string) (string, error) {
+func (t *TestWithdrawer) Withdraw(vol float64, cur, address string) (string, error) {
 	t.balances[t.exchangerName][cur] -= vol
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -38,7 +32,7 @@ func (t *TestTrader) Withdraw(vol float64, cur, address string) (string, error) 
 	return "", nil
 }
 
-func (t *TestTrader) WaitBalance(cur string, amount float64) error {
+func (t *TestWithdrawer) WaitBalance(cur string, amount float64) error {
 	for {
 		bal, err := t.TradingBalances()
 		if err != nil {
@@ -64,19 +58,19 @@ func TestExecRebalanceTransactions(t *testing.T) {
 		"market4": map[string]float64{cur: 9},
 	}
 
-	t1 := &TestTrader{"market1", balances}
-	t2 := &TestTrader{"market2", balances}
-	t3 := &TestTrader{"market3", balances}
-	t4 := &TestTrader{"market4", balances}
+	w1 := &TestWithdrawer{"market1", balances}
+	w2 := &TestWithdrawer{"market2", balances}
+	w3 := &TestWithdrawer{"market3", balances}
+	w4 := &TestWithdrawer{"market4", balances}
 
-	traders := map[string]Trader{}
-	for _, t := range []Trader{t1, t2, t3, t4} {
-		traders[t.Exchanger()] = t
+	Withdrawers := map[string]Withdrawer{}
+	for _, w := range []Withdrawer{w1, w2, w3, w4} {
+		Withdrawers[w.Exchanger()] = w
 	}
 
-	ExecRebalanceTransactions(traders, cur)
+	ExecRebalanceTransactions(Withdrawers, cur)
 
-	b1, _ := t1.TradingBalances()
+	b1, _ := w1.TradingBalances()
 	if amount := b1[cur]; amount != 10 {
 		t.Errorf("Trader balance not correct - 10 expected got %f", amount)
 	}

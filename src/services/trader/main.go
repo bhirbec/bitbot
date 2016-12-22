@@ -62,7 +62,13 @@ func main() {
 		"Kraken":   NewKrakenTrader(config["kraken"]),
 	}
 
-	balances, err := getBalances(traders)
+	withdrawers := map[string]Withdrawer{
+		"Hitbtc":   NewHitbtcWithdrawer(config["hitbtc"]),
+		"Poloniex": NewPoloniexWithdrawer(config["poloniex"]),
+		"Kraken":   NewKrakenWithdrawer(config["kraken"]),
+	}
+
+	balances, err := getBalances(withdrawers)
 	if err != nil {
 		log.Printf("Cannot retrieve balances: %s", err)
 	} else {
@@ -89,7 +95,7 @@ func main() {
 
 			go func() {
 				defer wg.Done()
-				ExecRebalanceTransactions(traders, pair.Base)
+				ExecRebalanceTransactions(withdrawers, pair.Base)
 			}()
 
 			// ExecRebalanceTransactions triggers several API requests. With latency issues, the exchanger
@@ -100,12 +106,12 @@ func main() {
 
 			go func() {
 				defer wg.Done()
-				ExecRebalanceTransactions(traders, pair.Quote)
+				ExecRebalanceTransactions(withdrawers, pair.Quote)
 			}()
 
 			wg.Wait()
 
-			balances, err = getBalances(traders)
+			balances, err = getBalances(withdrawers)
 			if err != nil {
 				log.Printf("Cannot retrieve balances: %s", err)
 			}
@@ -122,18 +128,18 @@ func main() {
 func arbitre(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) {
 	buyTrader := traders[arb.buyEx.Exchanger]
 	sellTrader := traders[arb.sellEx.Exchanger]
-	go executeOrder(buyTrader, "buy", pair, arb.buyEx.Asks[0].Price, arb.vol)
-	go executeOrder(sellTrader, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
+	go executeOrder(buyTrader, arb.buyEx.Exchanger, "buy", pair, arb.buyEx.Asks[0].Price, arb.vol)
+	go executeOrder(sellTrader, arb.sellEx.Exchanger, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
 }
 
-func executeOrder(c Trader, side string, pair exchanger.Pair, price, vol float64) {
-	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", c.Exchanger(), side, pair, price, vol)
-	ack, err := c.PlaceOrder(side, pair, price, vol)
+func executeOrder(t Trader, exchangerName, side string, pair exchanger.Pair, price, vol float64) {
+	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", exchangerName, side, pair, price, vol)
+	ack, err := t.PlaceOrder(side, pair, price, vol)
 
 	if err != nil {
-		log.Printf("Cannot execute %s order on %s: %s, %s\n", side, c.Exchanger(), ack, err)
+		log.Printf("Cannot execute %s order on %s: %s, %s\n", side, exchangerName, ack, err)
 	} else {
-		log.Printf("Order sent successfully on %s: %s\n", c.Exchanger(), ack)
+		log.Printf("Order sent successfully on %s: %s\n", exchangerName, ack)
 	}
 }
 
