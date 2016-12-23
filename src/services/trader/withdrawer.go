@@ -180,8 +180,6 @@ func (w *KrakenWithdrawer) Withdraw(vol float64, cur, account string) (string, e
 		return "", fmt.Errorf("Kraken: %s withdraw failed - %s", cur, err)
 	}
 
-	// TODO: need to fetch gmail to get confirmation code and then
-	// curl -X POST --data "code=4yR4ope7X32I1fTrVpSm1xuou69VrYpCRp4KjTYJI9XBDT0D" https://www.kraken.com/withdrawal-approve
 	return resp["refid"], nil
 }
 
