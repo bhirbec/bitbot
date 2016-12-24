@@ -107,8 +107,24 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 	return balances, nil
 }
 
-// PlaceOrder places a new order. Read Hitbtc documentation for a detailed explanation about the
-// arguments (https://hitbtc.com/api#neworder)
+// PlaceOrder places a new order and returns a map of string with the following fields (see
+// https://hitbtc.com/api#neworder for more informations):
+// - orderStatus: "new" or "rejected"
+// - side: sell
+// - userId: xxx
+// - symbol: ZECBTC
+// - timeInForce: IOC
+// - lastPrice:
+// - orderRejectReason: badQuantity
+// - orderId: N/A
+// - averagePrice: 0
+// - execReportType: rejected
+// - type: market
+// - leavesQuantity: 0
+// - lastQuantity: 0
+// - cumQuantity: 0
+// - clientOrderId: xxx
+// - quantity: 0
 func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (map[string]interface{}, error) {
 	const path = "/api/1/trading/new_order"
 
@@ -142,33 +158,13 @@ func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity fl
 		data.Add("timeInForce", "IOC")
 	}
 
-	// Succes response example (status can be `new` or `rejected`)
-	// { ExecutionReport: {
-	//     orderStatus:rejected
-	//     side:sell
-	//     userId:user_142834
-	//     symbol:ZECBTC
-	//     timeInForce:IOC
-	//     lastPrice:
-	//     orderRejectReason:badQuantity
-	//     orderId:N/A
-	//     averagePrice:0
-	//     execReportType:rejected
-	//     type:market
-	//     leavesQuantity:0
-	//     lastQuantity:0
-	//     cumQuantity:0
-	//     clientOrderId:hitbtc-1479089075799175
-	//     quantity:0}
-	// }
+	// Success response example (status can be `new` or `rejected`)
 	var v struct {
 		ExecutionReport map[string]interface{}
 	}
 
+	// err example: {"code":"InvalidArgument","message":"Fields are not valid: quantity"}
 	err := c.authPost(path, data, &v)
-	// err example
-	// {"code":"InvalidArgument","message":"Fields are not valid: quantity"}
-
 	return v.ExecutionReport, err
 }
 
