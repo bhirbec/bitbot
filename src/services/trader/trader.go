@@ -49,5 +49,5 @@ func NewKrakenTrader(cred credential) *KrakenTrader {
 }
 
 func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
-	return t.Client.AddOrder(side, pair, price, vol)
+	return t.Client.AddOrder(side, pair, price, vol, "market")
 }

@@ -82,7 +82,7 @@ func (c *Client) TradeBalance(cur string) (float64, error) {
 	return strconv.ParseFloat(resp.Tb, 64)
 }
 
-func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64) (map[string]interface{}, error) {
+func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64, ordertype string) (map[string]interface{}, error) {
 	p, ok := Pairs[pair]
 	if !ok {
 		return nil, fmt.Errorf("Kraken: pair not supported %s", pair)
@@ -92,13 +92,12 @@ func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64) 
 	// amount to multiply lot volume by to get currency volume (1 for ZEC)
 	var lotMult float64 = 1
 
-	// TODO: ordertype should be passed as a parameter
 	data := map[string]string{
 		"type":      side,
 		"pair":      p,
 		"volume":    fmt.Sprint(vol / lotMult),
 		"price":     fmt.Sprint(price),
-		"ordertype": "market",
+		"ordertype": ordertype,
 	}
 
 	// map[descr:map[order:buy 0.01000000 ZECXBT @ market] txid:[XXX]]
