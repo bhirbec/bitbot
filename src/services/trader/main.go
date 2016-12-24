@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log"
 	"sync"
@@ -85,7 +86,7 @@ func main() {
 			availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
-			arbitre(traders, arb, pair)
+			arbitre(traders, arb)
 
 			// TODO: arbitre() should block?
 			time.Sleep(1 * time.Minute)
@@ -125,21 +126,42 @@ func main() {
 	}
 }
 
-func arbitre(traders map[string]Trader, arb *arbitrage, pair exchanger.Pair) {
-	buyTrader := traders[arb.buyEx.Exchanger]
-	sellTrader := traders[arb.sellEx.Exchanger]
-	go executeOrder(buyTrader, arb.buyEx.Exchanger, "buy", pair, arb.buyEx.Asks[0].Price, arb.vol)
-	go executeOrder(sellTrader, arb.sellEx.Exchanger, "sell", pair, arb.sellEx.Bids[0].Price, arb.vol)
+func arbitre(traders map[string]Trader, arb *arbitrage) {
+	db, err := OpenMysql()
+	if err != nil {
+		log.Printf("executeOrder: cannot open db %s\n", err)
+		return
+	}
+
+	ex1 := arb.buyEx.Exchanger
+	go executeOrder(db, traders[ex1], arb.id, ex1, "buy", arb.pair, arb.buyEx.Asks[0].Price, arb.vol)
+
+	ex2 := arb.sellEx.Exchanger
+	go executeOrder(db, traders[ex2], arb.id, ex2, "sell", arb.pair, arb.sellEx.Bids[0].Price, arb.vol)
+
+	err = saveArbitrage(db, arb)
+	if err != nil {
+		log.Printf("saveArbitrage failed - %s\n", err)
+	}
 }
 
-func executeOrder(t Trader, exchangerName, side string, pair exchanger.Pair, price, vol float64) {
-	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", exchangerName, side, pair, price, vol)
-	ack, err := t.PlaceOrder(side, pair, price, vol)
+func executeOrder(db *sql.DB, t Trader, arbId, ex, side string, pair exchanger.Pair, price, vol float64) {
+	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", ex, side, pair, price, vol)
 
+	tradeIds, err := t.PlaceOrder(side, pair, price, vol)
 	if err != nil {
-		log.Printf("Cannot execute %s order on %s: %s, %s\n", side, exchangerName, ack, err)
+		log.Printf("Cannot execute %s order on %s: %s\n", side, ex, err)
+		return
 	} else {
-		log.Printf("Order sent successfully on %s: %s\n", exchangerName, ack)
+		log.Printf("Order sent successfully on %s\n", ex)
+	}
+
+	// TODO: batch this operation with one insert
+	for _, tradeId := range tradeIds {
+		err = saveOrderAck(db, arbId, tradeId, pair.String(), ex, side)
+		if err != nil {
+			log.Printf("saveOrderAck failed - %s\n", err)
+		}
 	}
 }
 

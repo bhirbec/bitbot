@@ -82,6 +82,10 @@ func (c *Client) TradeBalance(cur string) (float64, error) {
 	return strconv.ParseFloat(resp.Tb, 64)
 }
 
+// AddOrder places an order as defined in https://www.kraken.com/help/api#add-standard-order. The
+// returned value is a map with the following fields:
+// - txid: list of transaction id
+// - descr: map[order:sell 0.19254164 ZECXBT @ market]]
 func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64, ordertype string) (map[string]interface{}, error) {
 	p, ok := Pairs[pair]
 	if !ok {
@@ -100,7 +104,6 @@ func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64, 
 		"ordertype": ordertype,
 	}
 
-	// map[descr:map[order:buy 0.01000000 ZECXBT @ market] txid:[XXX]]
 	resp := map[string]interface{}{}
 	err := c.Query("AddOrder", data, &resp)
 	return resp, err

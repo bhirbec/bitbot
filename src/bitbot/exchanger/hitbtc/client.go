@@ -250,8 +250,8 @@ func (c *Client) Withdraw(amount float64, currencyCode, address string) (string,
 	return v.Transaction, err
 }
 
-// Transaction returns payment transaction and its status transfert.
-// Return a map[string]interface{} with the following :
+// Transaction returns payment transaction and its status transfert. Return a
+// map[string]interface{} with the following fields:
 // - external_data
 // - type:payout
 // - created: 1.479274795e+09
@@ -273,7 +273,16 @@ func (c *Client) Transaction(id string) (map[string]interface{}, error) {
 	}
 	err := c.authGet(path+id, &v)
 	return v.Transaction, err
+}
 
+// TradesByOrder returns all trades of specified order.
+func (c *Client) TradesByOrder(clientOrderId string) ([]map[string]interface{}, error) {
+	const path = "/api/1/trading/trades/by/order"
+	var v struct {
+		Trades []map[string]interface{}
+	}
+	err := c.authGet(path+"?clientOrderId="+clientOrderId, &v)
+	return v.Trades, err
 }
 
 func (c *Client) authGet(path string, v interface{}) error {
@@ -293,7 +302,14 @@ func (c *Client) authPost(path string, data *url.Values, v interface{}) error {
 }
 
 func authURI(path, apiKey string) string {
-	return fmt.Sprintf("%s?nonce=%d&apikey=%s", path, makeTimestamp(), apiKey)
+	// TODO: this is hacky
+	var sep = ""
+	if strings.ContainsAny(path, "?") {
+		sep = "&"
+	} else {
+		sep = "?"
+	}
+	return fmt.Sprintf("%s%snonce=%d&apikey=%s", path, sep, makeTimestamp(), apiKey)
 }
 
 func authHeader(uri, body, apiSecret string) http.Header {

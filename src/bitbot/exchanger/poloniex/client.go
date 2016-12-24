@@ -69,7 +69,15 @@ func (c *Client) Sell(pair exchanger.Pair, rate, amount float64) (map[string]int
 	return c.PlaceOrder("sell", pair, rate, amount)
 }
 
-// PlaceOrder places a limit order in a given market
+// PlaceOrder places a limit order in a given market. The returned value is a map with the following structure:
+// - orderNumber:xxx
+// - resultingTrades: list of:
+//   - amount: 0.19261550
+//   - date: 2016-12-23 10:42:09
+//   - rate: 0.05736700
+//   - total: 0.01104977
+//   - tradeID: xxx
+//   - type: buy
 func (c *Client) PlaceOrder(cmd string, pair exchanger.Pair, rate, amount float64) (map[string]interface{}, error) {
 	p, ok := Pairs[pair]
 	if !ok {
@@ -81,24 +89,9 @@ func (c *Client) PlaceOrder(cmd string, pair exchanger.Pair, rate, amount float6
 	data.Add("currencyPair", p)
 	data.Add("rate", fmt.Sprint(rate))
 	data.Add("amount", fmt.Sprint(amount))
+
+	// Example of err: {error: Total must be at least 0.0001.}
 	err := c.post(cmd, data, &v)
-
-	// Example of response:
-	// {
-	//  orderNumber:3073419682
-	// 	resultingTrades: {
-	// 		amount:0.06300000
-	// 		date:2016-11-15 05:15:45
-	// 		rate:0.15445400
-	// 		total:0.00973060
-	// 		tradeID:620559
-	// 		type:sell
-	// 	 }
-	// }
-
-	// Example of err:
-	// {error: Total must be at least 0.0001.}
-
 	return v, err
 }
 

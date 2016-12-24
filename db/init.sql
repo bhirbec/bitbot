@@ -22,3 +22,24 @@ create table arbitrages (
     spread float,
     key (spread)
 );
+
+create table arbitrage (
+    arbitrage_id varchar(100) not null,
+    buy_ex varchar(20) not null,
+    sell_ex varchar(20) not null,
+    pair varchar(10) not null,
+    ts timestamp(3) not null,
+    buy_price float,
+    sell_price float,
+    vol float,
+    spread float,
+    primary key (arbitrage_id)
+);
+
+create table order_ack (
+    arbitrage_id varchar(100) not null,
+    trade_id varchar(50) not null,
+    pair varchar(10) not null,
+    exchanger varchar(20),
+    side varchar(10)
+);

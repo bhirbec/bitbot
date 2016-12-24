@@ -1,16 +1,22 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"math"
 	"sync"
+	"time"
 
 	"bitbot/errorutils"
 	"bitbot/exchanger"
 )
 
 type arbitrage struct {
+	id     string
+	ts     time.Time
+	pair   exchanger.Pair
 	buyEx  *exchanger.OrderBook
 	sellEx *exchanger.OrderBook
 	vol    float64
@@ -18,11 +24,12 @@ type arbitrage struct {
 }
 
 func (a *arbitrage) String() string {
-	return fmt.Sprintf("Buy %s at %2f and Sell %s at %2f | spread: %2.2f%% | vol: %f",
+	return fmt.Sprintf("Buy %s at %2f and Sell %s at %2f | pair: %s | spread: %2.2f%% | vol: %f",
 		a.buyEx.Exchanger,
 		a.buyEx.Asks[0].Price,
 		a.sellEx.Exchanger,
 		a.sellEx.Bids[0].Price,
+		a.pair,
 		a.spread,
 		a.vol,
 	)
@@ -37,12 +44,12 @@ func findArbitages(pair exchanger.Pair, exchangers []*Exchanger) chan *arbitrage
 
 		for b := range getBooks(pair, exchangers) {
 			for _, ob := range obs {
-				arbitrage := computeArbitrage(b, ob)
+				arbitrage := computeArbitrage(pair, b, ob)
 				if arbitrage != nil {
 					c <- arbitrage
 				}
 
-				arbitrage = computeArbitrage(ob, b)
+				arbitrage = computeArbitrage(pair, ob, b)
 				if arbitrage != nil {
 					c <- arbitrage
 				}
@@ -89,18 +96,30 @@ func getBooks(pair exchanger.Pair, exchangers []*Exchanger) chan *exchanger.Orde
 	return c
 }
 
-func computeArbitrage(buyEx, sellEx *exchanger.OrderBook) *arbitrage {
+func computeArbitrage(pair exchanger.Pair, buyEx, sellEx *exchanger.OrderBook) *arbitrage {
 	buyOrder := buyEx.Asks[0]
 	sellOrder := sellEx.Bids[0]
+	ts := time.Now()
 
 	if buyOrder.Price >= sellOrder.Price {
 		return nil
 	}
 
 	return &arbitrage{
+		id:     arbId(ts, pair, buyEx.Exchanger, sellEx.Exchanger),
+		ts:     ts,
+		pair:   pair,
 		buyEx:  buyEx,
 		sellEx: sellEx,
 		vol:    math.Min(buyOrder.Volume, sellOrder.Volume),
 		spread: 100 * (sellOrder.Price/buyOrder.Price - 1),
 	}
+}
+
+func arbId(ts time.Time, pair exchanger.Pair, buyEx, sellEx string) string {
+	key := fmt.Sprintf("%d-%s-%s-%s", ts.UnixNano(), pair.String(), buyEx, sellEx)
+	h := md5.New()
+	h.Write([]byte(key))
+	b := h.Sum(nil)
+	return hex.EncodeToString(b)
 }
