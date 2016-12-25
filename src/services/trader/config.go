@@ -5,18 +5,24 @@ import (
 	"io/ioutil"
 )
 
-type credential struct {
+type Config struct {
+	Hitbtc   Credential
+	Poloniex Credential
+	Kraken   Credential
+}
+
+type Credential struct {
 	Key    string
 	Secret string
 }
 
-func LoadConfig(path string) (map[string]credential, error) {
+func LoadConfig(path string) (*Config, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	dest := map[string]credential{}
-	err = json.Unmarshal(data, &dest)
+	dest := &Config{}
+	err = json.Unmarshal(data, dest)
 	return dest, err
 }

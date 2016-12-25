@@ -26,7 +26,7 @@ type HitbtcWithdrawer struct {
 	*hitbtc.Client
 }
 
-func NewHitbtcWithdrawer(cred credential) *HitbtcWithdrawer {
+func NewHitbtcWithdrawer(cred Credential) *HitbtcWithdrawer {
 	c := hitbtc.NewClient(cred.Key, cred.Secret)
 	return &HitbtcWithdrawer{c}
 }
@@ -84,7 +84,7 @@ type PoloniexWithdrawer struct {
 	addresses map[string]string
 }
 
-func NewPoloniexWithdrawer(cred credential) *PoloniexWithdrawer {
+func NewPoloniexWithdrawer(cred Credential) *PoloniexWithdrawer {
 	c := poloniex.NewClient(cred.Key, cred.Secret)
 	return &PoloniexWithdrawer{c, map[string]string{}}
 }
@@ -140,7 +140,7 @@ type KrakenWithdrawer struct {
 	*kraken.Client
 }
 
-func NewKrakenWithdrawer(cred credential) *KrakenWithdrawer {
+func NewKrakenWithdrawer(cred Credential) *KrakenWithdrawer {
 	c := kraken.NewClient(cred.Key, cred.Secret)
 	return &KrakenWithdrawer{c}
 }

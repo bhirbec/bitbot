@@ -20,7 +20,7 @@ type HitbtcTrader struct {
 	*hitbtc.Client
 }
 
-func NewHitbtcTrader(cred credential) *HitbtcTrader {
+func NewHitbtcTrader(cred Credential) *HitbtcTrader {
 	c := hitbtc.NewClient(cred.Key, cred.Secret)
 	return &HitbtcTrader{c}
 }
@@ -55,7 +55,7 @@ type PoloniexTrader struct {
 	*poloniex.Client
 }
 
-func NewPoloniexTrader(cred credential) *PoloniexTrader {
+func NewPoloniexTrader(cred Credential) *PoloniexTrader {
 	c := poloniex.NewClient(cred.Key, cred.Secret)
 	return &PoloniexTrader{c}
 }
@@ -87,7 +87,7 @@ type KrakenTrader struct {
 	*kraken.Client
 }
 
-func NewKrakenTrader(cred credential) *KrakenTrader {
+func NewKrakenTrader(cred Credential) *KrakenTrader {
 	c := kraken.NewClient(cred.Key, cred.Secret)
 	return &KrakenTrader{c}
 }

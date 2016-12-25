@@ -58,15 +58,15 @@ func main() {
 	}
 
 	traders := map[string]Trader{
-		"Hitbtc":   NewHitbtcTrader(config["hitbtc"]),
-		"Poloniex": NewPoloniexTrader(config["poloniex"]),
-		"Kraken":   NewKrakenTrader(config["kraken"]),
+		"Hitbtc":   NewHitbtcTrader(config.Hitbtc),
+		"Poloniex": NewPoloniexTrader(config.Poloniex),
+		"Kraken":   NewKrakenTrader(config.Kraken),
 	}
 
 	withdrawers := map[string]Withdrawer{
-		"Hitbtc":   NewHitbtcWithdrawer(config["hitbtc"]),
-		"Poloniex": NewPoloniexWithdrawer(config["poloniex"]),
-		"Kraken":   NewKrakenWithdrawer(config["kraken"]),
+		"Hitbtc":   NewHitbtcWithdrawer(config.Hitbtc),
+		"Poloniex": NewPoloniexWithdrawer(config.Poloniex),
+		"Kraken":   NewKrakenWithdrawer(config.Kraken),
 	}
 
 	balances, err := getBalances(withdrawers)
