@@ -148,7 +148,7 @@ func arbitre(traders map[string]Trader, arb *arbitrage) {
 func executeOrder(db *sql.DB, t Trader, arbId, ex, side string, pair exchanger.Pair, price, vol float64) {
 	log.Printf("%s: side: %s | pair: %s | price: %f | vol: %f\n", ex, side, pair, price, vol)
 
-	tradeIds, err := t.PlaceOrder(side, pair, price, vol)
+	ids, err := t.PlaceOrder(side, pair, price, vol)
 	if err != nil {
 		log.Printf("Cannot execute %s order on %s: %s\n", side, ex, err)
 		return
@@ -157,8 +157,8 @@ func executeOrder(db *sql.DB, t Trader, arbId, ex, side string, pair exchanger.P
 	}
 
 	// TODO: batch this operation with one insert
-	for _, tradeId := range tradeIds {
-		err = saveOrderAck(db, arbId, tradeId, pair.String(), ex, side)
+	for _, id := range ids {
+		err = saveOrderAck(db, arbId, id, pair.String(), ex, side)
 		if err != nil {
 			log.Printf("saveOrderAck failed - %s\n", err)
 		}

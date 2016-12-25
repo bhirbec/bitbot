@@ -38,7 +38,9 @@ create table arbitrage (
 
 create table order_ack (
     arbitrage_id varchar(100) not null,
-    trade_id varchar(50) not null,
+    -- depending on the exchanger external_id is either a trade_id or an
+    -- order_id. An order Id can be associated with several trade_id.
+    external_id varchar(50) not null,
     pair varchar(10) not null,
     exchanger varchar(20),
     side varchar(10)

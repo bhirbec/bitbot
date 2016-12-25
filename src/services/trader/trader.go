@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"time"
 
 	"bitbot/exchanger"
 	"bitbot/exchanger/hitbtc"
@@ -26,27 +24,13 @@ func NewHitbtcTrader(cred Credential) *HitbtcTrader {
 }
 
 func (t *HitbtcTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) ([]string, error) {
-	resp1, err := t.Client.PlaceOrder(side, pair, 0, vol, "market")
+	resp, err := t.Client.PlaceOrder(side, pair, 0, vol, "market")
 	if err != nil {
 		return nil, err
 	}
 
-	// TradesByOrder sometime returns an "Unknown order" error. It seems Hitbtc database
-	// needs sometime to propagate the information...
-	time.Sleep(5 * time.Second)
-
-	clientOrderId := resp1["clientOrderId"].(string)
-	resp2, err := t.Client.TradesByOrder(clientOrderId)
-	if err != nil {
-		return nil, err
-	}
-
-	ids := []string{}
-	for _, m := range resp2 {
-		i := int64(m["tradeId"].(float64))
-		ids = append(ids, strconv.FormatInt(i, 10))
-	}
-
+	clientOrderId := resp["clientOrderId"].(string)
+	ids := []string{clientOrderId}
 	return ids, nil
 }
 
