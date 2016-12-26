@@ -69,6 +69,8 @@ func main() {
 		"Kraken":   NewKrakenWithdrawer(config.Kraken),
 	}
 
+	go startSyncTrades(config)
+
 	balances, err := getBalances(withdrawers)
 	if err != nil {
 		log.Printf("Cannot retrieve balances: %s", err)

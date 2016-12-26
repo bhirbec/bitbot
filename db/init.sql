@@ -45,3 +45,14 @@ create table order_ack (
     exchanger varchar(20),
     side varchar(10)
 );
+
+create table trade (
+    arbitrage_id varchar(100) not null,
+    trade_id varchar(50) not null,
+    price float not null,
+    quantity float not null,
+    pair varchar(10) not null,
+    side varchar(4) not null,
+    fee float not null,
+    fee_currency varchar(4) not null
+);

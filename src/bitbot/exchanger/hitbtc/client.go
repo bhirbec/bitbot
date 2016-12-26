@@ -21,7 +21,7 @@ import (
 // TODO: generate unique clientOrderId for order creation
 
 // lot size as defined on https://hitbtc.com/api under "Currency symbols" section
-var lotSizes = map[exchanger.Pair]float64{
+var LotSizes = map[exchanger.Pair]float64{
 	exchanger.BTC_USD:   0.01,
 	exchanger.BTC_EUR:   0.01,
 	exchanger.LTC_BTC:   0.1,
@@ -128,7 +128,7 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, quantity float64, orderType string) (map[string]interface{}, error) {
 	const path = "/api/1/trading/new_order"
 
-	size, ok := lotSizes[pair]
+	size, ok := LotSizes[pair]
 	if !ok {
 		return nil, fmt.Errorf("%s: No lot size for this currency pair %s", ExchangerName, pair)
 	}
