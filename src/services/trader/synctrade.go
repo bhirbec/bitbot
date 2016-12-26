@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"bitbot/errorutils"
@@ -21,20 +22,19 @@ type OrderAck struct {
 	externalId  string
 	exchanger   string
 	pair        exchanger.Pair
+	side        string
 }
 
 type Trade struct {
 	tradeId     string
 	price       float64
 	quantity    float64
-	side        string
-	pair        exchanger.Pair
 	fee         float64
 	feeCurrency string
 }
 
 var getTradesFuncs = map[string]getTradesFunc{
-	// "Kraken":   getKrakenTrade,
+	"Kraken": getKrakenTrades,
 	// "Poloniex": getPoloniexTrade,
 	"Hitbtc": getHitbtcTrades,
 }
@@ -62,7 +62,7 @@ func syncTrades(conf *Config) {
 	}
 
 	for _, ack := range acks {
-		log.Printf("syncTrades: start sync of arbId %s\n", ack.arbitrageId)
+		log.Printf("syncTrades: start sync of %s trade for arbId %s\n", ack.exchanger, ack.arbitrageId)
 
 		f, ok := getTradesFuncs[ack.exchanger]
 		if !ok {
@@ -76,7 +76,7 @@ func syncTrades(conf *Config) {
 			continue
 		}
 
-		err = saveTrades(db, ack.arbitrageId, trades)
+		err = saveTrades(db, ack, trades)
 		if err != nil {
 			log.Printf("syncTrades: saveTrades failed - %s\n", err)
 			continue
@@ -114,24 +114,66 @@ func getHitbtcTrades(conf *Config, ack *OrderAck) ([]*Trade, error) {
 			return nil, fmt.Errorf("getHitbtcTrades: parsing `fee` failed - %s", err)
 		}
 
-		trade := &Trade{
+		trades = append(trades, &Trade{
 			tradeId:     strconv.FormatInt(idFloat, 10),
 			price:       price,
 			quantity:    item["execQuantity"].(float64) * lotSize,
-			side:        item["side"].(string),
-			pair:        ack.pair,
 			fee:         fee,
 			feeCurrency: ack.pair.Quote,
-		}
-		trades = append(trades, trade)
+		})
 	}
 
 	return trades, nil
 }
 
-func getKrakenTrade(conf *Config, id string) ([]*Trade, error) {
-	_ = kraken.NewClient(conf.Kraken.Key, conf.Kraken.Secret)
-	return nil, nil
+func getKrakenTrades(conf *Config, ack *OrderAck) ([]*Trade, error) {
+	api := kraken.NewClient(conf.Kraken.Key, conf.Kraken.Secret)
+
+	resp, err := api.OrdersInfo(ack.externalId, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tradeIds := []string{}
+	ids := resp[ack.externalId].(map[string]interface{})["trades"].([]interface{})
+	for _, id := range ids {
+		tradeIds = append(tradeIds, id.(string))
+	}
+
+	resp, err = api.TradesInfo(strings.Join(tradeIds, ","))
+	if err != nil {
+		return nil, err
+	}
+
+	trades := []*Trade{}
+	for _, tradeId := range tradeIds {
+		item := resp[tradeId].(map[string]interface{})
+
+		price, err := strconv.ParseFloat(item["price"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getKrakenTrades: parsing `price` failed - %s", err)
+		}
+
+		vol, err := strconv.ParseFloat(item["vol"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getKrakenTrades: parsing `vol` failed - %s", err)
+		}
+
+		fee, err := strconv.ParseFloat(item["fee"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getKrakenTrades: parsing `fee` failed - %s", err)
+		}
+
+		trades = append(trades, &Trade{
+			tradeId:     tradeId,
+			price:       price,
+			quantity:    vol,
+			fee:         fee,
+			feeCurrency: ack.pair.Quote,
+		})
+	}
+
+	return trades, nil
 }
 
 func getPoloniexTrade(conf *Config, id string) ([]*Trade, error) {
@@ -145,7 +187,8 @@ func getOrderAcks(db *sql.DB) ([]*OrderAck, error) {
 			arbitrage_id,
 			external_id,
 			exchanger,
-			pair
+			pair,
+			side
 		from
 			order_ack
 		where
@@ -158,16 +201,16 @@ func getOrderAcks(db *sql.DB) ([]*OrderAck, error) {
 	}
 	defer rows.Close()
 
-	var arbId, externalId, ex, pair string
+	var arbId, externalId, ex, pair, side string
 	acks := []*OrderAck{}
 
 	for rows.Next() {
-		err = rows.Scan(&arbId, &externalId, &ex, &pair)
+		err = rows.Scan(&arbId, &externalId, &ex, &pair, &side)
 		if err != nil {
 			return nil, err
 		}
 
-		acks = append(acks, &OrderAck{arbId, externalId, ex, exchanger.NewPair(pair)})
+		acks = append(acks, &OrderAck{arbId, externalId, ex, exchanger.NewPair(pair), side})
 	}
 
 	err = rows.Err()
@@ -178,7 +221,7 @@ func getOrderAcks(db *sql.DB) ([]*OrderAck, error) {
 	return acks, nil
 }
 
-func saveTrades(db *sql.DB, arbId string, trades []*Trade) error {
+func saveTrades(db *sql.DB, ack *OrderAck, trades []*Trade) error {
 	const sql = `
 		insert into trade
 			(arbitrage_id, trade_id, price, quantity, pair, side, fee, fee_currency)
@@ -192,7 +235,7 @@ func saveTrades(db *sql.DB, arbId string, trades []*Trade) error {
 	}
 
 	for _, t := range trades {
-		params := []interface{}{arbId, t.tradeId, t.price, t.quantity, t.pair.String(), t.side, t.fee, t.feeCurrency}
+		params := []interface{}{ack.arbitrageId, t.tradeId, t.price, t.quantity, ack.pair.String(), ack.side, t.fee, t.feeCurrency}
 		_, err := tx.Exec(sql, params...)
 
 		if err != nil {

@@ -109,6 +109,29 @@ func (c *Client) AddOrder(side string, pair exchanger.Pair, price, vol float64, 
 	return resp, err
 }
 
+func (c *Client) OrdersInfo(txid string, trades bool) (map[string]interface{}, error) {
+	data := map[string]string{
+		"txid": txid,
+	}
+
+	if trades {
+		data["trades"] = "true"
+	}
+
+	resp := map[string]interface{}{}
+	err := c.Query("QueryOrders", data, &resp)
+	return resp, err
+}
+
+func (c *Client) TradesInfo(txid string) (map[string]interface{}, error) {
+	data := map[string]string{
+		"txid": txid,
+	}
+	resp := map[string]interface{}{}
+	err := c.Query("QueryTrades", data, &resp)
+	return resp, err
+}
+
 func (c *Client) Query(method string, data map[string]string, typ interface{}) error {
 	values := url.Values{}
 	for key, value := range data {
