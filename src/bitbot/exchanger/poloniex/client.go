@@ -107,6 +107,15 @@ func (c *Client) Withdraw(amount float64, currency, address string) (string, err
 	return v.Response, err
 }
 
+// OrderTrades returns all trades involving a given order, specified by the "orderNumber" parameter.
+func (c *Client) OrderTrades(orderNumber string) ([]map[string]interface{}, error) {
+	data := &url.Values{}
+	data.Add("orderNumber", orderNumber)
+	var dest []map[string]interface{}
+	err := c.post("returnOrderTrades", data, &dest)
+	return dest, err
+}
+
 func (c *Client) post(cmd string, data *url.Values, v interface{}) error {
 	if data == nil {
 		data = &url.Values{}

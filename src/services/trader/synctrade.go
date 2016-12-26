@@ -34,9 +34,9 @@ type Trade struct {
 }
 
 var getTradesFuncs = map[string]getTradesFunc{
-	"Kraken": getKrakenTrades,
-	// "Poloniex": getPoloniexTrade,
-	"Hitbtc": getHitbtcTrades,
+	"Kraken":   getKrakenTrades,
+	"Poloniex": getPoloniexTrades,
+	"Hitbtc":   getHitbtcTrades,
 }
 
 func startSyncTrades(conf *Config) {
@@ -84,7 +84,7 @@ func syncTrades(conf *Config) {
 
 		// throttle queries (we're using the same API keys than the trader)
 		log.Printf("syncTrades: completed sync of arbId %s\n", ack.arbitrageId)
-		time.Sleep(1 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -176,9 +176,62 @@ func getKrakenTrades(conf *Config, ack *OrderAck) ([]*Trade, error) {
 	return trades, nil
 }
 
-func getPoloniexTrade(conf *Config, id string) ([]*Trade, error) {
-	_ = poloniex.NewClient(conf.Poloniex.Key, conf.Poloniex.Secret)
-	return nil, nil
+func getPoloniexTrades(conf *Config, ack *OrderAck) ([]*Trade, error) {
+	api := poloniex.NewClient(conf.Poloniex.Key, conf.Poloniex.Secret)
+
+	resp, err := api.OrderTrades(ack.externalId)
+	if err != nil {
+		return nil, fmt.Errorf("getPoloniexTrades: OrderTrades() failed - %s", err)
+	}
+
+	var feeCurrency string
+	var feeAmount float64
+	trades := []*Trade{}
+
+	for _, item := range resp {
+		id := item["tradeID"].(float64)
+		tradeId := strconv.FormatFloat(id, 'f', 0, 64)
+
+		rate, err := strconv.ParseFloat(item["rate"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getPoloniexTrades: parsing `rate` failed - %s", err)
+		}
+
+		amount, err := strconv.ParseFloat(item["amount"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getPoloniexTrades: parsing `amount` failed - %s", err)
+		}
+
+		feePercent, err := strconv.ParseFloat(item["fee"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getPoloniexTrades: parsing `fee` failed - %s", err)
+		}
+
+		total, err := strconv.ParseFloat(item["total"].(string), 64)
+		if err != nil {
+			return nil, fmt.Errorf("getPoloniexTrades: parsing `fee` failed - %s", err)
+		}
+
+		// Not so sure about the fee computation.
+		// TODO: only take X significant digit
+		if ack.side == "buy" {
+			feeCurrency = ack.pair.Base
+			feeAmount = amount * feePercent
+		} else {
+			feeCurrency = ack.pair.Quote
+			feeAmount = total * feePercent
+		}
+
+		trades = append(trades, &Trade{
+			tradeId:     tradeId,
+			price:       rate,
+			quantity:    amount,
+			fee:         feeAmount,
+			feeCurrency: feeCurrency,
+		})
+	}
+
+	return trades, nil
 }
 
 func getOrderAcks(db *sql.DB) ([]*OrderAck, error) {

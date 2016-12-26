@@ -45,7 +45,7 @@ func saveArbitrage(db *sql.DB, arb *arbitrage) error {
 
 func saveOrderAck(db *sql.DB, arbId, externalId, pair, ex, side string) error {
 	params := []interface{}{arbId, externalId, pair, ex, side}
-	const stmt = "insert into order_ack (arbirage_id, external_id, pair, exchanger, side) values (?, ?, ?, ?, ?)"
+	const stmt = "insert into order_ack (arbitrage_id, external_id, pair, exchanger, side) values (?, ?, ?, ?, ?)"
 	_, err := db.Exec(stmt, params...)
 	return err
 }

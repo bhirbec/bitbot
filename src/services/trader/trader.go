@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"bitbot/exchanger"
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
@@ -45,25 +43,14 @@ func NewPoloniexTrader(cred Credential) *PoloniexTrader {
 }
 
 func (t *PoloniexTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) ([]string, error) {
+	// note: this is not a "market" order so it may not be filled.
 	resp, err := t.Client.PlaceOrder(side, pair, price, vol)
 	if err != nil {
 		return nil, err
 	}
 
-	// note: this is not a "market" order so it may not be filled.
-	trades := resp["resultingTrades"].([]interface{})
-	if len(trades) == 0 {
-		// TODO: cancel order?
-		return nil, fmt.Errorf("Kraken: order has been filled (0 resulting trade)")
-	}
-
-	ids := []string{}
-	for _, m := range trades {
-		item := m.(map[string]interface{})
-		ids = append(ids, item["tradeID"].(string))
-	}
-
-	return ids, nil
+	orderNumber := resp["orderNumber"].(string)
+	return []string{orderNumber}, nil
 }
 
 // Kraken Trader
