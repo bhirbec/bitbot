@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"bitbot/exchanger"
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
@@ -27,6 +29,7 @@ func (t *HitbtcTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol f
 		return nil, err
 	}
 
+	log.Printf("Hitbtc: PlaceOrder successed - %s\n", resp)
 	clientOrderId := resp["clientOrderId"].(string)
 	ids := []string{clientOrderId}
 	return ids, nil
@@ -49,6 +52,7 @@ func (t *PoloniexTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol
 		return nil, err
 	}
 
+	log.Printf("Poloniex: PlaceOrder successed - %s\n", resp)
 	orderNumber := resp["orderNumber"].(string)
 	return []string{orderNumber}, nil
 }
@@ -69,6 +73,7 @@ func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol f
 		return []string{}, err
 	}
 
+	log.Printf("Kraken: PlaceOrder successed - %s\n", resp)
 	tradeIds := resp["txid"].([]interface{})
 
 	ids := []string{}
