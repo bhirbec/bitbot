@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"bitbot/exchanger"
@@ -30,9 +31,13 @@ func (t *HitbtcTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol f
 	}
 
 	log.Printf("Hitbtc: PlaceOrder successed - %s\n", resp)
-	clientOrderId := resp["clientOrderId"].(string)
-	ids := []string{clientOrderId}
-	return ids, nil
+	clientOrderId, ok := resp["clientOrderId"]
+
+	if !ok {
+		return nil, fmt.Errorf("Hitbtc: PlaceOrder failed - no resulting trade")
+	}
+
+	return []string{clientOrderId.(string)}, nil
 }
 
 // Poloniex trader
