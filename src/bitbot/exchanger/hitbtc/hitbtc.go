@@ -24,14 +24,17 @@ var Pairs = map[exchanger.Pair]string{
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
-	p := Pairs[pair]
-	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, p)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("Hitbtc: OrderBook function doesn't not support %s", pair)
+	}
 
 	var result struct {
 		Asks [][]string
 		Bids [][]string
 	}
 
+	url := fmt.Sprintf("%s/api/1/public/%s/orderbook", host, p)
 	if err := httpreq.Get(url, nil, &result); err != nil {
 		return nil, err
 	}

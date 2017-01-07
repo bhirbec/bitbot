@@ -15,9 +15,8 @@ import (
 )
 
 type Exchanger struct {
-	name  string
-	pairs map[exchanger.Pair]string
-	f     func(exchanger.Pair) (*exchanger.OrderBook, error)
+	name string
+	f    func(exchanger.Pair) (*exchanger.OrderBook, error)
 }
 
 var (
@@ -52,9 +51,9 @@ func main() {
 	}
 
 	var exchangers = []*Exchanger{
-		&Exchanger{hitbtc.ExchangerName, hitbtc.Pairs, hitbtc.OrderBook},
-		&Exchanger{poloniex.ExchangerName, poloniex.Pairs, poloniex.OrderBook},
-		&Exchanger{kraken.ExchangerName, kraken.Pairs, kraken.OrderBook},
+		&Exchanger{hitbtc.ExchangerName, hitbtc.OrderBook},
+		&Exchanger{poloniex.ExchangerName, poloniex.OrderBook},
+		&Exchanger{kraken.ExchangerName, kraken.OrderBook},
 	}
 
 	traders := map[string]Trader{
@@ -80,11 +79,22 @@ func main() {
 
 	for {
 		for arb := range findArbitages(pair, exchangers) {
+			_, ok := traders[arb.buyEx.Exchanger]
+			if !ok {
+				log.Printf("Missing trader for %s\n", arb.buyEx.Exchanger)
+				break
+			}
+
+			_, ok = traders[arb.sellEx.Exchanger]
+			if !ok {
+				log.Printf("Missing trader for %s\n", arb.sellEx.Exchanger)
+				break
+			}
+
 			if arb.spread < minSpread || arb.vol < minVol {
 				break
 			}
 
-			log.Println(arb)
 			availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
 			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
@@ -129,6 +139,8 @@ func main() {
 }
 
 func arbitre(traders map[string]Trader, arb *arbitrage) {
+	log.Println(arb)
+
 	db, err := OpenMysql()
 	if err != nil {
 		log.Printf("executeOrder: cannot open db %s\n", err)

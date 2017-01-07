@@ -73,19 +73,16 @@ func getBooks(pair exchanger.Pair, exchangers []*Exchanger) chan *exchanger.Orde
 		log.Printf("Fetching %s orderbook for pair %s...", e.name, pair)
 		book, err := e.f(pair)
 
-		if err != nil {
-			log.Println(err)
-			return
+		if err == nil {
+			c <- book
+		} else {
+			log.Println("getBooks: failed to retrieve %s orderbook for pair %s - %s", e.name, pair, err)
 		}
-
-		c <- book
 	}
 
 	for _, e := range exchangers {
-		if _, ok := e.pairs[pair]; ok {
-			wg.Add(1)
-			go getBook(pair, e)
-		}
+		wg.Add(1)
+		go getBook(pair, e)
 	}
 
 	go func() {

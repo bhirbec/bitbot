@@ -33,8 +33,10 @@ var Pairs = map[exchanger.Pair]string{
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
-	p := Pairs[pair]
-	url := fmt.Sprintf("%s/%s/public/Depth?pair=%s", APIURL, APIVersion, p)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("Kraken: OrderBook function doesn't not support %s", pair)
+	}
 
 	var result struct {
 		Error  []string
@@ -44,6 +46,7 @@ func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
 		}
 	}
 
+	url := fmt.Sprintf("%s/%s/public/Depth?pair=%s", APIURL, APIVersion, p)
 	if err := httpreq.Get(url, nil, &result); err != nil {
 		return nil, err
 	}

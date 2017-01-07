@@ -21,8 +21,10 @@ var Pairs = map[exchanger.Pair]string{
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
-	p := Pairs[pair]
-	url := fmt.Sprintf("%s/depth/%s", APIURL, p)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("Bter: OrderBook function doesn't not support %s", pair)
+	}
 
 	var result struct {
 		Result string
@@ -30,6 +32,7 @@ func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
 		Bids   [][]interface{}
 	}
 
+	url := fmt.Sprintf("%s/depth/%s", APIURL, p)
 	err := exchanger.FetchOrderBook(url, &result)
 	if err != nil {
 		return nil, err

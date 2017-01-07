@@ -19,14 +19,17 @@ var Pairs = map[exchanger.Pair]string{
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
-	p := Pairs[pair]
-	url := fmt.Sprintf("%s/funds/%s/orderbook", APIURL, p)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("The Rock Trading: OrderBook function doesn't not support %s", pair)
+	}
 
 	var result struct {
 		Asks []map[string]float64
 		Bids []map[string]float64
 	}
 
+	url := fmt.Sprintf("%s/funds/%s/orderbook", APIURL, p)
 	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}

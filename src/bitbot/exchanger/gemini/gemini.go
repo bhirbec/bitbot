@@ -18,14 +18,17 @@ var Pairs = map[exchanger.Pair]string{
 }
 
 func OrderBook(pair exchanger.Pair) (*exchanger.OrderBook, error) {
-	p := Pairs[pair]
-	url := fmt.Sprintf("%s/book/%s", APIURL, p)
+	p, ok := Pairs[pair]
+	if !ok {
+		return nil, fmt.Errorf("Gemini: OrderBook function doesn't not support %s", pair)
+	}
 
 	var result struct {
 		Asks []map[string]string
 		Bids []map[string]string
 	}
 
+	url := fmt.Sprintf("%s/book/%s", APIURL, p)
 	if err := exchanger.FetchOrderBook(url, &result); err != nil {
 		return nil, err
 	}
