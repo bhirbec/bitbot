@@ -14,11 +14,6 @@ import (
 	"bitbot/exchanger/poloniex"
 )
 
-type Exchanger struct {
-	name string
-	f    func(exchanger.Pair) (*exchanger.OrderBook, error)
-}
-
 var (
 	p          = flag.String("p", "zec_btc", "Currency pair.")
 	configPath = flag.String("config", "ansible/secrets/trader.json", "JSON file that stores exchanger credentials.")
@@ -50,10 +45,10 @@ func main() {
 		log.Panicf("Unsupported pair %s\n", *p)
 	}
 
-	var exchangers = []*Exchanger{
-		&Exchanger{hitbtc.ExchangerName, hitbtc.OrderBook},
-		&Exchanger{poloniex.ExchangerName, poloniex.OrderBook},
-		&Exchanger{kraken.ExchangerName, kraken.OrderBook},
+	bookFuncs := map[string]bookFunc{
+		hitbtc.ExchangerName:   hitbtc.OrderBook,
+		poloniex.ExchangerName: poloniex.OrderBook,
+		kraken.ExchangerName:   kraken.OrderBook,
 	}
 
 	traders := map[string]Trader{
@@ -78,7 +73,7 @@ func main() {
 	}
 
 	for {
-		for arb := range findArbitages(pair, exchangers) {
+		for arb := range findArbitages(pair, bookFuncs) {
 			_, ok := traders[arb.buyEx.Exchanger]
 			if !ok {
 				log.Printf("Missing trader for %s\n", arb.buyEx.Exchanger)

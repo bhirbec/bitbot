@@ -13,6 +13,8 @@ import (
 	"bitbot/exchanger"
 )
 
+type bookFunc func(exchanger.Pair) (*exchanger.OrderBook, error)
+
 type arbitrage struct {
 	id     string
 	ts     time.Time
@@ -35,14 +37,14 @@ func (a *arbitrage) String() string {
 	)
 }
 
-func findArbitages(pair exchanger.Pair, exchangers []*Exchanger) chan *arbitrage {
+func findArbitages(pair exchanger.Pair, bookFuncs map[string]bookFunc) chan *arbitrage {
 	c := make(chan *arbitrage)
 
 	go func() {
 		defer close(c)
 		obs := []*exchanger.OrderBook{}
 
-		for b := range getBooks(pair, exchangers) {
+		for b := range getBooks(pair, bookFuncs) {
 			for _, ob := range obs {
 				arbitrage := computeArbitrage(pair, b, ob)
 				if arbitrage != nil {
@@ -62,27 +64,27 @@ func findArbitages(pair exchanger.Pair, exchangers []*Exchanger) chan *arbitrage
 	return c
 }
 
-func getBooks(pair exchanger.Pair, exchangers []*Exchanger) chan *exchanger.OrderBook {
+func getBooks(pair exchanger.Pair, bookFuncs map[string]bookFunc) chan *exchanger.OrderBook {
 	var wg sync.WaitGroup
 	c := make(chan *exchanger.OrderBook)
 
-	var getBook = func(pair exchanger.Pair, e *Exchanger) {
+	var getBook = func(pair exchanger.Pair, ex string, f bookFunc) {
 		defer wg.Done()
 		defer errorutils.LogPanic()
 
-		log.Printf("Fetching %s orderbook for pair %s...", e.name, pair)
-		book, err := e.f(pair)
+		log.Printf("Fetching %s orderbook for pair %s...", ex, pair)
+		book, err := f(pair)
 
 		if err == nil {
 			c <- book
 		} else {
-			log.Println("getBooks: failed to retrieve %s orderbook for pair %s - %s", e.name, pair, err)
+			log.Println("getBooks: failed to retrieve %s orderbook for pair %s - %s", ex, pair, err)
 		}
 	}
 
-	for _, e := range exchangers {
+	for ex, f := range bookFuncs {
 		wg.Add(1)
-		go getBook(pair, e)
+		go getBook(pair, ex, f)
 	}
 
 	go func() {
