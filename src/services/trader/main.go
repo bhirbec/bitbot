@@ -65,14 +65,16 @@ func main() {
 
 	go startSyncTrades(config)
 
-	balances, err := getBalances(withdrawers)
-	if err != nil {
-		log.Printf("Cannot retrieve balances: %s", err)
-	} else {
-		printBalances(balances, pair)
-	}
-
 	for {
+		balances, err := getBalances(withdrawers)
+		if err != nil {
+			log.Printf("Cannot retrieve balances: %s", err)
+			logAndWait()
+			continue
+		}
+
+		printBalances(balances, pair)
+
 		for arb := range findArbitages(pair, bookFuncs) {
 			_, ok := traders[arb.buyEx.Exchanger]
 			if !ok {
@@ -118,19 +120,15 @@ func main() {
 			}()
 
 			wg.Wait()
-
-			balances, err = getBalances(withdrawers)
-			if err != nil {
-				log.Printf("Cannot retrieve balances: %s", err)
-			}
-
-			break
 		}
 
-		log.Printf("Waiting %d seconds before fetching orderbooks...\n", periodicity)
-		time.Sleep(time.Duration(periodicity) * time.Second)
-		printBalances(balances, pair)
+		logAndWait()
 	}
+}
+
+func logAndWait() {
+	log.Printf("Waiting %d seconds before fetching orderbooks...\n", periodicity)
+	time.Sleep(time.Duration(periodicity) * time.Second)
 }
 
 func arbitre(traders map[string]Trader, arb *arbitrage) {
