@@ -65,46 +65,44 @@ func main() {
 	go startSyncTrades(config)
 
 	for {
-		balances, err := getBalances(withdrawers)
-		if err != nil {
-			log.Printf("Cannot retrieve balances: %s", err)
-			logAndWait()
-			continue
-		}
-
-		printBalances(balances, pair)
-
-		for arb := range findArbitages(pair, bookFuncs) {
-			_, ok := traders[arb.buyEx.Exchanger]
-			if !ok {
-				log.Printf("Missing trader for %s\n", arb.buyEx.Exchanger)
-				break
-			}
-
-			_, ok = traders[arb.sellEx.Exchanger]
-			if !ok {
-				log.Printf("Missing trader for %s\n", arb.sellEx.Exchanger)
-				break
-			}
-
-			if arb.spread < minSpread || arb.vol < minVol {
-				break
-			}
-
-			availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
-			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
-			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
-			arbitre(traders, arb)
-			rebalance(withdrawers, pair)
-		}
-
-		logAndWait()
+		work(pair, bookFuncs, traders, withdrawers)
+		log.Printf("Waiting %d seconds before fetching orderbooks...\n", periodicity)
+		time.Sleep(time.Duration(periodicity) * time.Second)
 	}
 }
 
-func logAndWait() {
-	log.Printf("Waiting %d seconds before fetching orderbooks...\n", periodicity)
-	time.Sleep(time.Duration(periodicity) * time.Second)
+func work(pair exchanger.Pair, bookFuncs map[string]bookFunc, traders map[string]Trader, withdrawers map[string]Withdrawer) {
+	balances, err := getBalances(withdrawers)
+	if err != nil {
+		log.Printf("Cannot retrieve balances: %s", err)
+		return
+	}
+
+	printBalances(balances, pair)
+
+	for arb := range findArbitages(pair, bookFuncs) {
+		_, ok := traders[arb.buyEx.Exchanger]
+		if !ok {
+			log.Printf("Missing trader for %s\n", arb.buyEx.Exchanger)
+			continue
+		}
+
+		_, ok = traders[arb.sellEx.Exchanger]
+		if !ok {
+			log.Printf("Missing trader for %s\n", arb.sellEx.Exchanger)
+			continue
+		}
+
+		if arb.spread < minSpread || arb.vol < minVol {
+			continue
+		}
+
+		availableSellVol := balances[arb.sellEx.Exchanger][pair.Base]
+		availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
+		arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
+		arbitre(traders, arb)
+		rebalance(withdrawers, pair)
+	}
 }
 
 func arbitre(traders map[string]Trader, arb *arbitrage) {
