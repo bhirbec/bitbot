@@ -58,7 +58,7 @@ func execRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 			if err != nil {
 				log.Printf("execRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
 			} else {
-				total[withdrawers[t.dest].Exchanger()] += t.amount
+				total[t.dest] += t.amount
 			}
 		}(t)
 	}
