@@ -48,7 +48,7 @@ func (t *TestWithdrawer) WaitBalance(cur string, amount float64) error {
 	return nil
 }
 
-func TestExecRebalanceTransactions(t *testing.T) {
+func TestexecRebalanceTransactions(t *testing.T) {
 	const cur = "CUR-1"
 
 	balances := map[string]map[string]float64{
@@ -68,7 +68,7 @@ func TestExecRebalanceTransactions(t *testing.T) {
 		Withdrawers[w.Exchanger()] = w
 	}
 
-	ExecRebalanceTransactions(Withdrawers, cur)
+	execRebalanceTransactions(Withdrawers, cur)
 
 	b1, _ := w1.TradingBalances()
 	if amount := b1[cur]; amount != 10 {

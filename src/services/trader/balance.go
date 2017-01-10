@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"bitbot/exchanger"
 )
@@ -14,10 +15,29 @@ type transaction struct {
 	amount float64
 }
 
-func ExecRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
+func rebalance(withdrawers map[string]Withdrawer, pair exchanger.Pair) {
+	wg := sync.WaitGroup{}
+
+	f := func(cur string) {
+		wg.Add(1)
+		defer wg.Done()
+		execRebalanceTransactions(withdrawers, cur)
+	}
+
+	// execRebalanceTransactions triggers several API requests. With latency issues, the exchanger
+	// could receive requests in a different order than what we sent. This involves that the nounce
+	// will be invalid and a "Kraken errors: [EAPI:Invalid nonce]" can occur. To fix this quickly
+	// we just wait 10 seconds here...
+	go f(pair.Base)
+	time.Sleep(10 * time.Second)
+	go f(pair.Quote)
+	wg.Wait()
+}
+
+func execRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 	masterBal, err := getBalances(withdrawers)
 	if err != nil {
-		log.Printf("ExecRebalanceTransactions: call to getBalances() failed - %s (%s)", err, cur)
+		log.Printf("execRebalanceTransactions: call to getBalances() failed - %s (%s)", err, cur)
 		return
 	}
 
@@ -36,7 +56,7 @@ func ExecRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 			defer wg.Done()
 			err := execTransaction(withdrawers[t.orig], withdrawers[t.dest], cur, t.amount)
 			if err != nil {
-				log.Printf("ExecRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
+				log.Printf("execRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
 			} else {
 				total[withdrawers[t.dest].Exchanger()] += t.amount
 			}
@@ -50,7 +70,7 @@ func ExecRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 		target := 0.9 * (curBal[ex] + amount)
 		err = withdrawers[ex].WaitBalance(cur, target)
 		if err != nil {
-			log.Printf("ExecRebalanceTransactions: call to waitBalanceChange() failed - %s (%s)", err, cur)
+			log.Printf("execRebalanceTransactions: call to waitBalanceChange() failed - %s (%s)", err, cur)
 		}
 	}
 }

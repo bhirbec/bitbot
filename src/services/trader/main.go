@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"log"
-	"sync"
 	"time"
 
 	"bitbot/exchanger"
@@ -96,30 +95,7 @@ func main() {
 			availableBuyVol := 0.95 * (balances[arb.buyEx.Exchanger][pair.Quote] / arb.buyEx.Asks[0].Price)
 			arb.vol = minFloat64(arb.vol, availableSellVol, availableBuyVol)
 			arbitre(traders, arb)
-
-			// TODO: arbitre() should block?
-			time.Sleep(1 * time.Minute)
-
-			wg := sync.WaitGroup{}
-			wg.Add(2)
-
-			go func() {
-				defer wg.Done()
-				ExecRebalanceTransactions(withdrawers, pair.Base)
-			}()
-
-			// ExecRebalanceTransactions triggers several API requests. With latency issues, the exchanger
-			// could receive requests in a different order than what we sent. This involves that the nounce
-			// will be invalid and a "Kraken errors: [EAPI:Invalid nonce]" can occur. To fix this quickly
-			// we just wait 10 seconds here...
-			time.Sleep(10 * time.Second)
-
-			go func() {
-				defer wg.Done()
-				ExecRebalanceTransactions(withdrawers, pair.Quote)
-			}()
-
-			wg.Wait()
+			rebalance(withdrawers, pair)
 		}
 
 		logAndWait()
