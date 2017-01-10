@@ -15,6 +15,8 @@ type transaction struct {
 	amount float64
 }
 
+const threshold = 0.05
+
 func rebalance(withdrawers map[string]Withdrawer, pair exchanger.Pair) {
 	wg := sync.WaitGroup{}
 
@@ -35,53 +37,50 @@ func rebalance(withdrawers map[string]Withdrawer, pair exchanger.Pair) {
 }
 
 func execRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
-	masterBal, err := getBalances(withdrawers)
+	curBal, err := getCurrencyBalances(cur, withdrawers)
 	if err != nil {
-		log.Printf("execRebalanceTransactions: call to getBalances() failed - %s (%s)", err, cur)
+		log.Printf("execRebalanceTransactions: call to getCurrencyBalances() failed - %s (%s)\n", err, cur)
 		return
 	}
 
-	curBal := map[string]float64{}
-	for ex, bal := range masterBal {
-		curBal[ex] = bal[cur]
-	}
-
-	var wg sync.WaitGroup
-	total := map[string]float64{}
+	rebalanced := map[string]bool{}
 
 	for _, t := range findRebalanceTransactions(curBal) {
-		wg.Add(1)
-
-		go func(t *transaction) {
-			defer wg.Done()
-			err := execTransaction(withdrawers[t.orig], withdrawers[t.dest], cur, t.amount)
-			if err != nil {
-				log.Printf("execRebalanceTransactions: call to execTransaction() failed - %s (%s)", err, cur)
-			} else {
-				total[t.dest] += t.amount
-			}
-		}(t)
+		err := execTransaction(withdrawers[t.orig], withdrawers[t.dest], cur, t.amount)
+		if err != nil {
+			log.Printf("execRebalanceTransactions: call to execTransaction() failed - %s (%s)\n", err, cur)
+		} else {
+			rebalanced[t.dest] = true
+		}
 	}
 
-	wg.Wait()
-
-	for ex, amount := range total {
-		// we only take 90% to remove the transaction fee
-		target := 0.9 * (curBal[ex] + amount)
-		err = withdrawers[ex].WaitBalance(cur, target)
+	for len(rebalanced) > 0 {
+		curBal, err := getCurrencyBalances(cur, withdrawers)
 		if err != nil {
-			log.Printf("execRebalanceTransactions: call to waitBalanceChange() failed - %s (%s)", err, cur)
+			log.Printf("execRebalanceTransactions: call to getCurrencyBalances() failed - %s (%s)\n", err, cur)
+		} else {
+			total := sumBalance(curBal)
+			for ex, _ := range rebalanced {
+				alloc := curBal[ex] / total
+				if alloc < threshold {
+					continue
+				}
+				delete(rebalanced, ex)
+
+				err := withdrawers[ex].AfterWithdraw(cur)
+				if err != nil {
+					log.Printf("execRebalanceTransactions: call to AfterWithdraw() failed - %s (%s)\n", err, cur)
+				}
+			}
 		}
+
+		log.Printf("execRebalanceTransactions: waiting for %s transfer to complete\n", cur)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
 func findRebalanceTransactions(balances map[string]float64) []*transaction {
-	var total float64
-	for _, balance := range balances {
-		total += balance
-	}
-
-	const threshold = 0.05
+	total := sumBalance(balances)
 	targetBal := total / float64(len(balances))
 	positives := map[string]float64{}
 	negatives := map[string]float64{}
@@ -121,6 +120,14 @@ func findRebalanceTransactions(balances map[string]float64) []*transaction {
 	return transactions
 }
 
+func sumBalance(balances map[string]float64) float64 {
+	var total float64
+	for _, balance := range balances {
+		total += balance
+	}
+	return total
+}
+
 func execTransaction(org, dest Withdrawer, cur string, vol float64) error {
 	log.Printf("Starting transfert of %f %s from %s to %s\n", vol, cur, org.Exchanger(), dest.Exchanger())
 
@@ -147,6 +154,20 @@ func execTransaction(org, dest Withdrawer, cur string, vol float64) error {
 	}
 
 	return nil
+}
+
+func getCurrencyBalances(cur string, withdrawers map[string]Withdrawer) (map[string]float64, error) {
+	masterBal, err := getBalances(withdrawers)
+	if err != nil {
+		return nil, fmt.Errorf("getCurrencyBalances: call to getBalances() failed - %s (%s)", err, cur)
+	}
+
+	curBal := map[string]float64{}
+	for ex, bal := range masterBal {
+		curBal[ex] = bal[cur]
+	}
+
+	return curBal, nil
 }
 
 func getBalances(withdrawers map[string]Withdrawer) (map[string]map[string]float64, error) {

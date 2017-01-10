@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"testing"
 	"time"
 )
@@ -32,19 +31,7 @@ func (t *TestWithdrawer) Withdraw(vol float64, cur, address string) (string, err
 	return "", nil
 }
 
-func (t *TestWithdrawer) WaitBalance(cur string, amount float64) error {
-	for {
-		bal, err := t.TradingBalances()
-		if err != nil {
-			log.Printf("waitBalanceChange: call to TradingBalances() failed - %s (%s)\n", err, cur)
-		} else if bal[cur] >= amount {
-			break
-		}
-
-		log.Printf("WaitBalance: Wait until %s %s balance is >= than %f\n", t.Exchanger(), cur, amount)
-		time.Sleep(1 * time.Second)
-	}
-
+func (t *TestWithdrawer) AfterWithdraw(cur string) error {
 	return nil
 }
 

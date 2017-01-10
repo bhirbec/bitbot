@@ -14,7 +14,7 @@ type Withdrawer interface {
 	Exchanger() string
 	TradingBalances() (map[string]float64, error)
 	Withdraw(vol float64, cur, address string) (string, error)
-	WaitBalance(cur string, amount float64) error
+	AfterWithdraw(string) error
 	PaymentAddress(cur string) (string, error)
 }
 
@@ -51,29 +51,18 @@ func (w *HitbtcWithdrawer) Withdraw(vol float64, cur, address string) (string, e
 	return "ok", err
 }
 
-func (w *HitbtcWithdrawer) WaitBalance(cur string, amount float64) error {
-	var vol float64
-
-	for {
-		bal, err := w.Client.MainBalances()
-		if err != nil {
-			log.Println(err)
-		} else if bal[cur] > amount {
-			vol = bal[cur]
-			break
-		} else {
-			log.Printf("Hitbtc: Wait until %s transfer is complete\n", cur)
-		}
-
-		time.Sleep(balanceWaintingDuration)
-	}
-
-	result, err := w.Client.TransfertToTradingAccount(vol, cur)
+func (w *HitbtcWithdrawer) AfterWithdraw(cur string) error {
+	mainBalance, err := w.Client.MainBalances()
 	if err != nil {
-		return fmt.Errorf("Hitbtc: Cannot transfert `%s` from main trading account to trading account: %s", cur, err)
+		return fmt.Errorf("Hitbtc: MainBalances() failed - %s - %s", cur, err)
 	}
 
-	log.Printf("Hitbtc: transfert from main to trading account successed: %s\n", result)
+	ack, err := w.Client.TransfertToTradingAccount(mainBalance[cur], cur)
+	if err != nil {
+		return fmt.Errorf("Hitbtc: TransfertToTradingAccount() failed: %s - %s", cur, err)
+	}
+
+	log.Printf("Hitbtc: transfert from main to trading account successed: %s\n", ack)
 	return nil
 }
 
@@ -97,21 +86,7 @@ func (w *PoloniexWithdrawer) TradingBalances() (map[string]float64, error) {
 	return w.Client.TradingBalances()
 }
 
-func (w *PoloniexWithdrawer) WaitBalance(cur string, amount float64) error {
-	for {
-		bal, err := w.Client.TradingBalances()
-
-		if err != nil {
-			return err
-		} else if bal[cur] >= amount {
-			break
-		} else {
-			log.Printf("Poloniex: Wait until %s transfer is complete\n", cur)
-		}
-
-		time.Sleep(balanceWaintingDuration)
-	}
-
+func (w *PoloniexWithdrawer) AfterWithdraw(cur string) error {
 	return nil
 }
 
@@ -183,21 +158,7 @@ func (w *KrakenWithdrawer) Withdraw(vol float64, cur, account string) (string, e
 	return resp["refid"], nil
 }
 
-func (w *KrakenWithdrawer) WaitBalance(cur string, amount float64) error {
-	for {
-		bal, err := w.Client.TradeBalance(cur)
-
-		if err != nil {
-			return err
-		} else if bal >= amount {
-			break
-		} else {
-			log.Printf("Kraken: Wait until %s transfer is complete\n", cur)
-		}
-
-		time.Sleep(balanceWaintingDuration)
-	}
-
+func (w *KrakenWithdrawer) AfterWithdraw(cur string) error {
 	return nil
 }
 
