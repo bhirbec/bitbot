@@ -46,7 +46,7 @@ function addLineChart(data) {
     var xAxis = d3
         .axisBottom()
         .scale(x)
-        .ticks(d3.timeMinute, 5)
+        .ticks(10, d3.timeMinute)
         .tickFormat(d3.timeFormat("%H:%M"));
 
     // y axis
