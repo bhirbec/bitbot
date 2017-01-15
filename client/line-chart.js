@@ -35,15 +35,11 @@ function createLineChart(data) {
         row.date = formatDate(row.Date);
     }
 
-    var svgRoot = document.createElementNS(d3.namespaces.svg, 'svg');
-
-    var svg = d3.select(svgRoot)
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom);
-
-    var g = addLineChart(data);
-    svgRoot.appendChild(g);
-    return svgRoot;
+    var svg = document.createElementNS(d3.namespaces.svg, 'svg');
+    svg.style.width = width + margin.left + margin.right;
+    svg.style.height = height + margin.top + margin.bottom;
+    svg.appendChild(addLineChart(data));
+    return svg;
 }
 
 function addLineChart(data) {
