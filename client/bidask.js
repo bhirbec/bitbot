@@ -31,7 +31,14 @@ export default class extends React.Component {
     _updateState(location) {
         var that = this;
         $.get(location.pathname, location.query, function (data) {
-            that.setState({data: data});
+            var rows = []
+            for (var i = 0; i < exchangers.length; i++) {
+                var filteredData = filterExchangerData(data, exchangers[i]);
+                if (filteredData.length > 0) {
+                    rows.push(filteredData)
+                }
+            }
+            that.setState({data: rows});
         });
     }
 
@@ -65,7 +72,7 @@ class SearchForm extends React.Component {
         return <form onSubmit={this.handleSubmit.bind(this)}>
             <SelectField value={this.props.pair} onChange={this.handleChange.bind(this)}>
                 {pairs.map(function (p) {
-                    return <MenuItem value={p.symbol} primaryText={p.label} />
+                    return <MenuItem key={p.symbol} value={p.symbol} primaryText={p.label} />
                 })}
             </SelectField>
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
@@ -78,21 +85,16 @@ class SearchForm extends React.Component {
 class BidAskTable extends React.Component {
 
     render() {
-        var data = this.props.data;
-
-        var rows = exchangers.map(function (ex) {
-            var filteredData = filterExchangerData(data, ex)
-            var n = filteredData.length;
-
-            return <TableRow>
-                <TableRowColumn>{ex}</TableRowColumn>
-                <TableRowColumn>{filteredData[0] ? filteredData[0].BidPrice : '-'}</TableRowColumn>
-                <TableRowColumn style={ {width: 600} }><LineChart data={filteredData} /></TableRowColumn>
-                <TableRowColumn>{filteredData[0] ? filteredData[0].AskPrice : '-'}</TableRowColumn>
+        var rows = this.props.data.map(function (row) {
+            return <TableRow key={row[0].Exchanger}>
+                <TableRowColumn>{row[0].Exchanger}</TableRowColumn>
+                <TableRowColumn>{row[0] ? row[0].BidPrice : '-'}</TableRowColumn>
+                <TableRowColumn style={ {width: 600} }><LineChart data={row} /></TableRowColumn>
+                <TableRowColumn>{row[0] ? row[0].AskPrice : '-'}</TableRowColumn>
             </TableRow>
         });
 
-        return <Table selectable={false} style={ {'max-width': 1000} }>
+        return <Table selectable={false} style={ {maxWidth: 1000} }>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
                 <TableRow>
                     <TableHeaderColumn>Exchanger</TableHeaderColumn>

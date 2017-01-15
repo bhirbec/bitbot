@@ -4,10 +4,18 @@ var d3 = require('d3');
 
 export default class extends React.Component {
 
-    componentWillReceiveProps(props, state) {
+    componentDidMount(props, state) {
+        this.update(this.props.data);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.update(nextProps.data);
+    }
+
+    update(data) {
         var el = ReactDOM.findDOMNode(this);
         el.innerHTML = "";
-        el.appendChild(createLineChart(props.data));
+        el.appendChild(createLineChart(data));
     }
 
     render() {
