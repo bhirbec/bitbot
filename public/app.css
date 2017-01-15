@@ -14,30 +14,26 @@ select {
 	padding: 1em;
 }
 
-.chart:nth-child(odd) {
-	background-color: #f9f9f9;
-}
 
-.chart {
+/* line chart */
+div.chart {
 	font-size: 10px;
 }
 
-.axis path,
-.axis line {
+div.chart path,
+div.chart line {
   fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
 }
 
-.x.axis path {
+div.chart .x.axis path {
   display: none;
 }
 
-.line {
-  fill: none;
+div.chart path.line {
   stroke-width: 1.75px;
 }
 
+/* Form */
 .form-field {
 	margin: 2em 0;
 }
@@ -46,4 +42,10 @@ select {
 	color: #bbb;
 	display: block;
 	margin-bottom: .25em;
+}
+
+/* Bid ask table */
+table.bid-ask-table thead tr,
+table.bid-ask-table tr:nth-child(even) {
+	background-color: #f9f9f9;
 }

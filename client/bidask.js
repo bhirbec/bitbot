@@ -94,7 +94,7 @@ class BidAskTable extends React.Component {
             </TableRow>
         });
 
-        return <Table selectable={false} style={ {maxWidth: 1000} }>
+        return <Table selectable={false} style={ {maxWidth: 1000} } className="bid-ask-table">
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
                 <TableRow>
                     <TableHeaderColumn>Exchanger</TableHeaderColumn>
