@@ -61,7 +61,7 @@ class SearchForm extends React.Component {
                 <label>Pair</label>
                 <select name="pair" onChange={this.submit.bind(this)}>
                     {pairs.map(function (p) {
-                        return <option value={p.symbol} selected={that.props.params.pair == p.symbol}>{p.label}</option>
+                        return <option key={p.symbol} value={p.symbol} selected={that.props.params.pair == p.symbol}>{p.label}</option>
                     })}
                 </select>
             </div>
@@ -70,7 +70,7 @@ class SearchForm extends React.Component {
                 <select name="buy_ex" onChange={this.submit.bind(this)}>
                     <option value="">All</option>
                     {exchangers.map(function (e) {
-                        return <option value={e}>{e}</option>
+                        return <option key={"buy_ex:" + e} value={e}>{e}</option>
                     })}
                 </select>
             </div>
@@ -79,7 +79,7 @@ class SearchForm extends React.Component {
                 <select name="sell_ex" onChange={this.submit.bind(this)}>
                     <option value="">All</option>
                     {exchangers.map(function (e) {
-                        return <option value={e}>{e}</option>
+                        return <option key={"sell_ex:" + e} value={e}>{e}</option>
                     })}
                 </select>
             </div>
@@ -109,8 +109,8 @@ class ArbitrageTable extends React.Component {
             return <p>No results.</p>
         }
 
-        var rows = this.props.data.map(function (r) {
-            return <TableRow>
+        var rows = this.props.data.map(function (r, i) {
+            return <TableRow key={"key-" + i}>
                 <TableRowColumn>{r.Date}</TableRowColumn>
                 <TableRowColumn>{r.Spread}%</TableRowColumn>
                 <TableRowColumn>{r.Volume}</TableRowColumn>
