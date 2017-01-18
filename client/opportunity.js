@@ -10,39 +10,40 @@ export default class extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {data: []};
+        this.state = {data: [], params: {}};
     }
 
     componentDidMount() {
-        this._updateState(this.props.location);
+        this._updateState(this.props);
     }
 
-    componentWillReceiveProps(nextProps) {
-        this._updateState(nextProps.location)
+    componentWillReceiveProps(props) {
+        this._updateState(props)
     }
 
-    _updateState(location) {
+    _updateState(props) {
         var that = this;
-        $.get(location.pathname, location.query, function (data) {
-            that.setState({data: data});
+        $.get(props.location.pathname, props.location.query, function (data) {
+            var params = Object.assign({}, props.params, props.location.query);
+            that.setState({data: data, params: params});
         });
     }
 
     render() {
         return <div>
             <h1>Search for opportunities</h1>
-            <SearchForm location={this.props.location} params={this.props.params} />
+            <SearchForm params={this.state.params} />
             <ArbitrageTable data={this.state.data} />
         </div>
     }
 };
 
 class SearchForm extends React.Component {
-
     submit(e) {
         e.preventDefault()
 
         var form = ReactDOM.findDOMNode(this);
+
         var qs = $.param({
             buy_ex: form.buy_ex.value,
             sell_ex: form.sell_ex.value,
@@ -53,15 +54,21 @@ class SearchForm extends React.Component {
         hashHistory.push('/opportunity/' + form.pair.value + '?' + qs)
     }
 
-    render() {
-        var that = this;
+    componentDidUpdate() {
+        var form = ReactDOM.findDOMNode(this);
+        for (var key in this.props.params) {
+            // TODO: this doesn't work for select
+            form[key].value = this.props.params[key]
+        }
+    }
 
+    render() {
         return <form onSubmit={this.submit.bind(this)} style={ {'float': 'left', 'width': '15em'} }>
             <div className="form-field">
                 <label>Pair</label>
                 <select name="pair" onChange={this.submit.bind(this)}>
                     {pairs.map(function (p) {
-                        return <option key={p.symbol} value={p.symbol} selected={that.props.params.pair == p.symbol}>{p.label}</option>
+                        return <option key={p.symbol} value={p.symbol}>{p.label}</option>
                     })}
                 </select>
             </div>
@@ -85,15 +92,15 @@ class SearchForm extends React.Component {
             </div>
             <div className="form-field">
                 <label>Min Arbitrage Spread</label>
-                <input name="min_profit" type="text" size="10" defaultValue={this.props.params.min_profit} />
+                <input name="min_profit" type="text" size="10" />
             </div>
             <div className="form-field">
                 <label>Min Volume</label>
-                <input name="min_vol" type='text' size="10" defaultValue={this.props.params.min_vol} />
+                <input name="min_vol" type='text' size="10" />
             </div>
             <div className="form-field">
                 <label>Limit</label>
-                <input name="limit" type='text' size="10" defaultValue={this.props.params.limit} />
+                <input name="limit" type='text' size="10" />
             </div>
             {/* TODO: onSubmit isn't triggered whithout if the form doesn't contain that button.
             I don't understand why... */}
