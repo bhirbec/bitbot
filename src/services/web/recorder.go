@@ -14,7 +14,7 @@ const (
 	displayTimeFormat = "2006-01-02 15:04"
 )
 
-func selectArbitrages(db *database.DB, pair, buyExchanger, sellExchanger string, minProfit, minVol float64, limit int64) []map[string]interface{} {
+func recordedArbitrages(db *database.DB, pair, buyExchanger, sellExchanger string, minProfit, minVol float64, limit int64) []map[string]interface{} {
 	const stmt = `
         select
             buy_ex,
@@ -69,7 +69,7 @@ func selectArbitrages(db *database.DB, pair, buyExchanger, sellExchanger string,
 	return output
 }
 
-func selectBidAsk(db *database.DB, pair string, limit int64) []map[string]interface{} {
+func recordedBidAsk(db *database.DB, pair string, limit int64) []map[string]interface{} {
 	const stmt = `
         select
             ts,
