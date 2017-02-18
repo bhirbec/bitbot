@@ -88,7 +88,7 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows := database.SelectBidAsk(db, pair, 100)
+	rows := selectBidAsk(db, pair, 100)
 	JSONResponse(w, rows)
 }
 
@@ -130,7 +130,7 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	buyExchanger := r.FormValue("buy_ex")
 	sellExchanger := r.FormValue("sell_ex")
 
-	rows := database.SelectArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, minVol, limit)
+	rows := selectArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, minVol, limit)
 	JSONResponse(w, rows)
 }
 

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
+	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -111,6 +114,82 @@ func work(db *database.DB, pair exchanger.Pair) {
 		return
 	}
 
-	database.SaveOrderbooks(db, pair, start, obs)
-	database.ComputeAndSaveArbitrage(db, pair, start, obs)
+	saveOrderbooks(db, pair, start, obs)
+	computeAndSaveArbitrage(db, pair, start, obs)
+}
+
+func saveOrderbooks(db *database.DB, pair exchanger.Pair, start time.Time, obs []*exchanger.OrderBook) {
+	placeholders := []string{}
+	params := []interface{}{}
+
+	var min = func(a, b int) int {
+		if a < b {
+			return a
+		} else {
+			return b
+		}
+	}
+
+	for _, ob := range obs {
+		const limit = 10
+		n := min(len(ob.Bids), limit)
+		bids, err := json.Marshal(ob.Bids[:n])
+		errorutils.PanicOnError(err)
+
+		n = min(len(ob.Asks), limit)
+		asks, err := json.Marshal(ob.Asks[:n])
+		errorutils.PanicOnError(err)
+
+		params = append(params, start)
+		params = append(params, pair.String())
+		params = append(params, ob.Exchanger)
+		params = append(params, bids)
+		params = append(params, asks)
+		placeholders = append(placeholders, "(?, ?, ?, ?, ?)")
+	}
+
+	stmt := "insert into orderbooks (ts, pair, exchanger, bids, asks) values " + strings.Join(placeholders, ",")
+	_, err := db.Exec(stmt, params...)
+	errorutils.PanicOnError(err)
+}
+
+func computeAndSaveArbitrage(db *database.DB, pair exchanger.Pair, start time.Time, obs []*exchanger.OrderBook) {
+	placeholders := []string{}
+	params := []interface{}{}
+
+	for _, buyOb := range obs {
+		for _, sellOb := range obs {
+			if buyOb.Exchanger == sellOb.Exchanger {
+				continue
+			}
+
+			buyOrder := buyOb.Asks[0]
+			sellOrder := sellOb.Bids[0]
+
+			if buyOrder.Price >= sellOrder.Price {
+				continue
+			}
+
+			vol := math.Min(buyOrder.Volume, sellOrder.Volume)
+			spread := 100 * (sellOrder.Price/buyOrder.Price - 1)
+
+			params = append(params, buyOb.Exchanger)
+			params = append(params, sellOb.Exchanger)
+			params = append(params, pair.String())
+			params = append(params, start)
+			params = append(params, buyOrder.Price)
+			params = append(params, sellOrder.Price)
+			params = append(params, vol)
+			params = append(params, spread)
+			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?, ?)")
+		}
+	}
+
+	if len(params) == 0 {
+		return
+	}
+
+	stmt := "insert into arbitrages (buy_ex, sell_ex, pair, ts, buy_price, sell_price, vol, spread) values " + strings.Join(placeholders, ",")
+	_, err := db.Exec(stmt, params...)
+	errorutils.PanicOnError(err)
 }
