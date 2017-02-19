@@ -21,7 +21,6 @@ class App extends React.Component {
     }
 
     handleActive(tab) {
-        console.log(tab)
         this.setState({value: tab.props.value});
         hashHistory.push(tab.props.value);
     }
