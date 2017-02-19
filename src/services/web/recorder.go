@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"bitbot/database"
+	"github.com/jmoiron/sqlx"
+
 	"bitbot/errorutils"
 )
 
@@ -14,12 +15,12 @@ const (
 	displayTimeFormat = "2006-01-02 15:04"
 )
 
-func recordedArbitrages(db *database.DB, pair, buyExchanger, sellExchanger string, minProfit, minVol float64, limit int64) []map[string]interface{} {
+func recordedArbitrages(db *sqlx.DB, pair, buyExchanger, sellExchanger string, minProfit, minVol float64, limit int64) interface{} {
 	const stmt = `
         select
+            ts,
             buy_ex,
             sell_ex,
-            ts,
             buy_price,
             sell_price,
             vol,
@@ -38,46 +39,38 @@ func recordedArbitrages(db *database.DB, pair, buyExchanger, sellExchanger strin
             %d
     `
 
-	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair, buyExchanger, buyExchanger, sellExchanger, sellExchanger, minProfit, minVol)
-	errorutils.PanicOnError(err)
-	defer rows.Close()
-
-	var buyEx, sellEx, ts string
-	var buyPrice, sellPrice, vol, spread float64
-	output := []map[string]interface{}{}
-
-	for rows.Next() {
-		err = rows.Scan(&buyEx, &sellEx, &ts, &buyPrice, &sellPrice, &vol, &spread)
-		errorutils.PanicOnError(err)
-
-		date, err := time.Parse(timeFormat, ts)
-		errorutils.PanicOnError(err)
-
-		output = append(output, map[string]interface{}{
-			"Date":          date.Format(displayTimeFormat),
-			"BuyPrice":      buyPrice,
-			"BuyExchanger":  buyEx,
-			"SellPrice":     sellPrice,
-			"SellExchanger": sellEx,
-			"Volume":        vol,
-			"Spread":        spread,
-		})
+	var rows []struct {
+		Date          string  `db:"ts"`
+		BuyPrice      float64 `db:"buy_price"`
+		BuyExchanger  string  `db:"buy_ex"`
+		SellPrice     float64 `db:"sell_price"`
+		SellExchanger string  `db:"sell_ex"`
+		Volume        float64 `db:"vol"`
+		Spread        float64 `db:"spread"`
 	}
 
-	err = rows.Err()
+	sql := fmt.Sprintf(stmt, limit)
+	err := db.Select(&rows, sql, pair, buyExchanger, buyExchanger, sellExchanger, sellExchanger, minProfit, minVol)
 	errorutils.PanicOnError(err)
-	return output
+
+	for _, row := range rows {
+		date, err := time.Parse(timeFormat, row.Date)
+		errorutils.PanicOnError(err)
+		row.Date = date.Format(displayTimeFormat)
+	}
+
+	return rows
 }
 
-func recordedBidAsk(db *database.DB, pair string, limit int64) []map[string]interface{} {
+func recordedBidAsk(db *sqlx.DB, pair string, limit int64) interface{} {
 	const stmt = `
         select
             ts,
             exchanger,
-            bids->'$[0].Price',
-            asks->'$[0].Price',
-            bids->'$[0].Volume',
-            asks->'$[0].Volume'
+            bids->'$[0].Price' as bid_price,
+            asks->'$[0].Price' as ask_price,
+            bids->'$[0].Volume' as bid_vol,
+            asks->'$[0].Volume' as ask_vol
         from
             orderbooks
         where
@@ -88,32 +81,24 @@ func recordedBidAsk(db *database.DB, pair string, limit int64) []map[string]inte
             %d
     `
 
-	rows, err := db.Query(fmt.Sprintf(stmt, limit), pair)
-	errorutils.PanicOnError(err)
-	defer rows.Close()
-
-	var ts, ex string
-	var bidPrice, bidVol, askPrice, askVol float64
-	output := []map[string]interface{}{}
-
-	for rows.Next() {
-		err = rows.Scan(&ts, &ex, &bidPrice, &askPrice, &bidVol, &askVol)
-		errorutils.PanicOnError(err)
-
-		date, err := time.Parse(timeFormat, ts)
-		errorutils.PanicOnError(err)
-
-		output = append(output, map[string]interface{}{
-			"Exchanger": ex,
-			"Date":      date.Format(displayTimeFormat),
-			"BidPrice":  bidPrice,
-			"AskPrice":  askPrice,
-			"BidVol":    bidVol,
-			"AskVol":    askVol,
-		})
+	var rows []struct {
+		Date      string  `db:"ts"`
+		Exchanger string  `db:"exchanger"`
+		BidPrice  float64 `db:"bid_price"`
+		AskPrice  float64 `db:"ask_price"`
+		BidVol    float64 `db:"bid_vol"`
+		AskVol    float64 `db:"ask_vol"`
 	}
 
-	err = rows.Err()
+	sql := fmt.Sprintf(stmt, limit)
+	err := db.Select(&rows, sql, pair)
 	errorutils.PanicOnError(err)
-	return output
+
+	for _, row := range rows {
+		date, err := time.Parse(timeFormat, row.Date)
+		errorutils.PanicOnError(err)
+		row.Date = date.Format(displayTimeFormat)
+	}
+
+	return rows
 }

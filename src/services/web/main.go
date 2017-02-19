@@ -24,7 +24,6 @@ const (
 	staticDir = "public"
 )
 
-var db *database.DB
 var dbx *sqlx.DB
 
 var (
@@ -49,9 +48,6 @@ var pairs = map[string]bool{
 
 func main() {
 	flag.Parse()
-
-	db = database.Open(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
-	defer db.Close()
 
 	dbx = database.Openx(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
 	defer dbx.Close()
@@ -102,7 +98,7 @@ func BidAskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows := recordedBidAsk(db, pair, 100)
+	rows := recordedBidAsk(dbx, pair, 100)
 	JSONResponse(w, rows)
 }
 
@@ -144,7 +140,7 @@ func OpportunityHandler(w http.ResponseWriter, r *http.Request) {
 	buyExchanger := r.FormValue("buy_ex")
 	sellExchanger := r.FormValue("sell_ex")
 
-	rows := recordedArbitrages(db, pair, buyExchanger, sellExchanger, minProfit, minVol, limit)
+	rows := recordedArbitrages(dbx, pair, buyExchanger, sellExchanger, minProfit, minVol, limit)
 	JSONResponse(w, rows)
 }
 
