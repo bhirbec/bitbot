@@ -39,7 +39,7 @@ func recordedArbitrages(db *sqlx.DB, pair, buyExchanger, sellExchanger string, m
             %d
     `
 
-	var rows []struct {
+	var rows []*struct {
 		Date          string  `db:"ts"`
 		BuyPrice      float64 `db:"buy_price"`
 		BuyExchanger  string  `db:"buy_ex"`
@@ -81,7 +81,7 @@ func recordedBidAsk(db *sqlx.DB, pair string, limit int64) interface{} {
             %d
     `
 
-	var rows []struct {
+	var rows []*struct {
 		Date      string  `db:"ts"`
 		Exchanger string  `db:"exchanger"`
 		BidPrice  float64 `db:"bid_price"`
@@ -90,8 +90,7 @@ func recordedBidAsk(db *sqlx.DB, pair string, limit int64) interface{} {
 		AskVol    float64 `db:"ask_vol"`
 	}
 
-	sql := fmt.Sprintf(stmt, limit)
-	err := db.Select(&rows, sql, pair)
+	err := db.Select(&rows, fmt.Sprintf(stmt, limit), pair)
 	errorutils.PanicOnError(err)
 
 	for _, row := range rows {
