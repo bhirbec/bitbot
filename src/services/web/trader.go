@@ -28,7 +28,7 @@ func tradedArbitrages(db *sqlx.DB, limit int) interface{} {
             %d
     `
 	var rows []struct {
-		ArbitrageId int     `db:"arbitrage_id"`
+		ArbitrageId string  `db:"arbitrage_id"`
 		BuyEx       string  `db:"buy_ex"`
 		SellEx      string  `db:"sell_ex"`
 		Pair        string  `db:"pair"`
@@ -63,7 +63,7 @@ func trades(db *sqlx.DB, limit int) interface{} {
             %d
     `
 	var rows []struct {
-		ArbitrageId int     `db:"arbitrage_id"`
+		ArbitrageId string  `db:"arbitrage_id"`
 		TradeId     string  `db:"trade_id"`
 		Price       float64 `db:"price"`
 		Quantity    float64 `db:"quantity"`
