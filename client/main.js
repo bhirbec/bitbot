@@ -8,6 +8,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import BidAskTab from './bidask.js';
 import OpportunityTab from './opportunity.js';
+import {ArbitrageTab, TradeTab} from './trader.js';
 
 
 injectTapEventPlugin();
@@ -20,6 +21,7 @@ class App extends React.Component {
     }
 
     handleActive(tab) {
+        console.log(tab)
         this.setState({value: tab.props.value});
         hashHistory.push(tab.props.value);
     }
@@ -30,6 +32,8 @@ class App extends React.Component {
                 <Tabs value={this.state.value}>
                     <Tab label={"Bid/Ask"} value={"/bid_ask/btc_usd"} onActive={this.handleActive.bind(this)}></Tab>
                     <Tab label={"Opportunities"} value={"/opportunity/btc_usd"} onActive={this.handleActive.bind(this)}></Tab>
+                    <Tab label={"Arbitrage"} value={"/arbitrage"} onActive={this.handleActive.bind(this)}></Tab>
+                    <Tab label={"Trade"} value={"/trade"} onActive={this.handleActive.bind(this)}></Tab>
                 </Tabs>
                 <div id="content">
                     {this.props.children}
@@ -44,6 +48,8 @@ ReactDOM.render((
         <Route path="/" component={App}>
             <Route path="bid_ask/:pair" component={BidAskTab} />
             <Route path="opportunity/:pair" component={OpportunityTab} />
+            <Route path="arbitrage" component={ArbitrageTab} />
+            <Route path="trade" component={TradeTab} />
         </Route>
     </Router>
 ), document.getElementById('app'));

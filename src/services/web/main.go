@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
 	"bitbot/database"
 	"bitbot/errorutils"
 )
@@ -23,6 +25,7 @@ const (
 )
 
 var db *database.DB
+var dbx *sqlx.DB
 
 var (
 	// TODO: factorize db related flags
@@ -50,12 +53,23 @@ func main() {
 	db = database.Open(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
 	defer db.Close()
 
+	dbx = database.Openx(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
+	defer dbx.Close()
+
 	m := http.NewServeMux()
 
 	for pair, _ := range pairs {
 		m.HandleFunc("/bid_ask/"+pair, BidAskHandler)
 		m.HandleFunc("/opportunity/"+pair, OpportunityHandler)
 	}
+
+	m.HandleFunc("/arbitrage", func(w http.ResponseWriter, r *http.Request) {
+		JSONResponse(w, tradedArbitrages(dbx, 100))
+	})
+
+	m.HandleFunc("/trade", func(w http.ResponseWriter, r *http.Request) {
+		JSONResponse(w, trades(dbx, 100))
+	})
 
 	m.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
 	m.HandleFunc("/", HomeHandler)
