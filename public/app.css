@@ -44,6 +44,19 @@ div.chart path.line {
 	margin-bottom: .25em;
 }
 
+/* Table */
+table.report {
+	border-collapse: collapse;
+}
+
+table.report td {
+	padding: .5em;
+}
+
+table.report tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
+
 /* Bid ask table */
 table.bid-ask-table thead tr,
 table.bid-ask-table tr:nth-child(even) {

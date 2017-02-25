@@ -20,12 +20,29 @@ func tradedArbitrages(db *sqlx.DB, limit int) interface{} {
             a.sell_price,
             a.vol,
             a.spread,
-            buy.price as real_buy_price,
-            sell.price as real_sell_price
+            t.real_buy_price,
+            t.real_sell_price,
+            t.real_buy_vol,
+            t.real_sell_vol,
+            100 * (t.real_sell_price / t.real_buy_price - 1) as real_spread
         from
             arbitrage a
-            left join trade as buy on a.arbitrage_id = buy.arbitrage_id and buy.side = 'buy'
-            left join trade as sell on a.arbitrage_id = sell.arbitrage_id and sell.side = 'sell'
+            left join (
+                select
+                    arbitrage_id,
+                    sum(case when side = 'buy' then price * quantity else null end) /
+                    sum(case when side = 'buy' then quantity else null end) as real_buy_price,
+
+                    sum(case when side = 'sell' then price * quantity else null end) /
+                    sum(case when side = 'sell' then quantity else null end) as real_sell_price,
+
+                    sum(case when side = 'buy' then quantity else null end) as real_buy_vol,
+                    sum(case when side = 'sell' then quantity else null end) as real_sell_vol
+                from
+                    trade
+                group by
+                    arbitrage_id
+            ) as t using(arbitrage_id)
         order by
             a.ts desc
         limit
@@ -43,6 +60,9 @@ func tradedArbitrages(db *sqlx.DB, limit int) interface{} {
 		Spread        float64  `db:"spread"`
 		RealBuyPrice  *float64 `db:"real_buy_price"`
 		RealSellPrice *float64 `db:"real_sell_price"`
+		RealBuyVol    *float64 `db:"real_buy_vol"`
+		RealSellVol   *float64 `db:"real_sell_vol"`
+		RealSpread    *float64 `db:"real_spread"`
 	}
 
 	err := db.Select(&rows, fmt.Sprintf(stmt, limit))
@@ -53,14 +73,14 @@ func tradedArbitrages(db *sqlx.DB, limit int) interface{} {
 func trades(db *sqlx.DB, limit int) interface{} {
 	const stmt = `
         select
-		    arbitrage_id,
-		    trade_id,
-		    price,
-		    quantity,
-		    pair,
-		    side,
-		    fee,
-		    fee_currency
+            arbitrage_id,
+            trade_id,
+            price,
+            quantity,
+            pair,
+            side,
+            fee,
+            fee_currency
         from
             trade
         order by
