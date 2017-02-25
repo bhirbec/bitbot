@@ -11,32 +11,38 @@ import (
 func tradedArbitrages(db *sqlx.DB, limit int) interface{} {
 	const stmt = `
         select
-            arbitrage_id,
-            buy_ex,
-            sell_ex,
-            pair,
-            ts,
-            buy_price,
-            sell_price,
-            vol,
-            spread
+            a.arbitrage_id,
+            a.buy_ex,
+            a.sell_ex,
+            a.pair,
+            a.ts,
+            a.buy_price,
+            a.sell_price,
+            a.vol,
+            a.spread,
+            buy.price as real_buy_price,
+            sell.price as real_sell_price
         from
-            arbitrage
+            arbitrage a
+            left join trade as buy on a.arbitrage_id = buy.arbitrage_id and buy.side = 'buy'
+            left join trade as sell on a.arbitrage_id = sell.arbitrage_id and sell.side = 'sell'
         order by
-            ts desc
+            a.ts desc
         limit
             %d
     `
 	var rows []*struct {
-		ArbitrageId string  `db:"arbitrage_id"`
-		BuyEx       string  `db:"buy_ex"`
-		SellEx      string  `db:"sell_ex"`
-		Pair        string  `db:"pair"`
-		Date        string  `db:"ts"`
-		BuyPrice    float64 `db:"buy_price"`
-		SellPrice   float64 `db:"sell_price"`
-		Vol         float64 `db:"vol"`
-		Spread      float64 `db:"spread"`
+		ArbitrageId   string   `db:"arbitrage_id"`
+		BuyEx         string   `db:"buy_ex"`
+		SellEx        string   `db:"sell_ex"`
+		Pair          string   `db:"pair"`
+		Date          string   `db:"ts"`
+		BuyPrice      float64  `db:"buy_price"`
+		SellPrice     float64  `db:"sell_price"`
+		Vol           float64  `db:"vol"`
+		Spread        float64  `db:"spread"`
+		RealBuyPrice  *float64 `db:"real_buy_price"`
+		RealSellPrice *float64 `db:"real_sell_price"`
 	}
 
 	err := db.Select(&rows, fmt.Sprintf(stmt, limit))

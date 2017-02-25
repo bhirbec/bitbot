@@ -32,11 +32,12 @@ export class ArbitrageTab extends React.Component {
 
         var rows = this.state.data.map(function (r, i) {
             return <TableRow key={"key-" + i}>
+                <TableRowColumn>{r.ArbitrageId}</TableRowColumn>
                 <TableRowColumn>{r.Date}</TableRowColumn>
                 <TableRowColumn>{r.BuyEx}</TableRowColumn>
                 <TableRowColumn>{r.SellEx}</TableRowColumn>
-                <TableRowColumn>{r.BuyPrice}</TableRowColumn>
-                <TableRowColumn>{r.SellPrice}</TableRowColumn>
+                <TableRowColumn>{r.BuyPrice} | {r.RealBuyPrice}</TableRowColumn>
+                <TableRowColumn>{r.SellPrice} | {r.RealSellPrice}</TableRowColumn>
                 <TableRowColumn>{r.Spread} %</TableRowColumn>
                 <TableRowColumn>{r.Vol}</TableRowColumn>
             </TableRow>
@@ -47,6 +48,7 @@ export class ArbitrageTab extends React.Component {
             <Table>
                 <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
                     <TableRow>
+                        <TableHeaderColumn>Id</TableHeaderColumn>
                         <TableHeaderColumn>Date</TableHeaderColumn>
                         <TableHeaderColumn>Buy Exchanger</TableHeaderColumn>
                         <TableHeaderColumn>Sell Exchanger</TableHeaderColumn>
