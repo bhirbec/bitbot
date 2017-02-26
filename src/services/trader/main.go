@@ -11,6 +11,7 @@ import (
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/poloniex"
+	"bitbot/exchanger/therocktrading"
 )
 
 var (
@@ -45,21 +46,24 @@ func main() {
 	}
 
 	bookFuncs := map[string]bookFunc{
-		hitbtc.ExchangerName:   hitbtc.OrderBook,
-		poloniex.ExchangerName: poloniex.OrderBook,
-		kraken.ExchangerName:   kraken.OrderBook,
+		hitbtc.ExchangerName:         hitbtc.OrderBook,
+		poloniex.ExchangerName:       poloniex.OrderBook,
+		kraken.ExchangerName:         kraken.OrderBook,
+		therocktrading.ExchangerName: therocktrading.OrderBook,
 	}
 
 	traders := map[string]Trader{
-		"Hitbtc":   NewHitbtcTrader(config.Hitbtc),
-		"Poloniex": NewPoloniexTrader(config.Poloniex),
-		"Kraken":   NewKrakenTrader(config.Kraken),
+		"Hitbtc":           NewHitbtcTrader(config.Hitbtc),
+		"Poloniex":         NewPoloniexTrader(config.Poloniex),
+		"Kraken":           NewKrakenTrader(config.Kraken),
+		"The Rock Trading": NewTheRockTrader(config.TheRockTrading),
 	}
 
 	withdrawers := map[string]Withdrawer{
-		"Hitbtc":   NewHitbtcWithdrawer(config.Hitbtc),
-		"Poloniex": NewPoloniexWithdrawer(config.Poloniex),
-		"Kraken":   NewKrakenWithdrawer(config.Kraken),
+		"Hitbtc":           NewHitbtcWithdrawer(config.Hitbtc),
+		"Poloniex":         NewPoloniexWithdrawer(config.Poloniex),
+		"Kraken":           NewKrakenWithdrawer(config.Kraken),
+		"The Rock Trading": NewTheRockWithdrawer(config.TheRockTrading),
 	}
 
 	go startSyncTrades(config)

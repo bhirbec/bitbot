@@ -8,6 +8,7 @@ import (
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/poloniex"
+	"bitbot/exchanger/therocktrading"
 )
 
 type Withdrawer interface {
@@ -189,4 +190,46 @@ func (w *KrakenWithdrawer) PaymentAddress(cur string) (string, error) {
 	}
 
 	return resp[0]["address"].(string), nil
+}
+
+// ***************** The Rock Trading *****************
+
+type TheRockWithdrawer struct {
+	*therocktrading.Client
+	addresses map[string]string
+}
+
+func NewTheRockWithdrawer(cred Credential) *TheRockWithdrawer {
+	c := therocktrading.NewClient(cred.Key, cred.Secret)
+	return &TheRockWithdrawer{c, cred.Addresses}
+}
+
+func (w *TheRockWithdrawer) Exchanger() string {
+	return therocktrading.ExchangerName
+}
+
+func (w *TheRockWithdrawer) TradingBalances() (map[string]float64, error) {
+	balances, err := w.Client.Balances()
+	if err != nil {
+		return nil, fmt.Errorf("The Rock Trading: call to Balances failed - %s", err)
+	}
+
+	traidingBalances := map[string]float64{}
+	for _, bal := range balances {
+		traidingBalances[bal.Currency] = bal.TradingBalance
+	}
+
+	return traidingBalances, nil
+}
+
+func (w *TheRockWithdrawer) AfterWithdraw(cur string) error {
+	return nil
+}
+
+func (w *TheRockWithdrawer) PaymentAddress(cur string) (string, error) {
+	addr, ok := w.addresses[cur]
+	if !ok {
+		return "", fmt.Errorf("The Rock Trading: missing address for currency %s", cur)
+	}
+	return addr, nil
 }

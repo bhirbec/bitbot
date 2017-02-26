@@ -6,14 +6,16 @@ import (
 )
 
 type Config struct {
-	Hitbtc   Credential
-	Poloniex Credential
-	Kraken   Credential
+	Hitbtc         Credential
+	Poloniex       Credential
+	Kraken         Credential
+	TheRockTrading Credential `json:"The Rock Trading"`
 }
 
 type Credential struct {
-	Key    string
-	Secret string
+	Key       string
+	Secret    string
+	Addresses map[string]string
 }
 
 func LoadConfig(path string) (*Config, error) {

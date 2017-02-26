@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -138,7 +139,8 @@ func execTransaction(org, dest Withdrawer, cur string, vol float64) error {
 		// Kraken requires to input the withdrawal addresses in the UI and to
 		// give them unique name. The convention is ExchangerName + "-" + cur.
 		// Example: Poloniex-ZEC
-		address = fmt.Sprintf("%s-%s", dest.Exchanger(), cur)
+		exName := strings.Replace(dest.Exchanger(), " ", "-", -1)
+		address = fmt.Sprintf("%s-%s", exName, cur)
 	} else {
 		address, err = dest.PaymentAddress(cur)
 		if err != nil {

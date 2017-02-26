@@ -8,6 +8,7 @@ import (
 	"bitbot/exchanger/hitbtc"
 	"bitbot/exchanger/kraken"
 	"bitbot/exchanger/poloniex"
+	"bitbot/exchanger/therocktrading"
 )
 
 type Trader interface {
@@ -84,6 +85,32 @@ func (t *KrakenTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol f
 	ids := []string{}
 	for _, id := range tradeIds {
 		ids = append(ids, id.(string))
+	}
+
+	return ids, nil
+}
+
+// The Rock Trading Trader
+type TheRockTrader struct {
+	*therocktrading.Client
+}
+
+func NewTheRockTrader(cred Credential) *TheRockTrader {
+	c := therocktrading.NewClient(cred.Key, cred.Secret)
+	return &TheRockTrader{c}
+}
+
+func (t *TheRockTrader) PlaceOrder(side string, pair exchanger.Pair, price, vol float64) ([]string, error) {
+	order, err := t.Client.PlaceOrder(side, pair, price, vol)
+	if err != nil {
+		return []string{}, fmt.Errorf("The Rock Trading: PlaceOrder failed - %s", err)
+	}
+
+	log.Printf("The Rock Trading: PlaceOrder successed - %#v\n", order)
+
+	ids := []string{}
+	for _, trade := range order.Trades {
+		ids = append(ids, fmt.Sprint(trade.Id))
 	}
 
 	return ids, nil

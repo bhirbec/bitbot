@@ -52,7 +52,7 @@ func doRequest(req *http.Request, h http.Header, v interface{}) error {
 
 	// TODO: is it the right thing to do? How to handle 403 (like Hitbtc {"code":"NotAuthorized","message":"Wrong signature"})
 	// or 522 (like CEX maintenance)
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		status := http.StatusText(resp.StatusCode)
 
 		limit := 1000
