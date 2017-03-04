@@ -56,27 +56,28 @@ func execRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 	}
 
 	for len(rebalanced) > 0 {
+		log.Printf("execRebalanceTransactions: waiting for %s transfer to complete\n", cur)
+		time.Sleep(1 * time.Minute)
+
 		curBal, err := getCurrencyBalances(cur, withdrawers)
 		if err != nil {
 			log.Printf("execRebalanceTransactions: call to getCurrencyBalances() failed - %s (%s)\n", err, cur)
-		} else {
-			total := sumBalance(curBal)
-			for ex, _ := range rebalanced {
-				alloc := curBal[ex] / total
-				if alloc < threshold {
-					continue
-				}
-				delete(rebalanced, ex)
-
-				err := withdrawers[ex].AfterWithdraw(cur)
-				if err != nil {
-					log.Printf("execRebalanceTransactions: call to AfterWithdraw() failed - %s (%s)\n", err, cur)
-				}
-			}
+			continue
 		}
 
-		log.Printf("execRebalanceTransactions: waiting for %s transfer to complete\n", cur)
-		time.Sleep(1 * time.Minute)
+		total := sumBalance(curBal)
+		for ex, _ := range rebalanced {
+			err := withdrawers[ex].AfterWithdraw(cur)
+			if err != nil {
+				log.Printf("execRebalanceTransactions: call to AfterWithdraw() failed - %s (%s)\n", err, cur)
+				continue
+			}
+
+			alloc := curBal[ex] / total
+			if alloc >= threshold {
+				delete(rebalanced, ex)
+			}
+		}
 	}
 }
 
