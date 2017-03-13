@@ -62,7 +62,8 @@ func execRebalanceTransactions(withdrawers map[string]Withdrawer, cur string) {
 		curBal, err := getCurrencyBalances(cur, withdrawers)
 		if err != nil {
 			log.Printf("execRebalanceTransactions: call to getCurrencyBalances() failed - %s (%s)\n", err, cur)
-			continue
+			// TODO: hack
+			return
 		}
 
 		total := sumBalance(curBal)
