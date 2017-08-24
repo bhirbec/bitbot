@@ -84,6 +84,15 @@ func (c *Client) Balances() ([]Balance, error) {
 	return v.Balances, err
 }
 
+func (c *Client) Transactions() ([]Transaction, error) {
+	var v struct {
+		Transactions []Transaction
+	}
+	url := fmt.Sprintf("%s/transactions", APIURL)
+	err := c.get(url, &v)
+	return v.Transactions, err
+}
+
 // PlaceOrder places a limit order in a given market.
 func (c *Client) PlaceOrder(side string, pair exchanger.Pair, price, amount float64) (*Order, error) {
 	p, ok := Pairs[pair]
@@ -226,4 +235,16 @@ type WithdrawLimit struct {
 	Initial float64
 	// Residual user limit
 	Available float64
+}
+
+type Transaction struct {
+	Id       int
+	Type     string
+	Price    float64
+	Currency string
+	Date     string
+	// OrderId        interface{} `json:"order_id"`
+	// TradeId        interface{} `json:"trade_id"`
+	// Note           string
+	// TransferDetail interface{} `json:"transfer_detail"`
 }
