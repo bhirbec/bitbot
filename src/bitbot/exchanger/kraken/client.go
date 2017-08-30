@@ -18,6 +18,7 @@ import (
 var Currencies = map[string]string{
 	"BTC": "XXBT",
 	"ZEC": "XZEC",
+	"BCH": "BCH",
 }
 
 var reversedCurrencies = map[string]string{}
