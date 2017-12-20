@@ -1,6 +1,3 @@
-create database if not exists bittrex;
-use bittrex;
-
 create table market_summary (
     market_name      varchar(10) not null,
     high             decimal(40, 25) not null,

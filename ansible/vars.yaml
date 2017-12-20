@@ -1,0 +1,5 @@
+mysql_db: bitbot
+mysql_schema: /tmp/schema.sql
+mysql_root_pwd: password
+mysql_user: bitbot
+mysql_user_pwd: password

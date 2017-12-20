@@ -1,0 +1,5 @@
+[Unit]
+Description=Bittrex trader
+
+[Service]
+ExecStart={{project_dir}}/bin/bittrex_trader --config {{config}} -u {{mysql_user}} -w {{mysql_user_pwd}} -d {{mysql_db}}

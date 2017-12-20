@@ -1,0 +1,78 @@
+- hosts: all
+  sudo: true
+
+  vars:
+    go_version: 1.9.2
+
+  tasks:
+    - include_vars:
+        file: vars.yaml
+
+    # BUILD
+    - name: Download APT packages
+      apt: name={{item}} update_cache=true
+      with_items:
+        - git
+        - build-essential
+
+    - name: Clean previous Go install
+      file: path=/usr/local/go/ state=absent
+
+    - name: Download Go
+      shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
+      # [WARNING]: Consider using get_url module rather than running curl
+
+    - name: Create symlinks to Go binaries
+      shell: ln -fs /usr/local/go/bin/go /usr/local/bin
+      # [WARNING]: Consider using file module with state=link rather than running ln
+
+    - name: Setup APT for Nodejs
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+
+    - name: Install Node.js
+      apt: pkg=nodejs
+
+    # INSTALL MySQL
+    # https://github.com/bendbennett/vagrant-nginx-php7-mysql5-mongo3/blob/master/roles/mysql/tasks/mysql_default.yml
+
+    - name: Set MySQL root password before installing
+      debconf: name='mysql-server' question='mysql-server/root_password' value='{{mysql_root_pwd}}' vtype='password'
+
+    - name: Confirm MySQL root password before installing
+      debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{mysql_root_pwd}}' vtype='password'
+
+    - name: Install MySQL
+      apt: package={{ item }} state=present force=yes update_cache=yes cache_valid_time=3600
+      when: ansible_os_family == 'Debian'
+      with_items:
+        - mysql-server
+        - mysql-client
+        - python-mysqldb
+
+    # CREATE MySQL Database
+    - name: create MySQL user
+      mysql_user:
+        login_user: root
+        login_password: "{{mysql_root_pwd}}"
+        name: "{{mysql_user}}"
+        password: "{{mysql_user_pwd}}"
+        priv: '*.*:ALL,GRANT'
+        state: present
+
+    - name: Create a new MySQL database
+      mysql_db:
+        login_user: "{{mysql_user}}"
+        login_password: "{{mysql_user_pwd}}"
+        name: "{{mysql_db}}"
+        state: present
+
+    - name: Copy db.sql
+      copy: src=../src/services/bittrex_trader/db.sql dest={{mysql_schema}}
+
+    - name: Create MySQL tables
+      mysql_db:
+        login_user: "{{mysql_user}}"
+        login_password: "{{mysql_user_pwd}}"
+        state: import
+        name: "{{mysql_db}}"
+        target: "{{mysql_schema}}"
