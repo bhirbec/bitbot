@@ -8,7 +8,6 @@
 /public/lib.js
 /public/app.js
 
-ansible/deploy.retry
-ansible/provision.retry
+ansible/*.retry
 ansible/upstart/trader.json
 ansible/secrets
