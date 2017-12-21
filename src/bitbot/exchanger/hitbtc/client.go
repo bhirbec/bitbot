@@ -87,8 +87,8 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 	var v struct {
 		Balance []struct {
 			Currency_code string
-			Cash          float64
-			Reserved      float64
+			Cash          string
+			Reserved      interface{}
 		}
 	}
 
@@ -101,7 +101,12 @@ func (c *Client) TradingBalances() (map[string]float64, error) {
 	for _, row := range v.Balance {
 		// the "cash" entry is the available trading balance and there's no need to decrease this value
 		// using the "reserved" value.
-		balances[row.Currency_code] = row.Cash
+		cash, err := strconv.ParseFloat(row.Cash, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		balances[row.Currency_code] = cash
 	}
 
 	return balances, nil
