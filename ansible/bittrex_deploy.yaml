@@ -1,20 +1,20 @@
 - hosts: all
 
   vars:
+    dev: false
     rev: master
     project_dir: /home/bhirbec/bitbot
     config: /tmp/bittrex.json
 
   tasks:
     # BUILD
-    - name: Clone repository
-      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
-
     - name: Fetch repository
       shell: git fetch origin chdir={{project_dir}}
+      when: not dev
 
     - name: Checkout {{rev}} branch
       shell: git reset --hard origin/{{rev}} chdir={{project_dir}}
+      when: not dev
 
     - name: Run make
       shell: make chdir={{project_dir}}

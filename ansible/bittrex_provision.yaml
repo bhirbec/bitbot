@@ -2,7 +2,9 @@
   sudo: true
 
   vars:
+    dev: false
     go_version: 1.9.2
+    project_dir: /home/bhirbec/bitbot
 
   tasks:
     - include_vars:
@@ -31,6 +33,10 @@
 
     - name: Install Node.js
       apt: pkg=nodejs
+
+    - name: Clone repository
+      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
+      when: not dev
 
     # INSTALL MySQL
     # https://github.com/bendbennett/vagrant-nginx-php7-mysql5-mongo3/blob/master/roles/mysql/tasks/mysql_default.yml
