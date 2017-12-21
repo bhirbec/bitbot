@@ -70,8 +70,11 @@ func saveMarketSummaries(db *database.DB, summaries []bittrex.MarketSummary) err
 		placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	}
 
+	// Bittrex returns the last known price with its timestamp. If the price
+	// hasn't moved since the last fetch then we got a `duplicated key error`
+	// on (timestamp, price). We use `ignore` to skip this.
 	stmt := `
-        insert into market_summary
+        insert ignore into market_summary
             (market_name, high, low, Ask, Bid, open_buy_orders, open_sell_orders,
             volume, last, base_volume, prev_day, timestamp)
         values
