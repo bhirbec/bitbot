@@ -6,8 +6,17 @@ import (
 )
 
 type Config struct {
-	Key    string `json:"key"`
-	Secret string `json:"secret"`
+	Mysql struct {
+		Db   string `json:"db"`
+		Host string `json:"host"`
+		Port string `json:"port"`
+		User string `json:"user"`
+		Pwd  string `json:"pwd"`
+	} `json:"mysql"`
+	Bittrex struct {
+		Key    string `json:"key"`
+		Secret string `json:"secret"`
+	} `json:"bittrex"`
 }
 
 func loadConfig(path string) (*Config, error) {

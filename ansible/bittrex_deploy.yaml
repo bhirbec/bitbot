@@ -24,7 +24,7 @@
         file: vars.yaml
 
     - name: Copy JSON config
-      copy: src=secrets/bittrex.json dest={{config}}
+      copy: src=secrets/bittrex.json dest={{config}} # TODO: template this with vars.yaml
 
     - name: Copy systemd conf
       become: true

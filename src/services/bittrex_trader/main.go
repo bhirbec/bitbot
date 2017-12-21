@@ -12,12 +12,7 @@ import (
 )
 
 var (
-	configPath = flag.String("config", "ansible/secrets/bittrex.json", "JSON file that stores bittrex credentials.")
-	dbName     = flag.String("d", "bittrex", "MySQL database.")
-	dbHost     = flag.String("h", "localhost", "MySQL host.")
-	dbPort     = flag.String("p", "3306", "MySQL port.")
-	dbUser     = flag.String("u", "root", "MySQL user.")
-	dbPwd      = flag.String("w", "", "MySQL user's password.")
+	configPath = flag.String("config", "src/services/bittrex_trader/config.json", "JSON file that stores bittrex credentials.")
 )
 
 func main() {
@@ -30,10 +25,11 @@ func main() {
 	}
 
 	// Bittrex client
-	bittrex := bittrex.New(config.Key, config.Secret)
+	bittrex := bittrex.New(config.Bittrex.Key, config.Bittrex.Secret)
 
 	// open db
-	db := database.Open(*dbName, *dbHost, *dbPort, *dbUser, *dbPwd)
+	creds := config.Mysql
+	db := database.Open(creds.Db, creds.Host, creds.Port, creds.User, creds.Pwd)
 	defer db.Close()
 
 	// Get markets
