@@ -79,4 +79,4 @@ Configure gcloud ssh (only once):
 
 Run ansible-playbook:
 
-`$ ansible-playbook -i ansible/gce_hosts ansible/bittrex_deploy.yaml`
+`$ ansible-playbook -i ansible/gce_host ansible/bittrex_deploy.yaml`
