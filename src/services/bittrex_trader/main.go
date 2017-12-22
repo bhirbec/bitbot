@@ -42,7 +42,7 @@ func main() {
 			log.Println("ERROR: ", err)
 		}
 
-		time.Sleep(5 * time.Minute)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
@@ -71,8 +71,8 @@ func saveMarketSummaries(db *database.DB, summaries []bittrex.MarketSummary) err
 	// on (timestamp, price). We use `ignore` to skip this.
 	stmt := `
         insert ignore into market_summary
-            (market_name, high, low, Ask, Bid, open_buy_orders, open_sell_orders,
-            volume, last, base_volume, prev_day, timestamp)
+            (market_name, high, low, ask, bid, open_buy_orders, open_sell_orders,
+            volume, last, base_volume, prev_day, creation_date)
         values
     ` + strings.Join(placeholders, ",")
 
