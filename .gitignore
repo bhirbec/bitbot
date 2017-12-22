@@ -8,6 +8,7 @@
 /public/lib.js
 /public/app.js
 
+client/node_modules
 ansible/*.retry
 ansible/upstart/trader.json
 ansible/secrets
