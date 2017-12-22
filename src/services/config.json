@@ -1,0 +1,13 @@
+{
+    "mysql": {
+        "db": "bitbot",
+        "host": "localhost",
+        "port": "3306",
+        "user": "root",
+        "pwd": ""
+    },
+    "bittrex": {
+        "key": "8aa20f285f04413f8106553eb2410b68",
+        "secret": "eb8acf8c3ee043919f5f22fb28a5423f"
+    }
+}

@@ -9,17 +9,18 @@ import (
 	"github.com/toorop/go-bittrex"
 
 	"bitbot/database"
+	"services"
 )
 
 var (
-	configPath = flag.String("config", "src/services/bittrex_trader/config.json", "JSON file that stores bittrex credentials.")
+	configPath = flag.String("config", "src/services/config.json", "JSON file that stores credentials.")
 )
 
 func main() {
-	log.Println("Start Bittrex trader...")
+	log.Println("Start trader...")
 	flag.Parse()
 
-	config, err := loadConfig(*configPath)
+	config, err := services.LoadConfig(*configPath)
 	if err != nil {
 		log.Panic(err)
 	}
