@@ -1,61 +1,43 @@
 - hosts: all
 
   vars:
+    dev: false
     rev: master
     project_dir: /home/bhirbec/bitbot
-    disk_dir: /media/bitbot-data
-    trader_config: /tmp/trader.json
-    gmail_api_keys: /tmp/gmail_api_keys.json
+    config: /tmp/config.json
 
   tasks:
-    # TODO: use shallow repo with depth=1?
-    - name: Clone repository
-      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
-      sudo: no
-
+    # BUILD
     - name: Fetch repository
       shell: git fetch origin chdir={{project_dir}}
+      when: not dev
 
     - name: Checkout {{rev}} branch
       shell: git reset --hard origin/{{rev}} chdir={{project_dir}}
+      when: not dev
 
     - name: Run make
       shell: make chdir={{project_dir}}
 
-    - name: Copy record.conf
-      template: src=upstart/record.conf dest=/etc/init/record.conf
-      sudo: yes
+    # DEPLOY
+    - include_vars:
+        file: vars.yaml
 
-    - name: Restart record
-      command: service record restart
-      sudo: yes
+    - name: Copy JSON config
+      copy: src=secrets/config.json dest={{config}} # TODO: template this with vars.yaml
 
-    - name: Copy web.conf
-      template: src=upstart/web.conf dest=/etc/init/web.conf
-      sudo: yes
+    - name: Copy systemd conf
+      become: true
+      template: src=systemd/{{item}}.service dest=/etc/systemd/system/{{item}}.service
+      with_items:
+        - trader
 
-    - name: Restart web service
-      command: service web restart
-      sudo: yes
+    - name: reload systemd
+      become: true
+      shell: systemctl daemon-reload
 
-    - name: Copy trader Upstart config
-      template: src=upstart/trader.conf dest=/etc/init/trader.conf
-      sudo: yes
-
-    - name: Copy trader JSON config
-      copy: src=secrets/trader.json dest={{trader_config}}
-
-    - name: Restart trader service
-      command: service trader restart
-      sudo: yes
-
-    - name: Copy withdraw-confirm Upstart config
-      template: src=upstart/withdraw-confirm.conf dest=/etc/init/withdraw-confirm.conf
-      sudo: yes
-
-    - name: Copy withdraw-confirm config
-      copy: src=secrets/gmail_api_keys.json dest={{gmail_api_keys}}
-
-    - name: Restart withdraw-confirm service
-      command: service withdraw-confirm restart
-      sudo: yes
+    - name: Restart
+      service: name={{item}} state=restarted
+      become: true
+      with_items:
+        - trader

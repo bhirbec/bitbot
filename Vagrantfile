@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder ".", "/vagrant", :nfs => true
 
     config.vm.provision "ansible" do |ansible|
-        ansible.playbook = "ansible/bittrex_provision.yaml"
+        ansible.playbook = "ansible/provision.yaml"
         ansible.extra_vars = {dev: true, project_dir: '/vagrant'}
     end
 end

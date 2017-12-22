@@ -4,7 +4,7 @@ export GOPATH := $(CURDIR)
 
 .PHONY: all js go test
 
-all: js go
+all: go
 
 go:
 	go install -v services/...

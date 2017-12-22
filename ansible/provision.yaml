@@ -1,26 +1,24 @@
 - hosts: all
-  sudo: yes
+  sudo: true
 
   vars:
-    go_version: 1.7.1
-    mysql_db: bitbot
-    mysql_user: bitbot
-    mysql_user_pwd: password
-    disk_mount: /mnt/bitbot-data
-    mysql_data_dir: "{{ disk_mount }}/mysql"
-    mysql_log_dir: "{{ disk_mount }}/mysql/log"
+    dev: false
+    go_version: 1.9.2
+    project_dir: /home/bhirbec/bitbot
 
   tasks:
+    - include_vars:
+        file: vars.yaml
+
+    # BUILD
     - name: Download APT packages
       apt: name={{item}} update_cache=true
       with_items:
-        - gcc
         - git
         - build-essential
-        - curl
 
     - name: Clean previous Go install
-      shell: rm -rf /usr/local/go/
+      file: path=/usr/local/go/ state=absent
 
     - name: Download Go
       shell: curl https://storage.googleapis.com/golang/go{{go_version}}.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz
@@ -30,55 +28,57 @@
       shell: ln -fs /usr/local/go/bin/go /usr/local/bin
       # [WARNING]: Consider using file module with state=link rather than running ln
 
-    # # Node.js install
     - name: Setup APT for Nodejs
-      shell: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 
     - name: Install Node.js
       apt: pkg=nodejs
 
-    # MySQL 5.7 install (http://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-installing)
-    - name: Add APT key for mysql 5.7
-      apt_key:
-        data: "{{ lookup('file', 'mysql/apt.key') }}"
+    - name: Clone repository
+      git: repo=git@bitbucket.org:bhirbec/bitbot.git dest={{project_dir}} accept_hostkey=yes
+      when: not dev
 
-    - name: Copy mysql.list
-      copy: src=mysql/mysql.list dest=/etc/apt/sources.list.d/mysql.list
+    # INSTALL MySQL
+    # https://github.com/bendbennett/vagrant-nginx-php7-mysql5-mongo3/blob/master/roles/mysql/tasks/mysql_default.yml
 
-    - name: Install MySQL packages
-      apt: name=mysql-server update_cache=true
+    - name: Set MySQL root password before installing
+      debconf: name='mysql-server' question='mysql-server/root_password' value='{{mysql_root_pwd}}' vtype='password'
 
-    # change MySQL data dir like explained here
-    # https://www.digitalocean.com/community/tutorials/how-to-move-a-mysql-data-directory-to-a-new-location-on-ubuntu-16-04
-    - name: Stop MySQL
-      shell: service mysql stop
+    - name: Confirm MySQL root password before installing
+      debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{mysql_root_pwd}}' vtype='password'
 
-    - name: Make MySQL directories
-      file: path={{ item }} state=directory owner=mysql
+    - name: Install MySQL
+      apt: package={{ item }} state=present force=yes update_cache=yes cache_valid_time=3600
+      when: ansible_os_family == 'Debian'
       with_items:
-        - "{{ mysql_data_dir }}"
-        # - "{{ mysql_log_dir }}"
+        - mysql-server
+        - mysql-client
+        - python-mysqldb
 
-    # TODO: this may delete existing data.
-    - name: Copy Mysql data
-      shell: rsync -apv /var/lib/mysql/ {{ mysql_data_dir }}
+    # CREATE MySQL Database
+    - name: create MySQL user
+      mysql_user:
+        login_user: root
+        login_password: "{{mysql_root_pwd}}"
+        name: "{{mysql_user}}"
+        password: "{{mysql_user_pwd}}"
+        priv: '*.*:ALL,GRANT'
+        state: present
 
-    - name: Configure MySQL
-      template: src=mysql/mysql.conf.d/mysqld.cnf dest=/etc/mysql/mysql.conf.d/mysqld.cnf
+    - name: Create a new MySQL database
+      mysql_db:
+        login_user: "{{mysql_user}}"
+        login_password: "{{mysql_user_pwd}}"
+        name: "{{mysql_db}}"
+        state: present
 
-    - name: Configure AppArmor
-      template: src=mysql/alias dest=/etc/apparmor.d/tunables/alias
+    - name: Copy db.sql
+      copy: src=../src/services/db.sql dest={{mysql_schema}}
 
-    - name: Restar MySQL
-      shell: service mysql start
-
-    - name: Restart AppArmor
-      shell: service apparmor restart
-
-    # TODO: we need db/init.sql but haven't cloned the repo yet
-    - name: Setup database
-      shell: |
-        mysql -u root -e "
-          create user if not exists '{{ mysql_user }}' identified by '{{ mysql_user_pwd }}';
-          grant all privileges on {{ mysql_db }} . * to {{ mysql_user }};
-        "
+    - name: Create MySQL tables
+      mysql_db:
+        login_user: "{{mysql_user}}"
+        login_password: "{{mysql_user_pwd}}"
+        state: import
+        name: "{{mysql_db}}"
+        target: "{{mysql_schema}}"

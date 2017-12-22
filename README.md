@@ -72,11 +72,11 @@ Connect to the MV and initialize the MySQL database "manually":
 ## Deployment
 
 You can test deployment playbook with vagrant:
-`$ ansible-playbook --private-key=.vagrant/machines/default/virtualbox/private_key -i ansible/vagrant_host ansible/bittrex_deploy.yaml --extra-vars "project_dir=/vagrant dev=true"`
+`$ ansible-playbook --private-key=.vagrant/machines/default/virtualbox/private_key -i ansible/vagrant_host ansible/deploy.yaml --extra-vars "project_dir=/vagrant dev=true"`
 
 Configure gcloud ssh (only once):
 `$ gcloud compute config-ssh --project the-bitbot-project`
 
 Run ansible-playbook:
 
-`$ ansible-playbook -i ansible/gce_host ansible/bittrex_deploy.yaml`
+`$ ansible-playbook -i ansible/gce_host ansible/deploy.yaml`

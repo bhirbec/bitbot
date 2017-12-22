@@ -1,0 +1,5 @@
+[Unit]
+Description=Bittrex trader
+
+[Service]
+ExecStart={{project_dir}}/bin/trader --config {{config}}
