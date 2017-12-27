@@ -50,7 +50,7 @@ func main() {
 
 	m.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
 
-	m.HandleFunc("/api/v1/bittrex", func(w http.ResponseWriter, r *http.Request) {
+	m.HandleFunc("/api/v1/bittrex/market_summary", func(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, BittrexData(dbx))
 	})
 
