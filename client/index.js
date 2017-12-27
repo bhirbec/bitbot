@@ -37,7 +37,7 @@ class App extends React.Component {
 
 class Bittrex extends React.Component {
     componentDidMount() {
-        jquery.get('http://localhost:8080/api/v1/bittrex/market_summary').then(resp => {
+        jquery.get('/api/v1/bittrex/market_summary').then(resp => {
             this.setState({data: resp || []})
         })
     }
