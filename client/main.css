@@ -1,0 +1,45 @@
+@import './node_modules/roboto-fontface/css/roboto/roboto-fontface.css';
+@import './node_modules/material-design-icons-iconfont/dist/material-design-icons.css';
+@import './node_modules/bootstrap/dist/css/bootstrap.min.css';
+
+html,
+body {
+	font-family: 'roboto';
+}
+
+/* css reset */
+
+h1 {
+	margin: 25px 0;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table th,
+table td {
+	padding: 5px 10px;
+}
+
+/* records */
+#main {
+	margin-top: 50px;
+}
+
+table th,
+table td {
+	padding: 5px 10px 5px 0;
+	border-top: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}
+
+table.records {
+	table-layout: fixed;
+	word-wrap: break-word;
+	width: 100%;
+}
+
+table.records td.response {
+	width: 300px;
+}
