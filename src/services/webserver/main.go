@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/shopspring/decimal"
 
@@ -46,13 +47,11 @@ func main() {
 	dbx = database.Openx(creds.Db, creds.Host, creds.Port, creds.User, creds.Pwd)
 	defer dbx.Close()
 
-	m := http.NewServeMux()
+	m := mux.NewRouter()
+	m.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir(staticDir))))
 
-	m.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir(staticDir))))
-
-	m.HandleFunc("/api/v1/bittrex/market_summary", func(w http.ResponseWriter, r *http.Request) {
-		JSONResponse(w, BittrexData(dbx))
-	})
+	api := m.PathPrefix("/api/v1").Subrouter()
+	api.HandleFunc("/bittrex/market_summary", JSONWrapper(BittrexMarketSummary))
 
 	m.HandleFunc("/", HomeHandler)
 	http.HandleFunc("/", timeItWrapper(m))
@@ -63,22 +62,13 @@ func main() {
 	}
 }
 
-func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		h.ServeHTTP(w, r)
-		duration := time.Since(start) / time.Millisecond
-		log.Printf("%s took %dms", r.URL.RequestURI(), duration)
-	}
-}
-
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("client/index.html")
 	errorutils.PanicOnError(err)
 	t.Execute(w, nil)
 }
 
-func BittrexData(db *sqlx.DB) interface{} {
+func BittrexMarketSummary(db *sqlx.DB) interface{} {
 	const stmt = `
         select
             m.market_name,
@@ -112,12 +102,25 @@ func BittrexData(db *sqlx.DB) interface{} {
 	return rows
 }
 
-func JSONResponse(w http.ResponseWriter, input interface{}) {
-	out, err := json.Marshal(input)
-	if err == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(out)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		h.ServeHTTP(w, r)
+		duration := time.Since(start) / time.Millisecond
+		log.Printf("%s took %dms", r.URL.RequestURI(), duration)
+	}
+}
+
+func JSONWrapper(f func(*sqlx.DB) interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp := f(dbx)
+
+		out, err := json.Marshal(resp)
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(out)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
