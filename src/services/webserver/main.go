@@ -52,6 +52,7 @@ func main() {
 
 	api := m.PathPrefix("/api/v1").Subrouter()
 	api.HandleFunc("/bittrex/market_summary", JSONWrapper(BittrexMarketSummary))
+	api.HandleFunc("/bittrex/market_history/{market}", JSONWrapper(BittrexMarketHistory))
 
 	m.HandleFunc("/", HomeHandler)
 	http.HandleFunc("/", timeItWrapper(m))
@@ -68,7 +69,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, nil)
 }
 
-func BittrexMarketSummary(db *sqlx.DB) interface{} {
+func BittrexMarketSummary(db *sqlx.DB, r *http.Request) interface{} {
 	const stmt = `
         select
             m.market_name,
@@ -102,6 +103,35 @@ func BittrexMarketSummary(db *sqlx.DB) interface{} {
 	return rows
 }
 
+func BittrexMarketHistory(db *sqlx.DB, r *http.Request) interface{} {
+	const stmt = `
+        select
+            market_name,
+            volume,
+            last,
+            prev_day,
+            creation_date
+        from
+            market_summary
+        where
+            market_name = ?
+        order by
+            creation_date
+    `
+	var rows []*struct {
+		MarketName   string          `db:"market_name"`
+		Volume       decimal.Decimal `db:"volume"`
+		Last         decimal.Decimal `db:"last"`
+		PrevDay      decimal.Decimal `db:"prev_day"`
+		CreationDate string          `db:"creation_date"`
+	}
+
+	market := mux.Vars(r)["market"]
+	err := db.Select(&rows, fmt.Sprintf(stmt), market)
+	errorutils.PanicOnError(err)
+	return rows
+}
+
 func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -111,9 +141,9 @@ func timeItWrapper(h http.Handler) func(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func JSONWrapper(f func(*sqlx.DB) interface{}) http.HandlerFunc {
+func JSONWrapper(f func(*sqlx.DB, *http.Request) interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		resp := f(dbx)
+		resp := f(dbx, r)
 
 		out, err := json.Marshal(resp)
 		if err == nil {
