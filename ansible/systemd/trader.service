@@ -2,4 +2,5 @@
 Description=Bittrex trader
 
 [Service]
+WorkingDirectory={{project_dir}}
 ExecStart={{project_dir}}/bin/trader --config {{config}}

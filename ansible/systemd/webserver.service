@@ -1,0 +1,6 @@
+[Unit]
+Description=Web service
+
+[Service]
+WorkingDirectory={{project_dir}}
+ExecStart={{project_dir}}/bin/webserver --config {{config}} -b 0.0.0.0:80
